@@ -73,6 +73,7 @@
     "saved": "Settings saved.",
     "sectionIdentity": "Club identity",
     "sectionMeeting": "Meeting details",
+    "sectionEmail": "Email delivery (Resend)",
     "f": {
       "name": "Club name",
       "tagline_en": "Tagline (EN)",
@@ -88,7 +89,9 @@
       "time": "Meeting time",
       "address": "Address",
       "location_note_en": "Location note (EN)",
-      "location_note_fr": "Location note (FR)"
+      "location_note_fr": "Location note (FR)",
+      "api_key": "Resend API key",
+      "from_address": "Sender address (From)"
     },
     "roles": {
       "title": "Meeting roles",
@@ -173,6 +176,44 @@
       "capOfficers": "Assign officers",
       "delete": "Delete position",
       "addTitle": "Add a position"
+    },
+    "notifications": {
+      "title": "Email notifications",
+      "intro": "Send members the list of open meeting roles — now, or on a recurring schedule. Set the Resend key and sender address in Settings before sending for real.",
+      "notConfigured": "No email provider is configured yet — sends will be logged to the server console as a preview. Add a Resend API key and sender address in Settings to deliver real email.",
+      "configureLink": "Open Settings",
+      "templates": "Templates",
+      "subjectEn": "Subject (EN)",
+      "subjectFr": "Subject (FR)",
+      "bodyEn": "Body (EN)",
+      "bodyFr": "Body (FR)",
+      "placeholders": "Placeholders: {intro} {unfilled_roles} {signup_link} {outro}",
+      "sendNow": "Send now",
+      "sending": "Sending…",
+      "sendConfirm": "Send this email to all members now?",
+      "sendResult": "Sent to {count} member(s) — status: {status}",
+      "schedules": "Schedules",
+      "schedulesIntro": "Recurring sends. The dispatcher runs every 15 minutes and fires any active schedule that is due.",
+      "template": "Template",
+      "day": "Day",
+      "time": "Time (24h)",
+      "active": "Active",
+      "addSchedule": "Add schedule",
+      "noSchedules": "No schedules yet.",
+      "deleteSchedule": "Delete schedule",
+      "log": "Send history",
+      "noLog": "Nothing sent yet.",
+      "colWhen": "When",
+      "colTemplate": "Template",
+      "colTrigger": "Trigger",
+      "colStatus": "Status",
+      "colRecipients": "Recipients",
+      "colBy": "By",
+      "triggerManual": "Manual",
+      "triggerScheduled": "Scheduled",
+      "statusSent": "Sent",
+      "statusStubbed": "Preview (logged)",
+      "statusFailed": "Failed"
     }
   },
   "common": {

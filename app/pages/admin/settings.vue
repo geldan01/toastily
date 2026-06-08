@@ -26,6 +26,12 @@ const meetingFields = [
   'meeting.location_note_fr',
 ] as const
 
+// Admin-only email delivery credentials (PRD §2.2, §10). Used by Resend.
+const emailFields = [
+  'resend.api_key',
+  'email.from_address',
+] as const
+
 // Map a setting key to its i18n label (e.g. club.tagline_en → admin.f.tagline_en).
 function labelKey(key: string) {
   return `admin.f.${key.slice(key.indexOf('.') + 1)}`
@@ -38,7 +44,7 @@ const { data } = await useFetch<{ settings: Record<string, string> }>('/api/admi
 const form = reactive<Record<string, string>>({})
 watchEffect(() => {
   const s = data.value?.settings ?? {};
-  [...identityFields, ...meetingFields].forEach((k) => {
+  [...identityFields, ...meetingFields, ...emailFields].forEach((k) => {
     if (!(k in form)) form[k] = s[k] ?? ''
   })
 })
@@ -141,6 +147,29 @@ useHead(() => ({ title: t('admin.settings') }))
             <Input
               :id="key"
               v-model="form[key]"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle class="text-lg">
+            {{ t('admin.sectionEmail') }}
+          </CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div
+            v-for="key in emailFields"
+            :key="key"
+            class="space-y-2"
+          >
+            <Label :for="key">{{ t(labelKey(key)) }}</Label>
+            <Input
+              :id="key"
+              v-model="form[key]"
+              :type="key === 'resend.api_key' ? 'password' : 'text'"
+              autocomplete="off"
             />
           </div>
         </CardContent>

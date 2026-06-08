@@ -45,6 +45,11 @@ const settingsSeed: { key: string, value: string, isAdminOnly?: boolean }[] = [
   { key: 'branding.maroon', value: '#772432' },
   { key: 'branding.navy', value: '#004165' },
   { key: 'branding.gold', value: '#F2DF74' },
+  // Configurable intro/outro copy for notification emails (PRD §10).
+  { key: 'notify.intro_en', value: 'Here are the roles still open for our upcoming meeting. Please consider signing up!' },
+  { key: 'notify.intro_fr', value: 'Voici les rôles encore vacants pour notre prochaine réunion. Pensez à vous inscrire!' },
+  { key: 'notify.outro_en', value: 'Thank you for helping make our meetings a success.' },
+  { key: 'notify.outro_fr', value: 'Merci de contribuer au succès de nos réunions.' },
   // Admin-only (never exposed to the public settings endpoint). Empty placeholders.
   { key: 'resend.api_key', value: '', isAdminOnly: true },
   { key: 'email.from_address', value: '', isAdminOnly: true },
@@ -189,6 +194,50 @@ const executivePositionsSeed = [
   { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier' },
 ]
 
+/**
+ * Default notification templates (PRD §10). Body placeholders are substituted at
+ * send time: {{intro}} {{unfilled_roles}} {{signup_link}} {{outro}}. Generic,
+ * club-agnostic copy — admins edit subject/body per club.
+ */
+const emailTemplatesSeed = [
+  {
+    key: 'unfilled_roles',
+    descriptionEn: 'Weekly reminder listing open roles for upcoming meeting(s) with a link to sign up.',
+    descriptionFr: 'Rappel hebdomadaire listant les rôles vacants pour les prochaines réunions avec un lien pour s\'inscrire.',
+    subjectEn: 'Roles still open for our next meeting',
+    subjectFr: 'Rôles encore vacants pour notre prochaine réunion',
+    bodyEn: '<p>{{intro}}</p>\n{{unfilled_roles}}\n<p><a href="{{signup_link}}">Sign up here</a></p>\n<p>{{outro}}</p>',
+    bodyFr: '<p>{{intro}}</p>\n{{unfilled_roles}}\n<p><a href="{{signup_link}}">Inscrivez-vous ici</a></p>\n<p>{{outro}}</p>',
+  },
+]
+
+async function seedEmailNotifications() {
+  console.log('Seeding email templates…')
+  for (const tmpl of emailTemplatesSeed) {
+    await db.insert(schema.emailTemplates)
+      .values(tmpl)
+      .onConflictDoUpdate({
+        target: schema.emailTemplates.key,
+        // Templates are admin-managed: on reseed, refresh only the description
+        // and never clobber edited subject/body copy.
+        set: { descriptionEn: tmpl.descriptionEn, descriptionFr: tmpl.descriptionFr, updatedAt: new Date() },
+      })
+  }
+
+  // A sample weekly schedule (inactive by default), only when none exist.
+  const existing = await db.select({ id: schema.emailSchedules.id }).from(schema.emailSchedules).limit(1)
+  if (existing.length === 0) {
+    console.log('Seeding sample (inactive) email schedule…')
+    await db.insert(schema.emailSchedules).values({
+      templateKey: 'unfilled_roles',
+      cadence: 'weekly',
+      dayOfWeek: 0, // Sunday
+      timeOfDay: '09:00',
+      active: false,
+    })
+  }
+}
+
 async function seedExecutivePositions() {
   const existing = await db.select({ id: schema.executivePositions.id }).from(schema.executivePositions).limit(1)
   if (existing.length > 0) {
@@ -274,6 +323,7 @@ async function main() {
 
   await seedMeetingRolesAndAgenda()
   await seedExecutivePositions()
+  await seedEmailNotifications()
 
   console.log('✓ Seed complete.')
 }
