@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Toolchain & commands
 
-- **Node** ≥ 20.19 / 22.12 (pinned in `.nvmrc` to 22.14.0). **Package manager: pnpm** (via corepack).
+- **Node** ≥ 20.19 / 22.12 (pinned in `.nvmrc` to 22.14.0). **Package manager: pnpm** (via corepack). Run `nvm use` before pnpm commands — on older Node (e.g. 20.18) corepack/pnpm fails with `ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING`.
 - App lives under `app/` (Nuxt 4 srcDir); server code under `server/`; DB schema/migrations/seed under `server/db/`.
 
 | Task | Command |
