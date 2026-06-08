@@ -17,6 +17,8 @@
     "account": "My account",
     "logout": "Log out",
     "requests": "Membership requests",
+    "membersArea": "Members",
+    "executive": "Executive",
     "menu": "Menu"
   },
   "auth": {
@@ -64,6 +66,35 @@
     "approve": "Approve",
     "decline": "Decline",
     "requestedOn": "Requested {date}"
+  },
+  "members": {
+    "title": "Members",
+    "subtitle": "The members area: club roster and member tools.",
+    "messages": {
+      "title": "Messages",
+      "soon": "Internal announcements — coming soon."
+    },
+    "tools": {
+      "title": "Tools",
+      "soon": "Member utilities — coming soon."
+    },
+    "roster": {
+      "title": "Roster",
+      "since": "Member since {date}"
+    }
+  },
+  "executive": {
+    "title": "Executive",
+    "subtitle": "The executive team workspace. You see only the tools your role allows.",
+    "tools": {
+      "requests": "Review and approve membership requests.",
+      "meetings": "Add meetings, generate the year, manage holidays.",
+      "notifications": "Email members and manage scheduled sends.",
+      "executives": "Assign executive positions and view history.",
+      "roles": "Edit meeting-role definitions.",
+      "agenda": "Edit the agenda template.",
+      "settings": "Configure club settings, email and QR."
+    }
   },
   "admin": {
     "settings": "Club settings",

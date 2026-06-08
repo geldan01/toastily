@@ -17,10 +17,12 @@ const links = computed(() => [
   { to: localePath('/meetings'), label: t('nav.meetings') },
 ])
 
-const canReviewRequests = computed(() => hasMinRole(user.value?.status, 'officer'))
-const canManageSettings = computed(() => hasMinRole(user.value?.status, 'admin'))
+const isMember = computed(() => hasMinRole(user.value?.status, 'member'))
+const isOfficer = computed(() => hasMinRole(user.value?.status, 'officer'))
 const { data: caps } = useCapabilities()
-const canManageCalendar = computed(() => caps.value?.canManageCalendar ?? false)
+// Members/officers reach management through the Members & Executive hubs. A
+// non-officer with a delegated calendar grant still needs a direct way in.
+const calendarOnly = computed(() => !isOfficer.value && (caps.value?.canManageCalendar ?? false))
 
 async function logout() {
   await clear()
@@ -76,46 +78,22 @@ async function logout() {
                 <NuxtLink :to="localePath('/account')">{{ t('nav.account') }}</NuxtLink>
               </DropdownMenuItem>
               <DropdownMenuItem
-                v-if="canReviewRequests"
+                v-if="isMember"
                 as-child
               >
-                <NuxtLink :to="localePath('/membership/requests')">{{ t('nav.requests') }}</NuxtLink>
+                <NuxtLink :to="localePath('/members')">{{ t('nav.membersArea') }}</NuxtLink>
               </DropdownMenuItem>
               <DropdownMenuItem
-                v-if="canManageCalendar"
+                v-if="isOfficer"
+                as-child
+              >
+                <NuxtLink :to="localePath('/executive')">{{ t('nav.executive') }}</NuxtLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                v-if="calendarOnly"
                 as-child
               >
                 <NuxtLink :to="localePath('/admin/meetings')">{{ t('admin.meetings.title') }}</NuxtLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                v-if="canManageSettings"
-                as-child
-              >
-                <NuxtLink :to="localePath('/admin/executives')">{{ t('admin.executives.title') }}</NuxtLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                v-if="canManageSettings"
-                as-child
-              >
-                <NuxtLink :to="localePath('/admin/meeting-roles')">{{ t('admin.roles.title') }}</NuxtLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                v-if="canManageSettings"
-                as-child
-              >
-                <NuxtLink :to="localePath('/admin/agenda-template')">{{ t('admin.agenda.title') }}</NuxtLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                v-if="canReviewRequests"
-                as-child
-              >
-                <NuxtLink :to="localePath('/admin/notifications')">{{ t('admin.notifications.title') }}</NuxtLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                v-if="canManageSettings"
-                as-child
-              >
-                <NuxtLink :to="localePath('/admin/settings')">{{ t('admin.settings') }}</NuxtLink>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem @select="logout">
@@ -177,60 +155,28 @@ async function logout() {
                   {{ t('nav.account') }}
                 </NuxtLink>
                 <NuxtLink
-                  v-if="canReviewRequests"
-                  :to="localePath('/membership/requests')"
+                  v-if="isMember"
+                  :to="localePath('/members')"
                   class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
                   @click="open = false"
                 >
-                  {{ t('nav.requests') }}
+                  {{ t('nav.membersArea') }}
                 </NuxtLink>
                 <NuxtLink
-                  v-if="canManageCalendar"
+                  v-if="isOfficer"
+                  :to="localePath('/executive')"
+                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                  @click="open = false"
+                >
+                  {{ t('nav.executive') }}
+                </NuxtLink>
+                <NuxtLink
+                  v-if="calendarOnly"
                   :to="localePath('/admin/meetings')"
                   class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
                   @click="open = false"
                 >
                   {{ t('admin.meetings.title') }}
-                </NuxtLink>
-                <NuxtLink
-                  v-if="canManageSettings"
-                  :to="localePath('/admin/executives')"
-                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-                  @click="open = false"
-                >
-                  {{ t('admin.executives.title') }}
-                </NuxtLink>
-                <NuxtLink
-                  v-if="canManageSettings"
-                  :to="localePath('/admin/meeting-roles')"
-                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-                  @click="open = false"
-                >
-                  {{ t('admin.roles.title') }}
-                </NuxtLink>
-                <NuxtLink
-                  v-if="canManageSettings"
-                  :to="localePath('/admin/agenda-template')"
-                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-                  @click="open = false"
-                >
-                  {{ t('admin.agenda.title') }}
-                </NuxtLink>
-                <NuxtLink
-                  v-if="canReviewRequests"
-                  :to="localePath('/admin/notifications')"
-                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-                  @click="open = false"
-                >
-                  {{ t('admin.notifications.title') }}
-                </NuxtLink>
-                <NuxtLink
-                  v-if="canManageSettings"
-                  :to="localePath('/admin/settings')"
-                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-                  @click="open = false"
-                >
-                  {{ t('admin.settings') }}
                 </NuxtLink>
                 <button
                   type="button"

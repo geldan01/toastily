@@ -17,6 +17,8 @@
     "account": "Mon compte",
     "logout": "Déconnexion",
     "requests": "Demandes d'adhésion",
+    "membersArea": "Membres",
+    "executive": "Exécutif",
     "menu": "Menu"
   },
   "auth": {
@@ -64,6 +66,35 @@
     "approve": "Approuver",
     "decline": "Refuser",
     "requestedOn": "Demandé le {date}"
+  },
+  "members": {
+    "title": "Membres",
+    "subtitle": "L'espace membres : répertoire du club et outils des membres.",
+    "messages": {
+      "title": "Messages",
+      "soon": "Annonces internes — bientôt disponible."
+    },
+    "tools": {
+      "title": "Outils",
+      "soon": "Utilitaires des membres — bientôt disponible."
+    },
+    "roster": {
+      "title": "Répertoire",
+      "since": "Membre depuis {date}"
+    }
+  },
+  "executive": {
+    "title": "Exécutif",
+    "subtitle": "L'espace de travail de l'équipe exécutive. Vous ne voyez que les outils permis par votre rôle.",
+    "tools": {
+      "requests": "Examiner et approuver les demandes d'adhésion.",
+      "meetings": "Ajouter des réunions, générer l'année, gérer les congés.",
+      "notifications": "Écrire aux membres et gérer les envois planifiés.",
+      "executives": "Attribuer les postes exécutifs et consulter l'historique.",
+      "roles": "Modifier les définitions des rôles de réunion.",
+      "agenda": "Modifier le modèle d'ordre du jour.",
+      "settings": "Configurer les paramètres du club, le courriel et le QR."
+    }
   },
   "admin": {
     "settings": "Paramètres du club",
