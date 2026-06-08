@@ -22,11 +22,12 @@ export default defineEventHandler(async (event) => {
   if (session.status !== 'open') throw createError({ statusCode: 409, statusMessage: 'Voting is closed.' })
 
   // Candidate must belong to this ballot.
-  const [candidate] = await db.select({ id: schema.voteCandidates.id })
+  const [candidate] = await db.select({ id: schema.voteCandidates.id, excluded: schema.voteCandidates.excluded })
     .from(schema.voteCandidates)
     .where(and(eq(schema.voteCandidates.id, candidateId), eq(schema.voteCandidates.sessionId, sessionId)))
     .limit(1)
   if (!candidate) throw createError({ statusCode: 404, statusMessage: 'Candidate not found for this ballot.' })
+  if (candidate.excluded) throw createError({ statusCode: 409, statusMessage: 'Candidate is not available for voting.' })
 
   const token = getOrSetVoterToken(event)
   await db.insert(schema.voteBallots)

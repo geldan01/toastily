@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, FileText, MapPin, UserPlus, X } from '@lucide/vue'
+import { CalendarDays, FileText, MapPin, UserPlus, Vote, X } from '@lucide/vue'
 
 interface Occupant { userId: string | null, name: string | null, isGuest: boolean }
 interface RoleRow { roleId: string, nameEn: string, nameFr: string, occupant: Occupant | null }
@@ -17,6 +17,7 @@ interface MeetingDetail {
   holiday: { labelEn: string, labelFr: string } | null
   roles: RoleRow[]
   speeches: SpeechSlot[]
+  canManageSignups?: boolean
 }
 
 const route = useRoute()
@@ -283,6 +284,15 @@ useHead(() => ({ title: theme.value || prettyDate.value }))
             {{ t('meetings.viewAgenda') }}
           </NuxtLink>
         </Button>
+        <Button
+          as-child
+          class="bg-blue-600 text-white hover:bg-blue-700"
+        >
+          <NuxtLink :to="localePath(`/meeting/${meeting.date}/vote`)">
+            <Vote class="size-4" />
+            {{ t('voting.title') }}
+          </NuxtLink>
+        </Button>
       </div>
 
       <div
@@ -541,13 +551,6 @@ useHead(() => ({ title: theme.value || prettyDate.value }))
           </div>
         </div>
       </template>
-
-      <!-- Voting (PRD §8) -->
-      <MeetingVotingPanel
-        :date="meeting.date"
-        :meeting-id="meeting.id"
-        :members="members"
-      />
     </template>
   </div>
 </template>

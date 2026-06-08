@@ -38,6 +38,7 @@ export default defineEventHandler(async (event) => {
         sessionId: schema.voteCandidates.sessionId,
         userId: schema.voteCandidates.userId,
         guestName: schema.voteCandidates.guestName,
+        excluded: schema.voteCandidates.excluded,
         userName: schema.users.name,
       })
         .from(schema.voteCandidates)
@@ -74,31 +75,59 @@ export default defineEventHandler(async (event) => {
     : []
   const votesByCandidate = new Map(tallyRows.map(r => [r.candidateId, Number(r.votes)]))
 
-  const resolveName = (c: typeof candRows[number]) => ({
-    id: c.id,
-    userId: c.userId,
-    name: c.userId ? c.userName : c.guestName,
-    isGuest: !c.userId,
-  })
+  const keyOf = (c: { userId: string | null, guestName: string | null }) =>
+    c.userId ? `u:${c.userId}` : `g:${(c.guestName ?? '').toLowerCase()}`
 
-  const categories = VOTE_CATEGORIES.map((category) => {
+  const categories = []
+  for (const category of VOTE_CATEGORIES) {
     const session = byCategory.get(category) ?? null
-    const cands = session ? (candidatesBySession.get(session.id) ?? []) : []
-    const showResults = !!session && session.status === 'closed' && canManageVoting
-    return {
+    const persisted = session ? (candidatesBySession.get(session.id) ?? []) : []
+    const persistedByKey = new Map(persisted.map(c => [keyOf(c), c]))
+
+    // Display list = the derived speakers/evaluators (numbered, in speech order,
+    // +Grammarian) merged with persisted rows for their id + struck-out state, so
+    // speech ballots always show the right people even before a session exists.
+    // Table-topics entries are empty here, so its candidates are the persisted
+    // (manually-added) rows. Any persisted row not matched by a derived entry
+    // (a manual add) is appended without a label.
+    const entries = await meetingAwardEntries(db, meeting.id, category)
+    const used = new Set<string>()
+    const candidates = []
+    for (const e of entries) {
+      const k = keyOf(e)
+      const p = persistedByKey.get(k)
+      if (p) used.add(k)
+      candidates.push({ id: p?.id ?? null, name: e.name, isGuest: e.isGuest, excluded: p?.excluded ?? false, label: e.label })
+    }
+    for (const p of persisted) {
+      if (used.has(keyOf(p))) continue
+      candidates.push({ id: p.id, name: p.userId ? p.userName : p.guestName, isGuest: !p.userId, excluded: p.excluded, label: null })
+    }
+
+    // Results revealed to managers once the ballot is closed (PRD §8).
+    let results = null
+    let tie = false
+    if (session && session.status === 'closed' && canManageVoting) {
+      results = candidates
+        .map(c => ({ ...c, votes: c.id ? (votesByCandidate.get(c.id) ?? 0) : 0 }))
+        .sort((a, b) => b.votes - a.votes)
+      // Winner(s) = the top vote count among non-excluded candidates (ties allowed).
+      const maxVotes = Math.max(0, ...results.filter(r => !r.excluded).map(r => r.votes))
+      tie = results.filter(r => !r.excluded && r.votes === maxVotes && maxVotes > 0).length > 1
+      results = results.map(r => ({ ...r, isWinner: !r.excluded && r.votes === maxVotes && maxVotes > 0 }))
+    }
+
+    categories.push({
       category,
       sessionId: session?.id ?? null,
       status: session?.status ?? null,
-      candidates: cands.map(resolveName),
+      candidates,
       myCandidateId: session ? (myVoteBySession.get(session.id) ?? null) : null,
       hasVoted: session ? myVoteBySession.has(session.id) : false,
-      results: showResults
-        ? cands
-            .map(c => ({ ...resolveName(c), votes: votesByCandidate.get(c.id) ?? 0 }))
-            .sort((a, b) => b.votes - a.votes)
-        : null,
-    }
-  })
+      results,
+      tie,
+    })
+  }
 
-  return { canManageVoting, categories }
+  return { canManageVoting, meetingId: meeting.id, categories }
 })

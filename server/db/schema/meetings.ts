@@ -18,6 +18,10 @@ export const meetingRoles = pgTable('meeting_roles', {
   // that meeting (assign/reassign/release any signup — e.g. the Toastmaster).
   // Data-driven so authority is never hard-coded against a role name (PRD §3).
   grantsMeetingAuthority: boolean('grants_meeting_authority').notNull().default(false),
+  // Whether the holder of this role is a candidate for the Best Evaluator award
+  // alongside the speech evaluators (PRD §8: "one of the evaluators or the
+  // Grammarian"). Data-driven so we never match the Grammarian by name.
+  countsAsEvaluator: boolean('counts_as_evaluator').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
