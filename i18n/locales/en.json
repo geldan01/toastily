@@ -307,6 +307,29 @@
     "minTime": "Minimum minutes",
     "maxTime": "Maximum minutes"
   },
+  "voting": {
+    "title": "Voting",
+    "voterHint": "When a category is open, tap a candidate to cast your vote. You can vote once per category.",
+    "categories": {
+      "best_speaker": "Best Speaker",
+      "best_evaluator": "Best Evaluator",
+      "best_table_topics_speaker": "Best Table Topics Speaker",
+      "best_table_topics_evaluator": "Best Table Topics Evaluator"
+    },
+    "statusOpen": "Open",
+    "statusClosed": "Closed",
+    "open": "Open ballot",
+    "close": "Close ballot",
+    "reopen": "Reopen",
+    "notOpened": "Voting has not been opened for this category yet.",
+    "noCandidates": "No candidates yet.",
+    "addCandidate": "Add candidate",
+    "vote": "Vote",
+    "voted": "Voted",
+    "yourVote": "Your vote",
+    "closedNoResults": "Voting is closed. Results were announced at the meeting.",
+    "voteCount": "{n} vote | {n} votes"
+  },
   "agenda": {
     "title": "Agenda",
     "backToMeeting": "Back to meeting",

@@ -307,6 +307,29 @@
     "minTime": "Minutes minimum",
     "maxTime": "Minutes maximum"
   },
+  "voting": {
+    "title": "Vote",
+    "voterHint": "Lorsqu'une catégorie est ouverte, touchez un candidat pour voter. Vous pouvez voter une fois par catégorie.",
+    "categories": {
+      "best_speaker": "Meilleur orateur",
+      "best_evaluator": "Meilleur évaluateur",
+      "best_table_topics_speaker": "Meilleur intervenant aux sujets impromptus",
+      "best_table_topics_evaluator": "Meilleur évaluateur des sujets impromptus"
+    },
+    "statusOpen": "Ouvert",
+    "statusClosed": "Fermé",
+    "open": "Ouvrir le scrutin",
+    "close": "Fermer le scrutin",
+    "reopen": "Rouvrir",
+    "notOpened": "Le vote n'a pas encore été ouvert pour cette catégorie.",
+    "noCandidates": "Aucun candidat pour l'instant.",
+    "addCandidate": "Ajouter un candidat",
+    "vote": "Voter",
+    "voted": "Voté",
+    "yourVote": "Votre vote",
+    "closedNoResults": "Le vote est fermé. Les résultats ont été annoncés pendant la réunion.",
+    "voteCount": "{n} vote | {n} votes"
+  },
   "agenda": {
     "title": "Ordre du jour",
     "backToMeeting": "Retour à la réunion",

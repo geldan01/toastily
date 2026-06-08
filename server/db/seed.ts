@@ -136,9 +136,10 @@ const newsSeed = [
 /**
  * Generic Toastmasters meeting roles (PRD §3.3). These are the standard,
  * club-agnostic role names — admins rename/reorder/deactivate per club.
- * `grantsMeetingAuthority` marks the role whose signed-up holder may manage that
- * meeting's signups (assign/reassign/release anyone) — the Toastmaster hosts the
- * meeting, so they get it by default; admins can move it to any role.
+ * `grantsMeetingAuthority` marks roles whose signed-up holder may manage that
+ * meeting's signups (assign/reassign/release anyone) and open/close voting
+ * (PRD §8) — the Toastmaster (host) and Sergeant-at-Arms (runs voting) get it by
+ * default; admins can move it to any role.
  */
 const meetingRolesSeed = [
   { nameEn: 'Chair', nameFr: 'Président' },
@@ -146,7 +147,7 @@ const meetingRolesSeed = [
   { nameEn: 'General Evaluator', nameFr: 'Évaluateur général' },
   { nameEn: 'Table Topics Master', nameFr: 'Maître des sujets impromptus' },
   { nameEn: 'Secretary', nameFr: 'Secrétaire' },
-  { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier' },
+  { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier', grantsMeetingAuthority: true },
   { nameEn: 'Toast', nameFr: 'Toast' },
   { nameEn: 'Moment of Reflection', nameFr: 'Moment de réflexion' },
   { nameEn: 'Moment of Humour', nameFr: 'Moment d\'humour' },
