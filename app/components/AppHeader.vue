@@ -106,6 +106,12 @@ async function logout() {
                 <NuxtLink :to="localePath('/admin/agenda-template')">{{ t('admin.agenda.title') }}</NuxtLink>
               </DropdownMenuItem>
               <DropdownMenuItem
+                v-if="canReviewRequests"
+                as-child
+              >
+                <NuxtLink :to="localePath('/admin/notifications')">{{ t('admin.notifications.title') }}</NuxtLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 v-if="canManageSettings"
                 as-child
               >
@@ -209,6 +215,14 @@ async function logout() {
                   @click="open = false"
                 >
                   {{ t('admin.agenda.title') }}
+                </NuxtLink>
+                <NuxtLink
+                  v-if="canReviewRequests"
+                  :to="localePath('/admin/notifications')"
+                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                  @click="open = false"
+                >
+                  {{ t('admin.notifications.title') }}
                 </NuxtLink>
                 <NuxtLink
                   v-if="canManageSettings"

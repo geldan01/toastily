@@ -29,6 +29,18 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2025-01-01',
 
+  // Scheduled email notifications (PRD §10). The dispatcher runs every 15 min
+  // and fires any DB-defined schedule that's due (server/tasks/notifications/
+  // dispatch.ts). Experimental tasks must be enabled for scheduledTasks.
+  nitro: {
+    experimental: {
+      tasks: true,
+    },
+    scheduledTasks: {
+      '*/15 * * * *': ['notifications:dispatch'],
+    },
+  },
+
   vite: {
     plugins: [tailwindcss()],
   },

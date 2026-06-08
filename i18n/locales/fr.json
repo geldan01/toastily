@@ -73,6 +73,7 @@
     "saved": "Paramètres enregistrés.",
     "sectionIdentity": "Identité du club",
     "sectionMeeting": "Détails de la réunion",
+    "sectionEmail": "Envoi de courriels (Resend)",
     "f": {
       "name": "Nom du club",
       "tagline_en": "Slogan (EN)",
@@ -88,7 +89,9 @@
       "time": "Heure de réunion",
       "address": "Adresse",
       "location_note_en": "Note de lieu (EN)",
-      "location_note_fr": "Note de lieu (FR)"
+      "location_note_fr": "Note de lieu (FR)",
+      "api_key": "Clé d'API Resend",
+      "from_address": "Adresse d'expéditeur (De)"
     },
     "roles": {
       "title": "Rôles de réunion",
@@ -173,6 +176,44 @@
       "capOfficers": "Nommer des officiers",
       "delete": "Supprimer le poste",
       "addTitle": "Ajouter un poste"
+    },
+    "notifications": {
+      "title": "Notifications par courriel",
+      "intro": "Envoyez aux membres la liste des rôles vacants — maintenant ou selon un horaire récurrent. Configurez la clé Resend et l'adresse d'expéditeur dans les Paramètres avant un envoi réel.",
+      "notConfigured": "Aucun fournisseur de courriel n'est configuré — les envois seront affichés dans la console du serveur en aperçu. Ajoutez une clé d'API Resend et une adresse d'expéditeur dans les Paramètres pour livrer de vrais courriels.",
+      "configureLink": "Ouvrir les Paramètres",
+      "templates": "Modèles",
+      "subjectEn": "Objet (EN)",
+      "subjectFr": "Objet (FR)",
+      "bodyEn": "Corps (EN)",
+      "bodyFr": "Corps (FR)",
+      "placeholders": "Variables : {intro} {unfilled_roles} {signup_link} {outro}",
+      "sendNow": "Envoyer maintenant",
+      "sending": "Envoi…",
+      "sendConfirm": "Envoyer ce courriel à tous les membres maintenant?",
+      "sendResult": "Envoyé à {count} membre(s) — statut : {status}",
+      "schedules": "Horaires",
+      "schedulesIntro": "Envois récurrents. Le distributeur s'exécute toutes les 15 minutes et déclenche tout horaire actif arrivé à échéance.",
+      "template": "Modèle",
+      "day": "Jour",
+      "time": "Heure (24 h)",
+      "active": "Actif",
+      "addSchedule": "Ajouter un horaire",
+      "noSchedules": "Aucun horaire pour l'instant.",
+      "deleteSchedule": "Supprimer l'horaire",
+      "log": "Historique des envois",
+      "noLog": "Rien n'a encore été envoyé.",
+      "colWhen": "Quand",
+      "colTemplate": "Modèle",
+      "colTrigger": "Déclencheur",
+      "colStatus": "Statut",
+      "colRecipients": "Destinataires",
+      "colBy": "Par",
+      "triggerManual": "Manuel",
+      "triggerScheduled": "Planifié",
+      "statusSent": "Envoyé",
+      "statusStubbed": "Aperçu (journalisé)",
+      "statusFailed": "Échec"
     }
   },
   "common": {
