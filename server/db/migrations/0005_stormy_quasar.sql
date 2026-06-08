@@ -1,0 +1,1 @@
+ALTER TABLE "meeting_roles" ADD COLUMN "grants_meeting_authority" boolean DEFAULT false NOT NULL;

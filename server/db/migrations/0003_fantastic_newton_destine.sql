@@ -1,0 +1,1 @@
+ALTER TYPE "public"."agenda_item_type" ADD VALUE 'evaluations';
