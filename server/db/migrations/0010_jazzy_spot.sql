@@ -1,0 +1,1 @@
+ALTER TABLE "meeting_roles" ADD COLUMN "counts_as_evaluator" boolean DEFAULT false NOT NULL;

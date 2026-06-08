@@ -1,24 +1,39 @@
 <script setup lang="ts">
-// In-meeting award voting (PRD §8). Self-contained: fetches the meeting's ballot
-// status and renders the four award categories. Meeting managers (officer/admin
-// OR the meeting's Sergeant-at-Arms / Toastmaster) open/close ballots and manage
-// candidates; anyone present votes once per category via an anonymous device
-// cookie. Tallies stay hidden until a ballot is closed, and only managers see them.
-import { UserPlus, Vote, X } from '@lucide/vue'
+// In-meeting award voting (PRD §8), shown on the dedicated /meeting/[date]/vote
+// page. Best Speaker / Best Evaluator candidates are derived from the meeting's
+// speeches (+ Grammarian) and shown automatically — numbered "Speaker 1",
+// "Evaluator 2", "Grammarian"; the two Table Topics ballots are filled live by
+// the manager and opened/closed together. A meeting manager (officer/admin OR the
+// meeting's Sergeant-at-Arms / Toastmaster) opens each ballot for voting and
+// closes it to reveal results; voting is possible only while open. Anyone present
+// votes once per category via an anonymous device cookie. Managers may strike out
+// (disqualify) a candidate before or during voting.
+
+type AwardLabel
+  = | { kind: 'speaker', index: number }
+    | { kind: 'evaluator', index: number }
+    | { kind: 'role', nameEn: string, nameFr: string }
 
 interface Member { id: string, name: string }
-interface Candidate { id: string, userId: string | null, name: string | null, isGuest: boolean }
-interface ResultRow extends Candidate { votes: number }
+interface Candidate { id: string | null, name: string | null, isGuest: boolean, excluded: boolean, label: AwardLabel | null }
+interface ResultRow extends Candidate { votes: number, isWinner: boolean }
 interface CategoryVote {
   category: string
   sessionId: string | null
-  status: 'open' | 'closed' | null
+  status: 'draft' | 'open' | 'closed' | null
   candidates: Candidate[]
   myCandidateId: string | null
   hasVoted: boolean
   results: ResultRow[] | null
+  tie: boolean
 }
-interface VotingData { canManageVoting: boolean, categories: CategoryVote[] }
+interface VotingData { canManageVoting: boolean, meetingId: string, categories: CategoryVote[] }
+type AssignTarget = { userId: string } | { guestName: string }
+type GroupStatus = 'draft' | 'open' | 'closed' | null
+
+const SPEECH_CATEGORIES = ['best_speaker', 'best_evaluator']
+const TABLE_TOPICS_CATEGORIES = ['best_table_topics_speaker', 'best_table_topics_evaluator']
+const ALL_CATEGORIES = [...SPEECH_CATEGORIES, ...TABLE_TOPICS_CATEGORIES]
 
 const props = defineProps<{ date: string, meetingId: string, members: Member[] }>()
 
@@ -29,17 +44,23 @@ const { data, refresh } = await useFetch<VotingData>(() => `/api/meetings/voting
 })
 
 const canManage = computed(() => data.value?.canManageVoting ?? false)
-const categories = computed(() => data.value?.categories ?? [])
+const byCategory = computed(() => new Map((data.value?.categories ?? []).map(c => [c.category, c])))
+const speechCategories = computed(() => SPEECH_CATEGORIES.map(c => byCategory.value.get(c)).filter((c): c is CategoryVote => !!c))
+const tableTopicsCategories = computed(() => TABLE_TOPICS_CATEGORIES.map(c => byCategory.value.get(c)).filter((c): c is CategoryVote => !!c))
+
+// Combined status of the Table Topics pair (open wins, then draft, then closed).
+const tableTopicsStatus = computed<GroupStatus>(() => {
+  const list = tableTopicsCategories.value
+  if (list.some(c => c.status === 'open')) return 'open'
+  if (list.some(c => c.status === 'draft')) return 'draft'
+  if (list.length && list.every(c => c.status === 'closed')) return 'closed'
+  return null
+})
+const tableTopicsSessionIds = computed(() =>
+  tableTopicsCategories.value.map(c => c.sessionId).filter((id): id is string => !!id))
 
 const busy = ref('')
 const error = ref('')
-type AssignTarget = { userId: string } | { guestName: string }
-
-// Which category's add-candidate panel is open (one at a time).
-const addFor = ref<string | null>(null)
-function toggleAdd(category: string) {
-  addFor.value = addFor.value === category ? null : category
-}
 
 async function run(key: string, fn: () => Promise<unknown>) {
   busy.value = key
@@ -52,34 +73,52 @@ async function run(key: string, fn: () => Promise<unknown>) {
   finally { busy.value = '' }
 }
 
-const open = (category: string) =>
-  run(category, () => $fetch('/api/meetings/voting/open', { method: 'POST', body: { meetingId: props.meetingId, category } }))
+const openBallots = (categories: string[], key: string) =>
+  run(key, () => $fetch('/api/meetings/voting/open', { method: 'POST', body: { meetingId: props.meetingId, categories } }))
 
-const close = (sessionId: string, category: string) =>
-  run(category, () => $fetch('/api/meetings/voting/close', { method: 'POST', body: { sessionId } }))
+const closeBallots = (sessionIds: string[], key: string) =>
+  run(key, () => $fetch('/api/meetings/voting/close', { method: 'POST', body: { sessionIds } }))
 
-function addCandidate(sessionId: string, category: string, target: AssignTarget) {
-  return run(category, async () => {
-    await $fetch('/api/meetings/voting/candidate', { method: 'POST', body: { sessionId, ...target } })
-    addFor.value = null
-  })
+const addCandidate = (sessionId: string, key: string, target: AssignTarget) =>
+  run(key, () => $fetch('/api/meetings/voting/candidate', { method: 'POST', body: { sessionId, ...target } }))
+
+const toggleExclude = (candidateId: string, excluded: boolean, key: string) =>
+  run(key, () => $fetch('/api/meetings/voting/candidate', { method: 'PATCH', body: { candidateId, excluded } }))
+
+const removeCandidate = (candidateId: string, key: string) =>
+  run(key, () => $fetch('/api/meetings/voting/candidate', { method: 'DELETE', body: { candidateId } }))
+
+const vote = (sessionId: string, candidateId: string, key: string) =>
+  run(key, () => $fetch('/api/meetings/voting/vote', { method: 'POST', body: { sessionId, candidateId } }))
+
+// When a manager opens the page, materialise the draft ballots so speech
+// candidates (speakers/evaluators/grammarian) are persisted and disqualifiable
+// before opening, and the table-topics drafts are ready to fill. Silent + once.
+const autoPrepared = ref(false)
+async function autoPrepare() {
+  if (autoPrepared.value || !canManage.value) return
+  autoPrepared.value = true
+  try {
+    await $fetch('/api/meetings/voting/prepare', { method: 'POST', body: { meetingId: props.meetingId, categories: ALL_CATEGORIES } })
+    await refresh()
+  }
+  catch { /* non-fatal — the candidate preview still renders from the speeches */ }
 }
+onMounted(autoPrepare)
 
-const removeCandidate = (candidateId: string, category: string) =>
-  run(`${category}:${candidateId}`, () => $fetch('/api/meetings/voting/candidate', { method: 'DELETE', body: { candidateId } }))
-
-const vote = (sessionId: string, candidateId: string, category: string) =>
-  run(`${category}:${candidateId}`, () => $fetch('/api/meetings/voting/vote', { method: 'POST', body: { sessionId, candidateId } }))
+function statusLabel(status: GroupStatus) {
+  if (status === 'open') return t('voting.statusOpen')
+  if (status === 'closed') return t('voting.statusClosed')
+  if (status === 'draft') return t('voting.statusDraft')
+  return ''
+}
 </script>
 
 <template>
   <section>
-    <h2 class="mt-8 text-xl font-semibold">
-      {{ t('voting.title') }}
-    </h2>
     <p
       v-if="!canManage"
-      class="mt-1 text-sm text-muted-foreground"
+      class="text-sm text-muted-foreground"
     >
       {{ t('voting.voterHint') }}
     </p>
@@ -92,8 +131,9 @@ const vote = (sessionId: string, candidateId: string, category: string) =>
     </div>
 
     <div class="mt-3 space-y-3">
+      <!-- Best Speaker / Best Evaluator — independent ballots -->
       <div
-        v-for="c in categories"
+        v-for="c in speechCategories"
         :key="c.category"
         class="rounded-lg border border-border p-4"
       >
@@ -109,158 +149,113 @@ const vote = (sessionId: string, candidateId: string, category: string) =>
                 ? 'bg-secondary/15 text-secondary'
                 : 'bg-muted text-muted-foreground'"
             >
-              {{ c.status === 'open' ? t('voting.statusOpen') : t('voting.statusClosed') }}
+              {{ statusLabel(c.status) }}
             </span>
 
-            <!-- Manager: open / close / reopen -->
             <template v-if="canManage">
               <Button
-                v-if="!c.status"
-                size="sm"
-                variant="outline"
-                :disabled="busy === c.category"
-                @click="open(c.category)"
-              >
-                {{ t('voting.open') }}
-              </Button>
-              <Button
-                v-else-if="c.status === 'open'"
+                v-if="c.status === 'open'"
                 size="sm"
                 variant="ghost"
                 :disabled="busy === c.category"
-                @click="close(c.sessionId!, c.category)"
+                @click="closeBallots([c.sessionId!], c.category)"
               >
                 {{ t('voting.close') }}
               </Button>
               <Button
                 v-else
                 size="sm"
-                variant="ghost"
+                :variant="c.status === 'closed' ? 'ghost' : 'outline'"
                 :disabled="busy === c.category"
-                @click="open(c.category)"
+                @click="openBallots([c.category], c.category)"
               >
-                {{ t('voting.reopen') }}
+                {{ c.status === 'closed' ? t('voting.reopen') : t('voting.open') }}
               </Button>
             </template>
           </div>
         </div>
 
-        <!-- Not yet opened -->
+        <MeetingVotingCategory
+          :category="c"
+          :can-manage="canManage"
+          :members="props.members"
+          :busy="busy"
+          @vote="(sid, cid) => vote(sid, cid, `${c.category}:${cid}`)"
+          @add="(sid, target) => addCandidate(sid, c.category, target)"
+          @exclude="(cid, ex) => toggleExclude(cid, ex, `${c.category}:${cid}`)"
+          @remove="cid => removeCandidate(cid, `${c.category}:${cid}`)"
+        />
+      </div>
+
+      <!-- Table Topics — both ballots opened / closed together -->
+      <div class="rounded-lg border border-border p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="font-medium">
+            {{ t('voting.tableTopicsGroup') }}
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              v-if="tableTopicsStatus"
+              class="rounded-full px-2 py-0.5 text-xs font-medium"
+              :class="tableTopicsStatus === 'open'
+                ? 'bg-secondary/15 text-secondary'
+                : 'bg-muted text-muted-foreground'"
+            >
+              {{ statusLabel(tableTopicsStatus) }}
+            </span>
+
+            <template v-if="canManage">
+              <Button
+                v-if="tableTopicsStatus === 'open'"
+                size="sm"
+                variant="ghost"
+                :disabled="busy === 'table_topics'"
+                @click="closeBallots(tableTopicsSessionIds, 'table_topics')"
+              >
+                {{ t('voting.closeBoth') }}
+              </Button>
+              <Button
+                v-else
+                size="sm"
+                :variant="tableTopicsStatus === 'closed' ? 'ghost' : 'outline'"
+                :disabled="busy === 'table_topics'"
+                @click="openBallots(TABLE_TOPICS_CATEGORIES, 'table_topics')"
+              >
+                {{ tableTopicsStatus === 'closed' ? t('voting.reopenBoth') : t('voting.openBoth') }}
+              </Button>
+            </template>
+          </div>
+        </div>
+
         <p
-          v-if="!c.status"
+          v-if="!canManage && !tableTopicsStatus"
           class="mt-2 text-sm text-muted-foreground/70"
         >
           {{ t('voting.notOpened') }}
         </p>
-
-        <!-- Open ballot: candidate list with vote buttons -->
-        <template v-else-if="c.status === 'open'">
-          <p
-            v-if="!c.candidates.length"
-            class="mt-2 text-sm text-muted-foreground/70"
-          >
-            {{ t('voting.noCandidates') }}
-          </p>
-          <ul
-            v-else
-            class="mt-3 divide-y divide-border rounded-md border border-border"
-          >
-            <li
-              v-for="cand in c.candidates"
-              :key="cand.id"
-              class="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5"
-              :class="c.myCandidateId === cand.id ? 'bg-secondary/10' : ''"
-            >
-              <div class="text-sm">
-                {{ cand.name }}
-                <span
-                  v-if="cand.isGuest"
-                  class="text-xs text-muted-foreground"
-                >({{ t('meetings.guest') }})</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span
-                  v-if="c.myCandidateId === cand.id"
-                  class="text-xs font-medium text-secondary"
-                >{{ t('voting.yourVote') }}</span>
-                <Button
-                  size="sm"
-                  :variant="c.myCandidateId === cand.id ? 'secondary' : 'outline'"
-                  :disabled="busy === `${c.category}:${cand.id}`"
-                  @click="vote(c.sessionId!, cand.id, c.category)"
-                >
-                  <Vote class="size-4" />
-                  {{ c.myCandidateId === cand.id ? t('voting.voted') : t('voting.vote') }}
-                </Button>
-                <Button
-                  v-if="canManage"
-                  size="sm"
-                  variant="ghost"
-                  class="text-muted-foreground hover:text-destructive"
-                  :disabled="busy === `${c.category}:${cand.id}`"
-                  @click="removeCandidate(cand.id, c.category)"
-                >
-                  <X class="size-4" />
-                </Button>
-              </div>
-            </li>
-          </ul>
-
-          <!-- Manager: add a candidate (member or guest) -->
+        <div
+          v-else
+          class="mt-3 grid gap-4 sm:grid-cols-2"
+        >
           <div
-            v-if="canManage"
-            class="mt-3"
+            v-for="c in tableTopicsCategories"
+            :key="c.category"
           >
-            <Button
-              size="sm"
-              variant="ghost"
-              :disabled="busy === c.category"
-              @click="toggleAdd(c.category)"
-            >
-              <UserPlus class="size-4" />
-              {{ t('voting.addCandidate') }}
-            </Button>
-            <MeetingAssignPanel
-              v-if="addFor === c.category"
-              :id-prefix="`vote-${c.category}`"
+            <div class="text-sm font-medium text-muted-foreground">
+              {{ t(`voting.categories.${c.category}`) }}
+            </div>
+            <MeetingVotingCategory
+              :category="c"
+              :can-manage="canManage"
               :members="props.members"
-              :busy="busy === c.category"
-              class="mt-2"
-              @assign="target => addCandidate(c.sessionId!, c.category, target)"
+              :busy="busy"
+              @vote="(sid, cid) => vote(sid, cid, `${c.category}:${cid}`)"
+              @add="(sid, target) => addCandidate(sid, c.category, target)"
+              @exclude="(cid, ex) => toggleExclude(cid, ex, `${c.category}:${cid}`)"
+              @remove="cid => removeCandidate(cid, `${c.category}:${cid}`)"
             />
           </div>
-        </template>
-
-        <!-- Closed ballot -->
-        <template v-else>
-          <!-- Manager: results tally (ties shown as equal counts) -->
-          <ul
-            v-if="c.results"
-            class="mt-3 divide-y divide-border rounded-md border border-border"
-          >
-            <li
-              v-for="r in c.results"
-              :key="r.id"
-              class="flex items-center justify-between gap-3 px-3 py-2.5 text-sm"
-            >
-              <span>
-                {{ r.name }}
-                <span
-                  v-if="r.isGuest"
-                  class="text-xs text-muted-foreground"
-                >({{ t('meetings.guest') }})</span>
-              </span>
-              <span class="font-semibold tabular-nums">{{ t('voting.voteCount', { n: r.votes }) }}</span>
-            </li>
-          </ul>
-          <!-- Everyone else: closed, no tally -->
-          <p
-            v-else
-            class="mt-2 text-sm text-muted-foreground/70"
-          >
-            {{ t('voting.closedNoResults') }}
-          </p>
-        </template>
+        </div>
       </div>
     </div>
   </section>

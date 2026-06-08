@@ -2,14 +2,15 @@ import { and, eq, inArray } from 'drizzle-orm'
 import { schema, useDrizzle } from '../../../db/client'
 
 /**
- * Open (or reopen) ballot(s) for a meeting (PRD §8). Restricted to meeting
- * managers (officer/admin OR the meeting's Sergeant-at-Arms / Toastmaster —
- * authority is data via the role flag). Accepts an array of categories so the
- * two Table Topics ballots open with one click; speech ballots send one. An
- * existing session (draft or closed) flips to `open` and keeps cast votes; a
- * category with no session yet is created. Either way the meeting's
- * speakers/evaluators are additively pulled in (so opening directly without
- * preparing first works, and reopening surfaces anyone added late).
+ * Prepare ballot(s) for a meeting (PRD §8) — the "Manage candidates" /
+ * "Sync from speeches" action. Ensures a `draft` vote session exists for each
+ * requested category, then **additively** pulls in the speech-category
+ * candidates (speakers → Best Speaker, evaluators → Best Evaluator); table-topics
+ * drafts start empty for the manager to fill live. Safe to call repeatedly: an
+ * existing session keeps its status and votes, and candidates already on the
+ * ballot are never duplicated — so this also surfaces speakers added after the
+ * ballot was first prepared. The Table Topics card sends both TT categories at
+ * once. Meeting managers only.
  */
 export default defineEventHandler(async (event) => {
   const user = await getCurrentUser(event)
@@ -38,23 +39,17 @@ export default defineEventHandler(async (event) => {
 
   const sessions = []
   for (const category of categories) {
-    const found = existingByCategory.get(category)
-    if (found) {
-      const [row] = await db.update(schema.voteSessions)
-        .set({ status: 'open', openedBy: user.id, openedAt: new Date(), closedBy: null, closedAt: null })
-        .where(eq(schema.voteSessions.id, found.id))
+    let session = existingByCategory.get(category)
+    if (!session) {
+      // Draft only — `openedBy`/`openedAt` are stamped when the ballot is opened.
+      const [created] = await db.insert(schema.voteSessions)
+        .values({ meetingId, category, status: 'draft' })
         .returning()
-      if (!row) continue
-      // Reopening pulls in any speakers/evaluators missed first time round.
-      await syncDerivedCandidates(db, row.id, meetingId, category)
-      sessions.push(row)
-      continue
+      if (!created) continue
+      session = created
     }
-    const [session] = await db.insert(schema.voteSessions)
-      .values({ meetingId, category, status: 'open', openedBy: user.id })
-      .returning()
-    if (!session) continue
-    // Seed speech-category candidates from the meeting's speeches.
+    // Additively pull in the meeting's speakers/evaluators (no-op for table
+    // topics, and never re-adds someone already on the ballot).
     await syncDerivedCandidates(db, session.id, meetingId, category)
     sessions.push(session)
   }

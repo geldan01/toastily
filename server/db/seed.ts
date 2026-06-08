@@ -151,7 +151,7 @@ const meetingRolesSeed = [
   { nameEn: 'Toast', nameFr: 'Toast' },
   { nameEn: 'Moment of Reflection', nameFr: 'Moment de réflexion' },
   { nameEn: 'Moment of Humour', nameFr: 'Moment d\'humour' },
-  { nameEn: 'Grammarian', nameFr: 'Grammairien' },
+  { nameEn: 'Grammarian', nameFr: 'Grammairien', countsAsEvaluator: true },
 ]
 
 /**

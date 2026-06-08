@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core'
+import { boolean, pgEnum, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core'
 import { meetings } from './meetings'
 import { users } from './users'
 
@@ -15,13 +15,17 @@ export const voteCategory = pgEnum('vote_category', [
   'best_table_topics_evaluator',
 ])
 
-/** A ballot is `open` (votes accepted) or `closed` (results revealed). The
- * opener can reopen a closed ballot to fix mistakes — flips back to `open`. */
-export const voteSessionStatus = pgEnum('vote_session_status', ['open', 'closed'])
+/** A ballot's lifecycle (PRD §8): `draft` (the meeting manager is curating the
+ * candidate list — visible to managers, not yet votable), `open` (votes
+ * accepted), `closed` (results revealed). The opener can reopen a closed ballot
+ * to fix mistakes — flips back to `open`. */
+export const voteSessionStatus = pgEnum('vote_session_status', ['draft', 'open', 'closed'])
 
 /**
- * One ballot per meeting per category (unique). Results are hidden until the
- * ballot is closed (PRD §8); reopening preserves cast ballots.
+ * One ballot per meeting per category (unique). A ballot starts as a `draft` when
+ * the manager opens "Manage candidates" (speech candidates are pre-derived then;
+ * table-topics drafts start empty), flips to `open` to accept votes, and `closed`
+ * to reveal results (PRD §8). Reopening preserves cast ballots.
  */
 export const voteSessions = pgTable('vote_sessions', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -38,14 +42,17 @@ export const voteSessions = pgTable('vote_sessions', {
 /**
  * A candidate on a ballot — a member (`userId`) OR a guest (`guestName`), like
  * every other participant in the app. Speech-category candidates are derived
- * from the meeting's speeches at open; table-topics candidates are added live by
- * the meeting manager.
+ * from the meeting's speeches when the draft is prepared; table-topics candidates
+ * are added live by the meeting manager. `excluded` strikes a candidate out
+ * (e.g. an over-time speaker) — the row and any cast votes are kept, but they are
+ * non-votable and never count as a winner.
  */
 export const voteCandidates = pgTable('vote_candidates', {
   id: uuid('id').defaultRandom().primaryKey(),
   sessionId: uuid('session_id').notNull().references(() => voteSessions.id, { onDelete: 'cascade' }),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   guestName: text('guest_name'),
+  excluded: boolean('excluded').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
