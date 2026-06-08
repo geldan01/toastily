@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Toastily theme — Toastmasters International palette.
+  Brand colors live as CSS variables so a club fork can re-skin via one file
+  (or, later, via DB-configured branding accents) without touching components.
+    maroon #772432 · navy #004165 · gold #F2DF74 · gray #A9B2B1
+*/
+:root {
+  --tm-maroon: #772432;
+  --tm-navy: #004165;
+  --tm-gold: #f2df74;
+  --tm-gray: #a9b2b1;
+
+  --radius: 0.625rem;
+
+  --background: #ffffff;
+  --foreground: #1a1416;
+
+  --card: #ffffff;
+  --card-foreground: #1a1416;
+  --popover: #ffffff;
+  --popover-foreground: #1a1416;
+
+  --primary: var(--tm-maroon);
+  --primary-foreground: #ffffff;
+
+  --secondary: var(--tm-navy);
+  --secondary-foreground: #ffffff;
+
+  --muted: #f4f2f3;
+  --muted-foreground: #6b5b60;
+
+  --accent: var(--tm-gold);
+  --accent-foreground: var(--tm-navy);
+
+  --destructive: #b3261e;
+  --destructive-foreground: #ffffff;
+
+  --border: #e7e2e4;
+  --input: #e7e2e4;
+  --ring: var(--tm-maroon);
+}
+
+.dark {
+  --background: #161013;
+  --foreground: #f5f1f2;
+
+  --card: #211a1d;
+  --card-foreground: #f5f1f2;
+  --popover: #211a1d;
+  --popover-foreground: #f5f1f2;
+
+  --primary: #a8485a;
+  --primary-foreground: #ffffff;
+
+  --secondary: #2e6f96;
+  --secondary-foreground: #ffffff;
+
+  --muted: #2a2226;
+  --muted-foreground: #b6a8ad;
+
+  --accent: var(--tm-gold);
+  --accent-foreground: #161013;
+
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+
+  --border: #34292e;
+  --input: #34292e;
+  --ring: #a8485a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-tm-maroon: var(--tm-maroon);
+  --color-tm-navy: var(--tm-navy);
+  --color-tm-gold: var(--tm-gold);
+  --color-tm-gray: var(--tm-gray);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}

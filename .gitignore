@@ -1,0 +1,34 @@
+# Nuxt
+.nuxt
+.output
+.nitro
+.cache
+dist
+
+# Local TMPDIR for the dev server (vite-node IPC socket — see `dev` script)
+.tmp
+
+# Dependencies
+node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / secrets (never commit — public repo)
+.env
+.env.*
+!.env.example
+
+# Test / tooling artifacts
+.playwright-mcp
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
