@@ -541,6 +541,13 @@ useHead(() => ({ title: theme.value || prettyDate.value }))
           </div>
         </div>
       </template>
+
+      <!-- Voting (PRD §8) -->
+      <MeetingVotingPanel
+        :date="meeting.date"
+        :meeting-id="meeting.id"
+        :members="members"
+      />
     </template>
   </div>
 </template>
