@@ -1,11 +1,13 @@
 <script setup lang="ts">
-// Inline panel for a meeting manager to assign a signup to any member or to a
-// named guest. Owns its own member/guest selection and emits the resolved
-// POST-body fragment on submit. Reused by both meeting roles and speech slots.
+// Inline panel for a meeting manager to assign a signup to any member, to a
+// checked-in guest (picked by name — no retyping, PRD §9), or to a manually-typed
+// guest. Owns its own selection and emits the resolved POST-body fragment on
+// submit. Reused by meeting roles, speech slots, and vote candidates.
 interface Member { id: string, name: string }
 
 const props = defineProps<{
   members: Member[]
+  guests?: { name: string }[]
   busy?: boolean
   idPrefix: string
 }>()
@@ -16,6 +18,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const GUEST = '__guest__'
+const CI = 'ci:' // checked-in guest option, value = `ci:<index>`
 const selection = ref('')
 const guestName = ref('')
 
@@ -24,7 +27,16 @@ const ready = computed(() => isGuest.value ? !!guestName.value.trim() : !!select
 
 function submit() {
   if (!ready.value) return
-  emit('assign', isGuest.value ? { guestName: guestName.value.trim() } : { userId: selection.value })
+  if (isGuest.value) {
+    emit('assign', { guestName: guestName.value.trim() })
+    return
+  }
+  if (selection.value.startsWith(CI)) {
+    const g = props.guests?.[Number(selection.value.slice(CI.length))]
+    if (g) emit('assign', { guestName: g.name })
+    return
+  }
+  emit('assign', { userId: selection.value })
 }
 </script>
 
@@ -50,6 +62,18 @@ function submit() {
             :value="m.id"
           >
             {{ m.name }}
+          </option>
+        </optgroup>
+        <optgroup
+          v-if="props.guests?.length"
+          :label="t('meetings.checkedInGuestsGroup')"
+        >
+          <option
+            v-for="(g, i) in props.guests"
+            :key="`ci-${i}`"
+            :value="`${CI}${i}`"
+          >
+            {{ g.name }}
           </option>
         </optgroup>
         <option :value="GUEST">

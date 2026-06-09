@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, FileText, MapPin, UserPlus, Vote, X } from '@lucide/vue'
+import { CalendarDays, FileText, MapPin, UserPlus, Users, Vote, X } from '@lucide/vue'
 
 interface Occupant { userId: string | null, name: string | null, isGuest: boolean }
 interface RoleRow { roleId: string, nameEn: string, nameFr: string, occupant: Occupant | null }
@@ -49,6 +49,36 @@ watch(canManage, (v) => {
 const members = computed(() => memberData.value?.members ?? [])
 
 const meeting = computed(() => data.value?.meeting ?? null)
+
+// Checked-in guests (PRD §9). Member-gated list: any member can view the current
+// meeting's guests. Doubles as the pick source for the assign panels below, so a
+// manager assigns a checked-in guest to a role/speech without retyping the name.
+interface Guest { id: string, name: string, email: string | null }
+const { data: checkinData, execute: loadCheckins } = await useFetch<{ guests: Guest[] }>(() => `/api/meetings/${date.value}/checkins`, {
+  key: () => `checkins-${date.value}`,
+  immediate: false,
+})
+watch([isMember, meeting], ([m, mt]) => {
+  if (m && mt && !checkinData.value) loadCheckins()
+}, { immediate: true })
+const checkedInGuests = computed(() => checkinData.value?.guests ?? [])
+
+// QR target for guests to self-check-in: the admin-set qr.target_url if present,
+// otherwise the dynamic /checkin resolver (PRD §9).
+const reqUrl = useRequestURL()
+const { setting } = useSettings()
+const checkinUrl = computed(() => setting('qr.target_url') || `${reqUrl.origin}${localePath('/checkin')}`)
+
+async function removeCheckin(id: string) {
+  busy.value = `checkin-${id}`
+  error.value = ''
+  try {
+    await $fetch('/api/meetings/checkin', { method: 'DELETE', body: { id } })
+    await loadCheckins()
+  }
+  catch (e) { error.value = errorMessage(e, t('auth.genericError')) }
+  finally { busy.value = '' }
+}
 const theme = computed(() => meeting.value ? localized(meeting.value, 'theme', locale.value) : '')
 const notes = computed(() => meeting.value ? localized(meeting.value, 'notes', locale.value) : '')
 const roleName = (r: RoleRow) => locale.value === 'fr' ? r.nameFr : r.nameEn
@@ -382,11 +412,89 @@ useHead(() => ({ title: theme.value || prettyDate.value }))
             v-if="assignFor === role.roleId"
             :id-prefix="`role-${role.roleId}`"
             :members="members"
+            :guests="checkedInGuests"
             :busy="busy === role.roleId"
             @assign="target => assignRole(role.roleId, target)"
           />
         </li>
       </ul>
+
+      <!-- Guests (check-in, PRD §9) -->
+      <h2 class="mt-8 flex items-center gap-2 text-xl font-semibold">
+        <Users class="size-5" />
+        {{ t('meetings.guestsTitle') }}
+      </h2>
+
+      <div class="mt-3 rounded-lg border border-border p-4">
+        <!-- Manager: QR to project so guests self-check-in -->
+        <div
+          v-if="canManage"
+          class="flex flex-wrap items-center gap-4 border-b border-border pb-4"
+        >
+          <QrCode :value="checkinUrl" />
+          <div class="min-w-48 flex-1 text-sm">
+            <p class="font-medium">
+              {{ t('meetings.projectQr') }}
+            </p>
+            <a
+              :href="checkinUrl"
+              target="_blank"
+              class="mt-1 inline-block break-all text-secondary hover:underline"
+            >{{ checkinUrl }}</a>
+          </div>
+        </div>
+
+        <!-- Member-visible guest list -->
+        <ul
+          v-if="checkedInGuests.length"
+          class="divide-y divide-border"
+          :class="canManage ? 'mt-1' : ''"
+        >
+          <li
+            v-for="g in checkedInGuests"
+            :key="g.id"
+            class="flex items-center justify-between gap-3 py-2.5"
+          >
+            <div>
+              <span class="font-medium">{{ g.name }}</span>
+              <span
+                v-if="g.email"
+                class="ml-2 text-sm text-muted-foreground"
+              >{{ g.email }}</span>
+            </div>
+            <Button
+              v-if="canManage"
+              size="sm"
+              variant="ghost"
+              class="text-muted-foreground hover:text-destructive"
+              :disabled="busy === `checkin-${g.id}`"
+              @click="removeCheckin(g.id)"
+            >
+              <X class="size-4" />
+            </Button>
+          </li>
+        </ul>
+        <p
+          v-else-if="isMember"
+          class="py-1 text-sm text-muted-foreground/70"
+        >
+          {{ t('meetings.noGuestsYet') }}
+        </p>
+
+        <!-- Add a guest on the spot (anyone) -->
+        <div
+          class="mt-3"
+          :class="checkedInGuests.length || canManage ? 'border-t border-border pt-3' : ''"
+        >
+          <p class="mb-2 text-sm text-muted-foreground">
+            {{ t('meetings.addGuestHint') }}
+          </p>
+          <GuestCheckInForm
+            :meeting-id="meeting.id"
+            @checked-in="loadCheckins()"
+          />
+        </div>
+      </div>
 
       <!-- Speeches -->
       <template v-if="data!.speeches.length">
@@ -543,6 +651,7 @@ useHead(() => ({ title: theme.value || prettyDate.value }))
                   v-if="assignFor === speechKey(s.slot, f)"
                   :id-prefix="speechKey(s.slot, f)"
                   :members="members"
+                  :guests="checkedInGuests"
                   :busy="busy === speechKey(s.slot, f)"
                   @assign="target => assignSpeech(s.slot, f, target)"
                 />

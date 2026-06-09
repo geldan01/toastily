@@ -29,7 +29,7 @@ interface CategoryVote {
 }
 type AssignTarget = { userId: string } | { guestName: string }
 
-const props = defineProps<{ category: CategoryVote, canManage: boolean, members: Member[], busy: string }>()
+const props = defineProps<{ category: CategoryVote, canManage: boolean, members: Member[], guests?: { name: string }[], busy: string }>()
 const emit = defineEmits<{
   vote: [sessionId: string, candidateId: string]
   add: [sessionId: string, target: AssignTarget]
@@ -180,6 +180,7 @@ function onAssign(target: AssignTarget) {
           v-if="addOpen"
           :id-prefix="`vote-${category.category}`"
           :members="members"
+          :guests="guests"
           :busy="busy === category.category"
           class="mt-2"
           @assign="onAssign"
