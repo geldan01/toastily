@@ -33,7 +33,22 @@ export default defineEventHandler(async (event) => {
 
   const db = useDrizzle()
   const [meeting] = await db.select().from(schema.meetings).where(eq(schema.meetings.date, date)).limit(1)
-  if (!meeting) return { meeting: null, lines: [] }
+  const [holiday] = await db.select().from(schema.calendarExceptions).where(eq(schema.calendarExceptions.date, date)).limit(1)
+  if (!meeting) return { meeting: null, holiday: holiday ?? null, lines: [] }
+
+  const meta = {
+    date: meeting.date,
+    meetingNumber: meeting.meetingNumber,
+    status: meeting.status,
+    themeEn: meeting.themeEn,
+    themeFr: meeting.themeFr,
+    location: meeting.location,
+    notesEn: meeting.notesEn,
+    notesFr: meeting.notesFr,
+  }
+
+  // A cancelled meeting keeps its header (banner client-side) but has no agenda.
+  if (meeting.status === 'cancelled') return { meeting: meta, holiday: holiday ?? null, lines: [] }
 
   // Resolve the template (the meeting's, else the default/first).
   let templateId = meeting.templateId
@@ -144,14 +159,5 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  return {
-    meeting: {
-      date: meeting.date,
-      meetingNumber: meeting.meetingNumber,
-      themeEn: meeting.themeEn,
-      themeFr: meeting.themeFr,
-      location: meeting.location,
-    },
-    lines,
-  }
+  return { meeting: meta, holiday: holiday ?? null, lines }
 })
