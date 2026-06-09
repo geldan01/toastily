@@ -142,6 +142,23 @@ export const speeches = pgTable('speeches', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, t => [unique('meeting_speech_slot_unique').on(t.meetingId, t.slot)])
 
+/**
+ * Guest check-ins for a meeting (PRD §9). A guest scans the meeting's QR and adds
+ * their own name (+ optional email) with no account, or a member adds them on the
+ * spot. `addedBy` is null for an anonymous self check-in, set when a logged-in
+ * member records the guest. Feeds the member-visible guest list and serves as a
+ * pick source so managers assign roles/speeches/vote candidates without retyping
+ * the name (the name is reused as a `guestName` everywhere participation is recorded).
+ */
+export const guestCheckins = pgTable('guest_checkins', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  meetingId: uuid('meeting_id').notNull().references(() => meetings.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  email: text('email'),
+  addedBy: uuid('added_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type MeetingRole = typeof meetingRoles.$inferSelect
 export type NewMeetingRole = typeof meetingRoles.$inferInsert
 export type AgendaTemplate = typeof agendaTemplates.$inferSelect
@@ -150,3 +167,5 @@ export type Meeting = typeof meetings.$inferSelect
 export type CalendarException = typeof calendarExceptions.$inferSelect
 export type MeetingRoleSignup = typeof meetingRoleSignups.$inferSelect
 export type Speech = typeof speeches.$inferSelect
+export type GuestCheckin = typeof guestCheckins.$inferSelect
+export type NewGuestCheckin = typeof guestCheckins.$inferInsert

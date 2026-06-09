@@ -33,6 +33,18 @@ watch(canManage, (v) => {
 }, { immediate: true })
 const members = computed(() => memberData.value?.members ?? [])
 
+// Checked-in guests (PRD §9) — a pick source so the SAA adds a guest as a vote
+// candidate without retyping their name. Member-gated, loaded for managers.
+interface Guest { id: string, name: string }
+const { data: checkinData, execute: loadCheckins } = await useFetch<{ guests: Guest[] }>(() => `/api/meetings/${date.value}/checkins`, {
+  key: () => `checkins-${date.value}`,
+  immediate: false,
+})
+watch(canManage, (v) => {
+  if (v && !checkinData.value) loadCheckins()
+}, { immediate: true })
+const checkedInGuests = computed(() => checkinData.value?.guests ?? [])
+
 const prettyDate = computed(() => {
   const d = new Date(`${date.value}T00:00:00`)
   return new Intl.DateTimeFormat(locale.value === 'fr' ? 'fr-CA' : 'en-CA', {
@@ -87,6 +99,7 @@ useHead(() => ({ title: `${t('voting.title')} — ${theme.value || prettyDate.va
           :date="meeting.date"
           :meeting-id="meeting.id"
           :members="members"
+          :guests="checkedInGuests"
         />
       </div>
     </template>

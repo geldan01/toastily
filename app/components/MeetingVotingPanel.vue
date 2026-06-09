@@ -35,7 +35,7 @@ const SPEECH_CATEGORIES = ['best_speaker', 'best_evaluator']
 const TABLE_TOPICS_CATEGORIES = ['best_table_topics_speaker', 'best_table_topics_evaluator']
 const ALL_CATEGORIES = [...SPEECH_CATEGORIES, ...TABLE_TOPICS_CATEGORIES]
 
-const props = defineProps<{ date: string, meetingId: string, members: Member[] }>()
+const props = defineProps<{ date: string, meetingId: string, members: Member[], guests?: { name: string }[] }>()
 
 const { t } = useI18n()
 
@@ -179,6 +179,7 @@ function statusLabel(status: GroupStatus) {
           :category="c"
           :can-manage="canManage"
           :members="props.members"
+          :guests="props.guests"
           :busy="busy"
           @vote="(sid, cid) => vote(sid, cid, `${c.category}:${cid}`)"
           @add="(sid, target) => addCandidate(sid, c.category, target)"
@@ -248,6 +249,7 @@ function statusLabel(status: GroupStatus) {
               :category="c"
               :can-manage="canManage"
               :members="props.members"
+              :guests="props.guests"
               :busy="busy"
               @vote="(sid, cid) => vote(sid, cid, `${c.category}:${cid}`)"
               @add="(sid, target) => addCandidate(sid, c.category, target)"
