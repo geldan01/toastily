@@ -6,11 +6,14 @@ interface HolidayRow { id: string, date: string, labelEn: string, labelFr: strin
 
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
+const { user } = useUserSession()
+
+const isMember = computed(() => hasMinRole(user.value?.status, 'member'))
 
 const { data } = await useFetch<{ meetings: MeetingRow[], holidays: HolidayRow[] }>('/api/meetings', { key: 'meetings-list' })
 
 const todayIso = new Date().toISOString().slice(0, 10)
-const upcoming = computed(() => (data.value?.meetings ?? []).filter(m => m.date >= todayIso).slice().reverse())
+const upcoming = computed(() => (data.value?.meetings ?? []).filter(m => m.date >= todayIso).slice().reverse().slice(0, 5))
 const past = computed(() => (data.value?.meetings ?? []).filter(m => m.date < todayIso))
 const holidays = computed(() => (data.value?.holidays ?? []).filter(h => h.date >= todayIso))
 
@@ -80,6 +83,20 @@ useHead(() => ({ title: t('meetings.title') }))
           </NuxtLink>
         </li>
       </ul>
+    </section>
+
+    <!-- Member-only signup matrix: roles × next 5 meetings -->
+    <section
+      v-if="isMember"
+      class="mt-8"
+    >
+      <h2 class="text-xl font-semibold">
+        {{ t('meetings.signupMatrix') }}
+      </h2>
+      <p class="mt-1 text-sm text-muted-foreground">
+        {{ t('meetings.signupMatrixHint') }}
+      </p>
+      <MeetingSignupMatrix class="mt-3" />
     </section>
 
     <section

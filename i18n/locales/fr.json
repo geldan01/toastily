@@ -325,7 +325,10 @@
     "timeWindow": "Durée",
     "minShort": "min",
     "minTime": "Minutes minimum",
-    "maxTime": "Minutes maximum"
+    "maxTime": "Minutes maximum",
+    "signupMatrix": "Tableau d'inscription",
+    "signupMatrixHint": "Les prochaines réunions en un coup d'œil — touchez une case pour vous inscrire, assigner ou vous retirer.",
+    "swipeHint": "Faites glisser pour voir plus de dates."
   },
   "voting": {
     "title": "Vote",
