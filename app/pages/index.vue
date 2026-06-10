@@ -23,14 +23,45 @@ const latestNews = computed(() => allNews.value.slice(0, 3))
 
 const clubName = computed(() => setting('club.name', 'Toastily'))
 
+// Rotating hero backgrounds from the landing.hero_images setting (comma-
+// separated URLs). Crossfades on a timer; static when the visitor prefers
+// reduced motion or only one image is configured.
+const heroImages = computed(() =>
+  setting('landing.hero_images', '').split(',').map(s => s.trim()).filter(Boolean),
+)
+const heroIndex = ref(0)
+let heroTimer: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  if (heroImages.value.length > 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    heroTimer = setInterval(() => {
+      heroIndex.value = (heroIndex.value + 1) % heroImages.value.length
+    }, 7000)
+  }
+})
+onUnmounted(() => clearInterval(heroTimer))
+
 useHead(() => ({ title: clubName.value }))
 </script>
 
 <template>
   <div>
-    <!-- Hero -->
-    <section class="bg-primary text-primary-foreground">
-      <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-20 md:py-28">
+    <!-- Hero (rotating background images behind a gradient for text contrast) -->
+    <section class="relative overflow-hidden bg-primary text-primary-foreground">
+      <img
+        v-for="(src, i) in heroImages"
+        :key="src"
+        :src="src"
+        alt=""
+        aria-hidden="true"
+        :loading="i === 0 ? 'eager' : 'lazy'"
+        class="absolute inset-0 size-full object-cover transition-opacity duration-1000"
+        :class="i === heroIndex ? 'opacity-100' : 'opacity-0'"
+      >
+      <div
+        v-if="heroImages.length"
+        class="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary/30"
+      />
+      <div class="relative mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-20 md:py-28">
         <h1 class="max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
           {{ hero ? localized(hero, 'title', locale) : clubName }}
         </h1>

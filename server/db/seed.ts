@@ -27,9 +27,14 @@ const settingsSeed: { key: string, value: string, isAdminOnly?: boolean }[] = [
   { key: 'meeting.day_en', value: 'Mondays' },
   { key: 'meeting.day_fr', value: 'Les lundis' },
   { key: 'meeting.time', value: '18:00 – 20:00' },
+  // Machine-readable start time (HH:MM) used to compute agenda line clock times.
+  { key: 'meeting.start_time', value: '18:00' },
   { key: 'meeting.address', value: '123 Example Street, Suite 100, Your City' },
   { key: 'meeting.location_note_en', value: 'A short walk from the downtown transit station.' },
   { key: 'meeting.location_note_fr', value: 'À quelques pas de la station de transport au centre-ville.' },
+  // Rotating landing-page hero backgrounds: comma-separated image URLs. Ships
+  // with generic bundled photos; clubs point these at their own images.
+  { key: 'landing.hero_images', value: '/images/hero/speaker.jpg,/images/hero/meeting.jpg,/images/hero/networking.jpg' },
   { key: 'default.locale', value: 'en' },
   { key: 'speeches.max_per_meeting', value: '3' },
   // Speech timing (PRD §6.3). Window default 5–7 min; the agenda allots each
@@ -42,9 +47,16 @@ const settingsSeed: { key: string, value: string, isAdminOnly?: boolean }[] = [
   { key: 'meeting.frequency_weeks', value: '1' },
   { key: 'meeting.number_start', value: '1' },
   { key: 'qr.target_url', value: '' },
+  // Official Toastmasters International palette (Brand Manual): True Maroon
+  // PMS 188, Loyal Blue PMS 302, Happy Yellow PMS 127, Cool Gray PMS 442.
   { key: 'branding.maroon', value: '#772432' },
   { key: 'branding.navy', value: '#004165' },
   { key: 'branding.gold', value: '#F2DF74' },
+  { key: 'branding.gray', value: '#A9B2B1' },
+  // Official TI logo shown on the agenda header (screen + print). The file is
+  // NOT bundled — clubs download it from the TI Brand Portal (trademarked) and
+  // place it at this URL or point this setting elsewhere.
+  { key: 'branding.logo_url', value: '/images/toastmasters-logo.png' },
   // Configurable intro/outro copy for notification emails (PRD §10).
   { key: 'notify.intro_en', value: 'Here are the roles still open for our upcoming meeting. Please consider signing up!' },
   { key: 'notify.intro_fr', value: 'Voici les rôles encore vacants pour notre prochaine réunion. Pensez à vous inscrire!' },
@@ -142,16 +154,17 @@ const newsSeed = [
  * default; admins can move it to any role.
  */
 const meetingRolesSeed = [
-  { nameEn: 'Chair', nameFr: 'Président' },
-  { nameEn: 'Toastmaster', nameFr: 'Animateur', grantsMeetingAuthority: true },
-  { nameEn: 'General Evaluator', nameFr: 'Évaluateur général' },
-  { nameEn: 'Table Topics Master', nameFr: 'Maître des sujets impromptus' },
-  { nameEn: 'Secretary', nameFr: 'Secrétaire' },
-  { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier', grantsMeetingAuthority: true },
+  { nameEn: 'Chair', nameFr: 'Président', isMeetingOfficer: true },
+  { nameEn: 'Toastmaster', nameFr: 'Animateur', grantsMeetingAuthority: true, isMeetingOfficer: true },
+  { nameEn: 'General Evaluator', nameFr: 'Évaluateur général', isMeetingOfficer: true },
+  { nameEn: 'Table Topics Master', nameFr: 'Maître des sujets impromptus', isMeetingOfficer: true },
+  { nameEn: 'Secretary', nameFr: 'Secrétaire', isMeetingOfficer: true },
+  { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier', grantsMeetingAuthority: true, isMeetingOfficer: true },
   { nameEn: 'Toast', nameFr: 'Toast' },
   { nameEn: 'Moment of Reflection', nameFr: 'Moment de réflexion' },
   { nameEn: 'Moment of Humour', nameFr: 'Moment d\'humour' },
-  { nameEn: 'Grammarian', nameFr: 'Grammairien', countsAsEvaluator: true },
+  { nameEn: 'Grammarian', nameFr: 'Grammairien', countsAsEvaluator: true, isMeetingOfficer: true },
+  { nameEn: 'Timer', nameFr: 'Chronométreur', isMeetingOfficer: true },
 ]
 
 /**
@@ -163,20 +176,26 @@ const agendaTemplateSeed = {
   nameEn: 'Standard Meeting',
   nameFr: 'Réunion standard',
   items: [
-    { labelEn: 'Call to Order', labelFr: 'Ouverture de la séance', duration: 1, role: 'Sergeant-at-Arms' },
-    { labelEn: 'Chair\'s Welcome', labelFr: 'Mot de bienvenue du président', duration: 3, role: 'Chair' },
-    { labelEn: 'Toast', labelFr: 'Toast', duration: 2, role: 'Toast' },
-    { labelEn: 'Moment of Reflection', labelFr: 'Moment de réflexion', duration: 2, role: 'Moment of Reflection' },
-    { labelEn: 'Moment of Humour', labelFr: 'Moment d\'humour', duration: 3, role: 'Moment of Humour' },
-    { labelEn: 'Toastmaster Takes Over', labelFr: 'Prise en charge par l\'animateur', duration: 2, role: 'Toastmaster' },
-    { labelEn: 'Prepared Speeches', labelFr: 'Discours préparés', type: 'speeches' as const },
-    { labelEn: 'Break', labelFr: 'Pause', duration: 10 },
-    { labelEn: 'Table Topics', labelFr: 'Sujets impromptus', duration: 15, role: 'Table Topics Master' },
-    { labelEn: 'Evaluation Session', labelFr: 'Séance d\'évaluation', duration: 2, role: 'General Evaluator' },
-    { labelEn: 'Speech Evaluations', labelFr: 'Évaluations des discours', type: 'evaluations' as const },
-    { labelEn: 'Grammarian\'s Report', labelFr: 'Rapport du grammairien', duration: 3, role: 'Grammarian' },
-    { labelEn: 'Voting & Awards', labelFr: 'Vote et remises de prix', duration: 5, role: 'Sergeant-at-Arms' },
-    { labelEn: 'Closing Remarks & Adjournment', labelFr: 'Mot de la fin et clôture', duration: 2, role: 'Chair' },
+    // Opening administrative segment.
+    { labelEn: 'Call to Order', labelFr: 'Ouverture de la séance', duration: 1, role: 'Sergeant-at-Arms', section: 'administrative' as const },
+    { labelEn: 'Chair\'s Welcome', labelFr: 'Mot de bienvenue du président', duration: 3, role: 'Chair', section: 'administrative' as const },
+    { labelEn: 'Toast', labelFr: 'Toast', duration: 2, role: 'Toast', section: 'administrative' as const },
+    { labelEn: 'Moment of Reflection', labelFr: 'Moment de réflexion', duration: 2, role: 'Moment of Reflection', section: 'administrative' as const },
+    { labelEn: 'Moment of Humour', labelFr: 'Moment d\'humour', duration: 3, role: 'Moment of Humour', section: 'administrative' as const },
+    { labelEn: 'Toastmaster Takes Over', labelFr: 'Prise en charge par l\'animateur', duration: 2, role: 'Toastmaster', section: 'administrative' as const },
+    // Educative session: prepared speeches, table topics, evaluations.
+    { labelEn: 'Prepared Speeches', labelFr: 'Discours préparés', type: 'speeches' as const, section: 'speeches' as const },
+    { labelEn: 'Break', labelFr: 'Pause', duration: 10, section: 'table_topics' as const },
+    { labelEn: 'Table Topics', labelFr: 'Sujets impromptus', duration: 15, role: 'Table Topics Master', section: 'table_topics' as const },
+    { labelEn: 'Evaluation Session', labelFr: 'Séance d\'évaluation', duration: 2, role: 'General Evaluator', section: 'evaluations' as const },
+    { labelEn: 'Speech Evaluations', labelFr: 'Évaluations des discours', type: 'evaluations' as const, section: 'evaluations' as const },
+    { labelEn: 'Grammarian\'s Report', labelFr: 'Rapport du grammairien', duration: 3, role: 'Grammarian', section: 'evaluations' as const },
+    { labelEn: 'General Evaluation', labelFr: 'Évaluation générale', duration: 5, role: 'General Evaluator', section: 'evaluations' as const },
+    { labelEn: 'Awards Ceremony', labelFr: 'Remise des prix', duration: 2, role: 'Toastmaster', section: 'evaluations' as const },
+    // Closing administrative segment — the Chair's conclusion.
+    { labelEn: 'Guests Feedback', labelFr: 'Commentaires des invités', duration: 5, role: 'Chair', section: 'administrative' as const },
+    { labelEn: 'Last Minute Announcements', labelFr: 'Annonces de dernière minute', duration: 2, role: 'Chair', section: 'administrative' as const },
+    { labelEn: 'Closing Remarks & Adjournment', labelFr: 'Mot de la fin et clôture', duration: 2, role: 'Chair', section: 'administrative' as const },
   ],
 }
 
@@ -283,6 +302,7 @@ async function seedMeetingRolesAndAgenda() {
       templateId: template!.id,
       sortOrder: i,
       itemType: (item.type ?? 'item') as 'item' | 'speeches' | 'evaluations',
+      section: item.section,
       labelEn: item.labelEn,
       labelFr: item.labelFr,
       durationMinutes: item.duration ?? null,
