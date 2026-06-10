@@ -325,7 +325,10 @@
     "timeWindow": "Time",
     "minShort": "min",
     "minTime": "Minimum minutes",
-    "maxTime": "Maximum minutes"
+    "maxTime": "Maximum minutes",
+    "signupMatrix": "Sign-up board",
+    "signupMatrixHint": "The next meetings at a glance — tap a cell to sign up, assign, or release.",
+    "swipeHint": "Swipe sideways to see more dates."
   },
   "voting": {
     "title": "Voting",
