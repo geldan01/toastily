@@ -9,6 +9,11 @@ const { loggedIn, user, clear } = useUserSession()
 const open = ref(false)
 const clubName = computed(() => setting('club.name', 'Toastily'))
 
+// Site logo: the club's configured branding.logo_url (the official Toastmasters
+// logo), falling back to a club-initial monogram when unset or missing.
+const logoUrl = computed(() => setting('branding.logo_url', ''))
+const logoFailed = ref(false)
+
 // Functional nav for this phase. Meetings / Our Club / Contact arrive in
 // later phases (PRD §5.2) and are added here as their pages ship.
 const links = computed(() => [
@@ -38,7 +43,17 @@ async function logout() {
         :to="localePath('/')"
         class="flex items-center gap-2 font-semibold text-primary"
       >
-        <span class="grid size-8 place-items-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
+        <img
+          v-if="logoUrl && !logoFailed"
+          :src="logoUrl"
+          alt=""
+          class="h-10 w-auto"
+          @error="logoFailed = true"
+        >
+        <span
+          v-else
+          class="grid size-8 place-items-center rounded-md bg-primary text-sm font-bold text-primary-foreground"
+        >
           {{ clubName.charAt(0) }}
         </span>
         <span class="truncate text-base">{{ clubName }}</span>

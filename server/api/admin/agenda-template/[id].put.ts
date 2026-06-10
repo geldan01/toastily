@@ -3,9 +3,12 @@ import { schema, useDrizzle } from '../../../db/client'
 
 type ItemType = 'item' | 'speeches' | 'evaluations'
 const BLOCK_TYPES: ItemType[] = ['speeches', 'evaluations']
+type Section = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
+const SECTIONS: Section[] = ['administrative', 'speeches', 'table_topics', 'evaluations']
 
 interface ItemInput {
   itemType?: ItemType
+  section?: Section
   labelEn?: string
   labelFr?: string
   durationMinutes?: number | string | null
@@ -53,6 +56,12 @@ export default defineEventHandler(async (event) => {
           templateId: id,
           sortOrder: i,
           itemType,
+          // The speeches/evaluations blocks always live in their own section.
+          section: itemType === 'speeches'
+            ? 'speeches' as const
+            : itemType === 'evaluations'
+              ? 'evaluations' as const
+              : (SECTIONS.includes(it.section as Section) ? it.section as Section : 'administrative' as const),
           labelEn: String(it.labelEn ?? '').trim(),
           labelFr: String(it.labelFr ?? '').trim(),
           durationMinutes: Number.isFinite(duration) ? duration : null,

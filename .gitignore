@@ -32,3 +32,10 @@ pnpm-debug.log*
 .idea
 .vscode/*
 !.vscode/extensions.json
+
+# Trademarked Toastmasters International logo (and the favicons derived from
+# it) — each club downloads it from the TI Brand Portal; never commit these to
+# this public repo.
+public/images/toastmasters-logo.png
+public/favicon.png
+public/apple-touch-icon.png

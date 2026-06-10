@@ -22,6 +22,10 @@ export const meetingRoles = pgTable('meeting_roles', {
   // alongside the speech evaluators (PRD §8: "one of the evaluators or the
   // Grammarian"). Data-driven so we never match the Grammarian by name.
   countsAsEvaluator: boolean('counts_as_evaluator').notNull().default(false),
+  // Whether this role is a meeting officer, listed in the agenda's Meeting
+  // Officers block so the chair can introduce them at the start of the meeting.
+  // Data-driven so officer-ness is never hard-coded against a role name.
+  isMeetingOfficer: boolean('is_meeting_officer').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -51,11 +55,21 @@ export const agendaTemplates = pgTable('agenda_templates', {
  */
 export const agendaItemType = pgEnum('agenda_item_type', ['item', 'speeches', 'evaluations'])
 
+/**
+ * The agenda is rendered in four sections: an administrative segment (which may
+ * appear both at the start and the end of the meeting) and the educative
+ * session's three parts — prepared speeches, table topics, evaluations. Each
+ * template item carries its section; the agenda view emits a heading whenever
+ * the section changes between consecutive items.
+ */
+export const agendaSection = pgEnum('agenda_section', ['administrative', 'speeches', 'table_topics', 'evaluations'])
+
 export const agendaTemplateItems = pgTable('agenda_template_items', {
   id: uuid('id').defaultRandom().primaryKey(),
   templateId: uuid('template_id').notNull().references(() => agendaTemplates.id, { onDelete: 'cascade' }),
   sortOrder: integer('sort_order').notNull().default(0),
   itemType: agendaItemType('item_type').notNull().default('item'),
+  section: agendaSection('section').notNull().default('administrative'),
   labelEn: text('label_en').notNull(),
   labelFr: text('label_fr').notNull(),
   durationMinutes: integer('duration_minutes'),

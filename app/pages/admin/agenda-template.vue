@@ -6,8 +6,17 @@ definePageMeta({ middleware: 'admin' })
 const { t } = useI18n()
 
 type ItemType = 'item' | 'speeches' | 'evaluations'
+type Section = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
+const SECTIONS: Section[] = ['administrative', 'speeches', 'table_topics', 'evaluations']
+const SECTION_KEY: Record<Section, string> = {
+  administrative: 'agenda.sectionAdministrative',
+  speeches: 'agenda.sectionSpeeches',
+  table_topics: 'agenda.sectionTableTopics',
+  evaluations: 'agenda.sectionEvaluations',
+}
 interface Item {
   itemType: ItemType
+  section: Section
   labelEn: string
   labelFr: string
   durationMinutes: number | null
@@ -48,13 +57,13 @@ function move(index: number, dir: -1 | 1) {
 }
 
 function addItem() {
-  items.value.push({ itemType: 'item', labelEn: '', labelFr: '', durationMinutes: null, meetingRoleId: null })
+  items.value.push({ itemType: 'item', section: 'administrative', labelEn: '', labelFr: '', durationMinutes: null, meetingRoleId: null })
 }
 function addSpeeches() {
-  items.value.push({ itemType: 'speeches', labelEn: 'Prepared Speeches', labelFr: 'Discours préparés', durationMinutes: null, meetingRoleId: null })
+  items.value.push({ itemType: 'speeches', section: 'speeches', labelEn: 'Prepared Speeches', labelFr: 'Discours préparés', durationMinutes: null, meetingRoleId: null })
 }
 function addEvaluations() {
-  items.value.push({ itemType: 'evaluations', labelEn: 'Speech Evaluations', labelFr: 'Évaluations des discours', durationMinutes: null, meetingRoleId: null })
+  items.value.push({ itemType: 'evaluations', section: 'evaluations', labelEn: 'Speech Evaluations', labelFr: 'Évaluations des discours', durationMinutes: null, meetingRoleId: null })
 }
 const hasSpeeches = computed(() => items.value.some(i => i.itemType === 'speeches'))
 const hasEvaluations = computed(() => items.value.some(i => i.itemType === 'evaluations'))
@@ -219,6 +228,24 @@ useHead(() => ({ title: t('admin.agenda.title') }))
                     type="number"
                     min="0"
                   />
+                </div>
+                <div class="space-y-1.5">
+                  <Label :for="`section-${index}`">{{ t('admin.agenda.section') }}</Label>
+                  <!-- The speeches/evaluations blocks define their own section. -->
+                  <select
+                    :id="`section-${index}`"
+                    v-model="item.section"
+                    :disabled="isBlock(item)"
+                    class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60"
+                  >
+                    <option
+                      v-for="s in SECTIONS"
+                      :key="s"
+                      :value="s"
+                    >
+                      {{ t(SECTION_KEY[s]) }}
+                    </option>
+                  </select>
                 </div>
                 <div
                   v-if="item.itemType === 'item'"

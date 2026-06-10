@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
   if (body?.descriptionFr !== undefined) patch.descriptionFr = body.descriptionFr ? String(body.descriptionFr) : null
   if (body?.active !== undefined) patch.active = Boolean(body.active)
   if (body?.grantsMeetingAuthority !== undefined) patch.grantsMeetingAuthority = Boolean(body.grantsMeetingAuthority)
+  if (body?.isMeetingOfficer !== undefined) patch.isMeetingOfficer = Boolean(body.isMeetingOfficer)
 
   if (Object.keys(patch).length === 0) {
     throw createError({ statusCode: 400, statusMessage: 'No fields to update.' })

@@ -15,12 +15,15 @@ const identityFields = [
   'club.area',
   'club.division',
   'club.district',
+  'landing.hero_images',
+  'branding.logo_url',
 ] as const
 
 const meetingFields = [
   'meeting.day_en',
   'meeting.day_fr',
   'meeting.time',
+  'meeting.start_time',
   'meeting.address',
   'meeting.location_note_en',
   'meeting.location_note_fr',

@@ -11,6 +11,17 @@ export default defineNuxtConfig({
   ],
   devtools: { enabled: true },
 
+  // Favicon files are generated from the club's Toastmasters logo and live in
+  // public/ (gitignored alongside it — trademarked, supplied per deployment).
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
+    },
+  },
+
   css: ['~/assets/css/tailwind.css'],
 
   // Club-agnostic & secret values come from env vars (Coolify) — never committed.

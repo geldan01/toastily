@@ -13,6 +13,7 @@ interface Role {
   descriptionFr: string | null
   active: boolean
   grantsMeetingAuthority: boolean
+  isMeetingOfficer: boolean
   sortOrder: number
 }
 
@@ -46,7 +47,7 @@ async function saveAll() {
     for (const r of roles.value) {
       await $fetch(`/api/admin/meeting-roles/${r.id}`, {
         method: 'PATCH',
-        body: { nameEn: r.nameEn, nameFr: r.nameFr, descriptionEn: r.descriptionEn, descriptionFr: r.descriptionFr, active: r.active, grantsMeetingAuthority: r.grantsMeetingAuthority },
+        body: { nameEn: r.nameEn, nameFr: r.nameFr, descriptionEn: r.descriptionEn, descriptionFr: r.descriptionFr, active: r.active, grantsMeetingAuthority: r.grantsMeetingAuthority, isMeetingOfficer: r.isMeetingOfficer },
       })
     }
     flash()
@@ -182,6 +183,18 @@ useHead(() => ({ title: t('admin.roles.title') }))
                   :for="`authority-${role.id}`"
                   class="font-normal"
                 >{{ t('admin.roles.authority') }}</Label>
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  :id="`officer-${role.id}`"
+                  v-model="role.isMeetingOfficer"
+                  type="checkbox"
+                  class="size-4 rounded border-input accent-primary"
+                >
+                <Label
+                  :for="`officer-${role.id}`"
+                  class="font-normal"
+                >{{ t('admin.roles.officer') }}</Label>
               </div>
             </div>
           </div>
