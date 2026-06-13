@@ -5,7 +5,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 
-process.loadEnvFile?.()
+try { process.loadEnvFile?.() } catch { /* no .env in production — vars injected by host */ }
 
 const url = process.env.DATABASE_URL ?? process.env.NUXT_DATABASE_URL
 if (!url) {
