@@ -39,7 +39,7 @@ COPY package.json ./
 
 EXPOSE 3000
 
-# /branded-public may be bind-mounted by the host with per-deployment assets
-# (favicon.png, apple-touch-icon.png, images/toastmasters-logo.png) that are
-# gitignored because they contain trademarked Toastmasters branding.
-CMD ["sh", "-c", "cp -rT /branded-public/ .output/public/ 2>/dev/null || true && node server/db/migrate.mjs && node .output/server/index.mjs"]
+# /branded-public is bind-mounted by the host with per-deployment assets
+# (favicon.png, apple-touch-icon.png, images/toastmasters-logo.png).
+# server/middleware/branded-assets.ts serves them at request time.
+CMD ["sh", "-c", "node server/db/migrate.mjs && node .output/server/index.mjs"]
