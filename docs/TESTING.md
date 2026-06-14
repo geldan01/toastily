@@ -48,7 +48,9 @@ Run a single test: `pnpm test:unit roles` (Vitest filter) or
   `TEST_DATABASE_URL`, or derived from `DATABASE_URL` by appending `_test` to the
   db name, or the compose default. `pnpm test:db:prepare`
   ([tests/setup/prepare-test-db.ts](../tests/setup/prepare-test-db.ts))
-  drops + recreates it every run for a clean slate.
+  drops + recreates it every run for a clean slate, then migrates it with the
+  **real production runner** ([server/db/migrate.mjs](../server/db/migrate.mjs)) —
+  so every test run is also a regression check that a fresh migration apply works.
 - **Dedicated port.** The test server runs on **3100**, so it never reuses a dev
   server already running on 3000 (which points at the dev DB).
 - **Per-role accounts + fixtures.** [tests/setup/global-setup.ts](../tests/setup/global-setup.ts)
@@ -101,14 +103,14 @@ Run a single test: `pnpm test:unit roles` (Vitest filter) or
 | Settings admin + public split (§13) | — | 🔲 admin-only vs public endpoints | 🔲 |
 | Participation tracking (§11) | — | 🔲 (when built) | 🔲 |
 
-### Known issue surfaced while building this suite
+### Fresh-migration apply (fixed — #22)
 
-A **fresh, all-at-once migration apply fails**: migration `0003` adds the enum
+A fresh, all-at-once migration apply once failed: migration `0003` adds the enum
 value `agenda_item_type.evaluations` and `0012` uses it, which Postgres forbids in
-a single transaction (`unsafe use of new value`). Both `drizzle-kit migrate` and
-the drizzle-orm migrator batch migrations into one transaction, so a brand-new DB
-(`docker compose up` / a new contributor / CI) can't migrate. The dev DB only
-works because it was migrated incrementally over time.
-`prepare-test-db.ts` works around it by applying each statement with autocommit;
-the underlying migration bug is tracked in
-[issue #22](https://github.com/geldan01/toastily/issues/22).
+a single transaction (`unsafe use of new value`) — and both `drizzle-kit migrate`
+and the drizzle-orm migrator batch all migrations into one transaction. Fixed in
+[#22] by replacing the runner ([server/db/migrate.mjs](../server/db/migrate.mjs),
+also wired to `pnpm db:migrate`) with one that applies **each migration in its own
+committed transaction** (so 0003 commits before 0012 reads it), with bookkeeping
+byte-compatible with drizzle's. A CI job (`fresh-migration`) migrates a brand-new
+Postgres from zero on every push to guard against regressions.
