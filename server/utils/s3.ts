@@ -104,6 +104,13 @@ export function useS3Client(cfg: S3Config = s3Config()): S3Client {
       region: cfg.region,
       forcePathStyle: cfg.forcePathStyle,
       credentials: { accessKeyId: cfg.accessKey, secretAccessKey: cfg.secretKey },
+      // @aws-sdk/client-s3 ≥ 3.729 sends request checksums (CRC32) by default,
+      // which Cloudflare R2 — and other S3-compatible backends like MinIO/B2 —
+      // reject, failing every PutObject. Only compute checksums when the API
+      // actually requires them (Cloudflare's recommended JS-SDK config). Safe
+      // for AWS S3 too, so it keeps the client backend-agnostic.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
     })
   }
   return client
