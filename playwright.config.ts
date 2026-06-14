@@ -58,6 +58,10 @@ export default defineConfig({
       SITE_URL: BASE_URL,
       PORT: TEST_PORT,
       NUXT_PORT: TEST_PORT,
+      // Keep object storage unconfigured in tests (dotenv won't clobber an
+      // already-set var) so the upload route's gating is deterministic
+      // regardless of a developer's local .env — see uploads-api.spec.ts.
+      S3_ENDPOINT: '',
     },
   },
 })

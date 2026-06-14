@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, FileText, ListChecks, Mail, Settings, Users, UserSquare } from '@lucide/vue'
+import { CalendarDays, FileText, ImageUp, ListChecks, Mail, Settings, Users, UserSquare } from '@lucide/vue'
 
 definePageMeta({ middleware: 'officer' })
 
@@ -69,6 +69,14 @@ const tools = computed(() => [
     to: localePath('/admin/settings'),
     title: t('admin.settings'),
     desc: t('executive.tools.settings'),
+    show: isAdmin.value,
+  },
+  {
+    key: 'uploads',
+    icon: ImageUp,
+    to: localePath('/admin/uploads'),
+    title: t('admin.uploads.title'),
+    desc: t('executive.tools.uploads'),
     show: isAdmin.value,
   },
 ].filter(tool => tool.show))

@@ -34,6 +34,25 @@ export default defineNuxtConfig({
     session: {
       maxAge: 60 * 60 * 24 * 7, // 1 week
     },
+    // S3-compatible object storage for uploaded images (issue #10, PRD §2/§15).
+    // Server-only secrets — injected by Coolify, never committed. Backend-agnostic
+    // (MinIO on Coolify, Cloudflare R2, Backblaze B2, AWS S3): only these vars
+    // change. Empty endpoint ⇒ uploads disabled (route returns 503). When
+    // `publicBaseUrl` is set the bucket is served directly; otherwise images are
+    // proxied through Nitro at /api/uploads/<key>.
+    s3: {
+      endpoint: process.env.S3_ENDPOINT || '',
+      region: process.env.S3_REGION || 'us-east-1',
+      bucket: process.env.S3_BUCKET || '',
+      accessKey: process.env.S3_ACCESS_KEY || '',
+      secretKey: process.env.S3_SECRET_KEY || '',
+      // MinIO and most self-hosted servers need path-style addressing.
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
+      // Optional public base URL of the bucket; omit to proxy via Nitro.
+      publicBaseUrl: process.env.S3_PUBLIC_BASE_URL || '',
+      // Max upload size in bytes (default 5 MB).
+      maxBytes: Number(process.env.S3_MAX_BYTES) || 5 * 1024 * 1024,
+    },
     public: {
       siteUrl: process.env.SITE_URL || '', // NUXT_PUBLIC_SITE_URL
     },
