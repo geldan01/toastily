@@ -104,6 +104,8 @@
     "saved": "Paramètres enregistrés.",
     "sectionIdentity": "Identité du club",
     "sectionMeeting": "Détails de la réunion",
+    "sectionSpeech": "Durée des discours",
+    "sectionQr": "Enregistrement des invités (QR)",
     "sectionEmail": "Envoi de courriels (Resend)",
     "f": {
       "name": "Nom du club",
@@ -124,8 +126,24 @@
       "address": "Adresse",
       "location_note_en": "Note de lieu (EN)",
       "location_note_fr": "Note de lieu (FR)",
+      "frequency_weeks": "Fréquence des réunions (semaines)",
+      "number_start": "Numéro de la première réunion",
+      "default_min_minutes": "Durée minimale par défaut d'un discours (minutes)",
+      "default_max_minutes": "Durée maximale par défaut d'un discours (minutes)",
+      "agenda_buffer_minutes": "Marge à l'ordre du jour par discours (minutes)",
+      "target_url": "URL cible du code QR d'enregistrement",
       "api_key": "Clé d'API Resend",
       "from_address": "Adresse d'expéditeur (De)"
+    },
+    "h": {
+      "frequency_weeks": "Nombre de semaines entre les réunions, utilisé pour générer l'année (1 = chaque semaine).",
+      "number_start": "Les réunions sont numérotées de façon contiguë à partir de cette valeur, par ordre de date.",
+      "default_min_minutes": "Initialise la fenêtre de durée des nouveaux discours; la norme est 5.",
+      "default_max_minutes": "Initialise la fenêtre de durée des nouveaux discours; la norme est 7. Doit être ≥ au minimum.",
+      "agenda_buffer_minutes": "Ajoutée au maximum de chaque discours pour le temps alloué à l'ordre du jour (transitions et applaudissements).",
+      "target_url": "Destination du code QR d'enregistrement des invités. Laisser vide pour utiliser la page /checkin intégrée de ce site.",
+      "api_key": "Clé secrète de votre tableau de bord Resend. Requise pour envoyer les courriels d'adhésion, de réinitialisation et de notification.",
+      "from_address": "Adresse d'expéditeur Resend vérifiée d'où partent les courriels (p. ex. « Nom du club <noreply{'@'}votredomaine.org> »)."
     },
     "roles": {
       "title": "Rôles de réunion",

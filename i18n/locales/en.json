@@ -104,6 +104,8 @@
     "saved": "Settings saved.",
     "sectionIdentity": "Club identity",
     "sectionMeeting": "Meeting details",
+    "sectionSpeech": "Speech timing",
+    "sectionQr": "Guest check-in (QR)",
     "sectionEmail": "Email delivery (Resend)",
     "f": {
       "name": "Club name",
@@ -124,8 +126,24 @@
       "address": "Address",
       "location_note_en": "Location note (EN)",
       "location_note_fr": "Location note (FR)",
+      "frequency_weeks": "Meeting frequency (weeks)",
+      "number_start": "First meeting number",
+      "default_min_minutes": "Default minimum speech length (minutes)",
+      "default_max_minutes": "Default maximum speech length (minutes)",
+      "agenda_buffer_minutes": "Agenda buffer per speech (minutes)",
+      "target_url": "Check-in QR target URL",
       "api_key": "Resend API key",
       "from_address": "Sender address (From)"
+    },
+    "h": {
+      "frequency_weeks": "Weeks between meetings, used to generate the meeting year (1 = weekly).",
+      "number_start": "Meetings are numbered contiguously from this value in date order.",
+      "default_min_minutes": "Seeds the timing window of new speeches; the standard is 5.",
+      "default_max_minutes": "Seeds the timing window of new speeches; the standard is 7. Must be ≥ the minimum.",
+      "agenda_buffer_minutes": "Added to each speech's maximum when allotting agenda time, covering transitions and applause.",
+      "target_url": "Where the guest check-in QR code points. Leave blank to use this site's built-in /checkin page.",
+      "api_key": "Secret key from your Resend dashboard. Required to send membership, reset, and notification emails.",
+      "from_address": "The verified Resend sender address emails are sent from (e.g. \"Club Name <noreply{'@'}yourdomain.org>\")."
     },
     "roles": {
       "title": "Meeting roles",
