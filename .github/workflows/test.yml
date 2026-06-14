@@ -59,3 +59,39 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Regression guard for #22: a fresh, all-at-once migration apply must succeed
+  # (using the same runner the Docker image runs at boot — not the test
+  # workaround). Catches a re-introduced "single transaction" migrator even if
+  # the e2e job is red for another reason.
+  fresh-migration:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: toastily
+          POSTGRES_PASSWORD: toastily
+          POSTGRES_DB: migrate_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U toastily"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://toastily:toastily@localhost:5432/migrate_check
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Migrate a brand-new database from zero
+        run: node server/db/migrate.mjs
