@@ -14,10 +14,23 @@ export default defineEventHandler(async (event) => {
 
   const db = useDrizzle()
 
-  const existing = await db.select({ id: schema.users.id })
+  const [existing] = await db.select({ id: schema.users.id, emailVerified: schema.users.emailVerified })
     .from(schema.users).where(eq(schema.users.email, email)).limit(1)
-  if (existing[0]) {
-    throw createError({ statusCode: 409, statusMessage: 'Email already registered' })
+  if (existing) {
+    // A *verified* account already owns this email — the right action is to log in.
+    if (existing.emailVerified) {
+      throw createError({ statusCode: 409, statusMessage: 'Email already registered' })
+    }
+    // Unverified account, e.g. a prior attempt whose confirmation email never
+    // arrived: restart its registration rather than dead-end on a 409. Refresh
+    // the (unowned) credentials and re-send a fresh verification link. Safe
+    // because the account stays unusable until the email is confirmed.
+    await db.update(schema.users)
+      .set({ name, passwordHash: await hashPassword(password), locale })
+      .where(eq(schema.users.id, existing.id))
+    const token = await createEmailToken(existing.id, 'verify')
+    await deliverAuthLink('verify', email, buildAuthLink('verify', token))
+    return { ok: true, status: 'guest', verified: false }
   }
 
   // Bootstrap: the first registered user becomes a verified admin and is logged
