@@ -2,6 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development workflow
+
+When you start work on a GitHub issue, **set its status to "In Progress" on the project board before writing code**, and create a `feature/issue-<n>-<slug>` branch. Status is tracked on the **GitHub Projects (v2) board "Toastily for CN Collaborators"** (owner `geldan01`), not via labels — the issue must be an item on the board with its **Status** field set.
+
+- Operate only as the `geldan01` account (`gh auth switch --user geldan01` if needed) — it owns the repo and the board. Don't use other authenticated accounts.
+- Setting the Status field requires the `project` token scope. If `gh` lacks it, the user must run `gh auth refresh -s project --hostname github.com` themselves **while the browser is signed in as geldan01** (interactive flow — you cannot drive it, and authorizing under the wrong account grants the scope to the wrong token).
+- Stable IDs for the board (re-list if they ever change):
+  - Project: number `5`, id `PVT_kwHOAprzFs4BaND7`
+  - Status field id: `PVTSSF_lAHOAprzFs4BaND7zhVGURU` — options: Backlog `6ca1ef53`, Todo `f75ad846`, **In Progress `47fc9ee4`**, Done `98236657`
+- Find the issue's item id, then set Status:
+  ```sh
+  gh project item-list 5 --owner geldan01 --format json --limit 200   # find the item id for the issue (content.number)
+  gh project item-edit --id <itemId> --project-id PVT_kwHOAprzFs4BaND7 \
+    --field-id PVTSSF_lAHOAprzFs4BaND7zhVGURU --single-select-option-id 47fc9ee4
+  ```
+  (Add the issue to the board first with `gh project item-add 5 --owner geldan01 --url <issueUrl>` if it isn't already an item.)
+- Move the item to **Done** (`98236657`) when the work merges.
+
 ## Project status
 
 **Foundation + public site + auth/membership + meetings/agenda built** (PRD phases P0/P1/P1b + P2 + **P3/§6 complete**). The Nuxt 4 app is scaffolded with the planned stack; the bilingual public site (landing, News list/detail) renders from `settings` + `content_blocks` + `news`. **Auth is live** (`nuxt-auth-utils` sealed sessions): register → email-confirm → login/logout, password reset, request-membership → officer/admin approval, with RBAC enforced in server utils. **Meetings & agenda are live**: calendar/holidays, role + speech signup (member self / officer-assigns-guest), and template-driven agenda generation with Print/Save-as-PDF. **Voting (§8), QR check-in (§9), and scheduled/triggered emails (§10) are also live** — ballots/results ([server/db/schema/voting.ts](server/db/schema/voting.ts), [/meeting/[date]/vote](app/pages/meeting/[date]/vote.vue) + [results](app/pages/meeting/[date]/results.vue)), guest check-in via QR (`guest_checkins`, [/checkin](app/pages/checkin.vue)), and the email pipeline ([server/db/schema/email.ts](server/db/schema/email.ts), [server/tasks/notifications/dispatch.ts](server/tasks/notifications/dispatch.ts), [/admin/notifications](app/pages/admin/notifications.vue)). Remaining gaps: News authoring + image upload, the delegable-grant (permissions) UI, minutes entry UI, settings surfacing, public About/FAQ/Contact pages, the internal **Messages** feature, and participation tracking (§11). **[docs/PRD.md](docs/PRD.md) remains the source of truth** — read it before implementing any feature.

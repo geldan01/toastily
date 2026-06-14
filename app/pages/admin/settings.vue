@@ -3,7 +3,7 @@ import { Check } from '@lucide/vue'
 
 definePageMeta({ middleware: 'admin' })
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 
 const identityFields = [
   'club.name',
@@ -27,6 +27,20 @@ const meetingFields = [
   'meeting.address',
   'meeting.location_note_en',
   'meeting.location_note_fr',
+  'meeting.frequency_weeks',
+  'meeting.number_start',
+] as const
+
+// Speech timing window + agenda buffer (PRD §6.3).
+const speechFields = [
+  'speech.default_min_minutes',
+  'speech.default_max_minutes',
+  'speech.agenda_buffer_minutes',
+] as const
+
+// Guest self-check-in QR target (PRD §9).
+const qrFields = [
+  'qr.target_url',
 ] as const
 
 // Admin-only email delivery credentials (PRD §2.2, §10). Used by Resend.
@@ -35,9 +49,36 @@ const emailFields = [
   'email.from_address',
 ] as const
 
+const allFields = [...identityFields, ...meetingFields, ...speechFields, ...qrFields, ...emailFields]
+
+// Whole-number settings — rendered as min-constrained number inputs and
+// validated server-side (see server/api/admin/settings.patch.ts).
+const integerFields: Record<string, number> = {
+  'meeting.frequency_weeks': 1,
+  'meeting.number_start': 1,
+  'speech.default_min_minutes': 1,
+  'speech.default_max_minutes': 1,
+  'speech.agenda_buffer_minutes': 0,
+}
+
 // Map a setting key to its i18n label (e.g. club.tagline_en → admin.f.tagline_en).
+function suffix(key: string) {
+  return key.slice(key.indexOf('.') + 1)
+}
 function labelKey(key: string) {
-  return `admin.f.${key.slice(key.indexOf('.') + 1)}`
+  return `admin.f.${suffix(key)}`
+}
+// Optional per-field help text, rendered when admin.h.<suffix> exists.
+function hintKey(key: string) {
+  return `admin.h.${suffix(key)}`
+}
+
+function inputType(key: string) {
+  if (key in integerFields) return 'number'
+  if (key === 'club.email') return 'email'
+  if (key === 'qr.target_url') return 'url'
+  if (key === 'resend.api_key') return 'password'
+  return 'text'
 }
 
 const { data } = await useFetch<{ settings: Record<string, string> }>('/api/admin/settings', {
@@ -46,8 +87,8 @@ const { data } = await useFetch<{ settings: Record<string, string> }>('/api/admi
 
 const form = reactive<Record<string, string>>({})
 watchEffect(() => {
-  const s = data.value?.settings ?? {};
-  [...identityFields, ...meetingFields, ...emailFields].forEach((k) => {
+  const s = data.value?.settings ?? {}
+  allFields.forEach((k) => {
     if (!(k in form)) form[k] = s[k] ?? ''
   })
 })
@@ -82,6 +123,14 @@ async function save() {
 }
 
 useHead(() => ({ title: t('admin.settings') }))
+
+const sections = [
+  { titleKey: 'admin.sectionIdentity', fields: identityFields },
+  { titleKey: 'admin.sectionMeeting', fields: meetingFields },
+  { titleKey: 'admin.sectionSpeech', fields: speechFields },
+  { titleKey: 'admin.sectionQr', fields: qrFields },
+  { titleKey: 'admin.sectionEmail', fields: emailFields },
+] as const
 </script>
 
 <template>
@@ -112,15 +161,18 @@ useHead(() => ({ title: t('admin.settings') }))
       class="mt-8 space-y-8"
       @submit.prevent="save"
     >
-      <Card>
+      <Card
+        v-for="section in sections"
+        :key="section.titleKey"
+      >
         <CardHeader>
           <CardTitle class="text-lg">
-            {{ t('admin.sectionIdentity') }}
+            {{ t(section.titleKey) }}
           </CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
           <div
-            v-for="key in identityFields"
+            v-for="key in section.fields"
             :key="key"
             class="space-y-2"
           >
@@ -128,52 +180,17 @@ useHead(() => ({ title: t('admin.settings') }))
             <Input
               :id="key"
               v-model="form[key]"
-              :type="key === 'club.email' ? 'email' : 'text'"
+              :type="inputType(key)"
+              :min="key in integerFields ? integerFields[key] : undefined"
+              :step="key in integerFields ? 1 : undefined"
+              :autocomplete="inputType(key) === 'password' ? 'off' : undefined"
             />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-lg">
-            {{ t('admin.sectionMeeting') }}
-          </CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div
-            v-for="key in meetingFields"
-            :key="key"
-            class="space-y-2"
-          >
-            <Label :for="key">{{ t(labelKey(key)) }}</Label>
-            <Input
-              :id="key"
-              v-model="form[key]"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle class="text-lg">
-            {{ t('admin.sectionEmail') }}
-          </CardTitle>
-        </CardHeader>
-        <CardContent class="space-y-4">
-          <div
-            v-for="key in emailFields"
-            :key="key"
-            class="space-y-2"
-          >
-            <Label :for="key">{{ t(labelKey(key)) }}</Label>
-            <Input
-              :id="key"
-              v-model="form[key]"
-              :type="key === 'resend.api_key' ? 'password' : 'text'"
-              autocomplete="off"
-            />
+            <p
+              v-if="te(hintKey(key))"
+              class="text-xs text-muted-foreground"
+            >
+              {{ t(hintKey(key)) }}
+            </p>
           </div>
         </CardContent>
       </Card>
