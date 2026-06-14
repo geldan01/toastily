@@ -67,8 +67,13 @@ When you start work on a GitHub issue, **set its status to "In Progress" on the 
 | Apply migrations | `pnpm db:migrate` |
 | Seed generic dev data | `pnpm db:seed` |
 | Drizzle Studio | `pnpm db:studio` |
+| Unit tests (Vitest, no DB) | `pnpm test:unit` (single: `pnpm test:unit roles`) |
+| Integration + e2e (Playwright) | `pnpm test:e2e` (single: `pnpm exec playwright test <file>:<line>`) |
+| Everything | `pnpm test:all` |
 
-There is **no test runner yet** — add one (e.g. Vitest + Playwright) in a later phase and document how to run a single test here.
+**Testing** is layered — **Vitest** for pure logic (`tests/unit`), **Playwright** for both API/integration (`tests/integration`, via the `request` context) and browser e2e (`tests/e2e`). Playwright runs the app on **port 3100** against a **dedicated `*_test` database** (`pnpm test:db:prepare` drops/recreates/migrates/seeds it), with per-role fixtures (`guestPage`/`memberPage`/`officerPage`/`adminPage`/`managerPage`, `apiAs(role)`) backed by seeded `@toastily.test` accounts; email is auto-stubbed (verification tokens read from the DB). **Read [docs/TESTING.md](docs/TESTING.md)** for the full harness, the feature×layer coverage matrix, and how to add tests. CI runs all three layers ([.github/workflows/test.yml](.github/workflows/test.yml)).
+
+> ⚠️ **Known migration bug** (surfaced by the test-DB setup): a fresh, all-at-once `pnpm db:migrate` fails — `0003` adds enum value `agenda_item_type.evaluations` and `0012` uses it, which Postgres rejects in one transaction (both migrators batch into a single tx). The dev DB only works because it was migrated incrementally. `prepare-test-db.ts` works around it (autocommit per statement); the migrations themselves still need a real fix — tracked in [issue #22](https://github.com/geldan01/toastily/issues/22).
 
 **Local DB:** `docker compose up -d db` (Postgres; host port via `DB_PORT`, default 5432). Copy `.env.example` → `.env` first. Full stack (app + db, runs migrations on start): `docker compose up --build`.
 

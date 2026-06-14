@@ -1,0 +1,61 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: toastily
+          POSTGRES_PASSWORD: toastily
+          POSTGRES_DB: toastily
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U toastily"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # prepare-test-db derives the test DB (toastily_test) from this.
+      DATABASE_URL: postgres://toastily:toastily@localhost:5432/toastily
+      CI: 'true'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # --- Unit layer (fast, no DB) ---
+      - name: Unit tests (Vitest)
+        run: pnpm test:unit
+
+      # --- Integration + e2e layer ---
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Integration + e2e tests (Playwright)
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
