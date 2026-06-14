@@ -143,7 +143,7 @@
       "agenda_buffer_minutes": "Ajoutée au maximum de chaque discours pour le temps alloué à l'ordre du jour (transitions et applaudissements).",
       "target_url": "Destination du code QR d'enregistrement des invités. Laisser vide pour utiliser la page /checkin intégrée de ce site.",
       "api_key": "Clé secrète de votre tableau de bord Resend. Requise pour envoyer les courriels d'adhésion, de réinitialisation et de notification.",
-      "from_address": "Adresse d'expéditeur Resend vérifiée d'où partent les courriels (p. ex. « Nom du club <noreply{'@'}votredomaine.org> »)."
+      "from_address": "Adresse d'expéditeur Resend vérifiée d'où partent les courriels (p. ex. « Nom du club <noreply{'@'}votredomaine.org> »). Requise avec la clé d'API — si l'une des deux est vide, aucun courriel n'est envoyé."
     },
     "roles": {
       "title": "Rôles de réunion",

@@ -12,9 +12,27 @@ export interface SendEmailInput {
 
 export interface SendEmailResult {
   ok: boolean
-  /** True when no Resend key is configured and the message was logged instead. */
+  /** True when delivery didn't happen and the message was logged instead. */
   stubbed: boolean
+  /** How delivery was (or wasn't) attempted — drives the log signal. */
+  mode: EmailDeliveryMode
   error?: string
+}
+
+/**
+ * - `live`: both key and from-address present → send via Resend.
+ * - `stub`: neither present → expected in local dev, log a benign stub.
+ * - `misconfigured`: exactly one present → likely a half-finished prod setup;
+ *   nothing is sent, so this must be surfaced loudly rather than silently stubbed.
+ */
+export type EmailDeliveryMode = 'live' | 'stub' | 'misconfigured'
+
+export function emailDeliveryMode(apiKey: string, from: string): EmailDeliveryMode {
+  const hasKey = Boolean(apiKey?.trim())
+  const hasFrom = Boolean(from?.trim())
+  if (hasKey && hasFrom) return 'live'
+  if (!hasKey && !hasFrom) return 'stub'
+  return 'misconfigured'
 }
 
 /**
@@ -47,11 +65,23 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const from = input.from || configuredFrom
   const recipients = Array.isArray(input.to) ? input.to : [input.to]
 
-  if (!apiKey || !from) {
-    console.info(
-      `\n📧 [dev email stub] (no Resend key configured)\n   to: ${recipients.join(', ')}\n   subject: ${input.subject}\n`,
-    )
-    return { ok: true, stubbed: true }
+  const mode = emailDeliveryMode(apiKey, from)
+  if (mode !== 'live') {
+    if (mode === 'misconfigured') {
+      const missing = apiKey?.trim()
+        ? 'email.from_address (or EMAIL_FROM) is missing'
+        : 'resend.api_key (or RESEND_API_KEY) is missing'
+      console.warn(
+        `\n⚠️  [email misconfigured] ${missing} — message NOT sent.`
+        + `\n   to: ${recipients.join(', ')}\n   subject: ${input.subject}\n`,
+      )
+    }
+    else {
+      console.info(
+        `\n📧 [dev email stub] (no Resend key configured)\n   to: ${recipients.join(', ')}\n   subject: ${input.subject}\n`,
+      )
+    }
+    return { ok: true, stubbed: true, mode }
   }
 
   try {
@@ -65,13 +95,13 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     })
     if (error) {
       console.error('Resend send failed:', error)
-      return { ok: false, stubbed: false, error: error.message }
+      return { ok: false, stubbed: false, mode, error: error.message }
     }
-    return { ok: true, stubbed: false }
+    return { ok: true, stubbed: false, mode }
   }
   catch (e) {
     const message = e instanceof Error ? e.message : String(e)
     console.error('Resend send threw:', message)
-    return { ok: false, stubbed: false, error: message }
+    return { ok: false, stubbed: false, mode, error: message }
   }
 }

@@ -143,7 +143,7 @@
       "agenda_buffer_minutes": "Added to each speech's maximum when allotting agenda time, covering transitions and applause.",
       "target_url": "Where the guest check-in QR code points. Leave blank to use this site's built-in /checkin page.",
       "api_key": "Secret key from your Resend dashboard. Required to send membership, reset, and notification emails.",
-      "from_address": "The verified Resend sender address emails are sent from (e.g. \"Club Name <noreply{'@'}yourdomain.org>\")."
+      "from_address": "The verified Resend sender address emails are sent from (e.g. \"Club Name <noreply{'@'}yourdomain.org>\"). Required together with the API key — if either is blank, no email is sent."
     },
     "roles": {
       "title": "Meeting roles",

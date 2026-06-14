@@ -61,10 +61,19 @@ function authLinkEmail(type: TokenType, link: string): { subject: string, html: 
 export async function deliverAuthLink(type: TokenType, email: string, link: string): Promise<void> {
   const { subject, html } = authLinkEmail(type, link)
   const result = await sendEmail({ to: email, subject, html })
-  // Keep the clickable link in the dev console when delivery is stubbed.
-  if (result.stubbed) {
+  // Keep the clickable link in the dev console when delivery is genuinely
+  // stubbed (local dev, no provider). Don't print it for a misconfigured
+  // prod setup — email-service already logs a loud warning there.
+  if (result.stubbed && result.mode === 'stub') {
     console.info(
       `\n📧 [dev email stub] ${type === 'verify' ? 'Verify account' : 'Password reset'} for ${email}\n   ${link}\n`,
+    )
+  }
+  // A real delivery failure (key+from set, but Resend rejected it) must be
+  // visible — registration/reset still succeeds so we don't block the user.
+  else if (!result.ok) {
+    console.error(
+      `Failed to deliver ${type} email to ${email}: ${result.error ?? 'unknown error'}`,
     )
   }
 }
