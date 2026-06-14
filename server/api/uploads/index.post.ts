@@ -27,14 +27,24 @@ export default defineEventHandler(async (event) => {
   const ext = validateImageUpload(file.type, file.data.length, cfg)
   const key = generateImageKey(ext)
 
-  await useS3Client(cfg).send(new PutObjectCommand({
-    Bucket: cfg.bucket,
-    Key: key,
-    Body: file.data,
-    ContentType: file.type,
-    // Hashed/random keys are immutable, so allow aggressive caching.
-    CacheControl: 'public, max-age=31536000, immutable',
-  }))
+  try {
+    await useS3Client(cfg).send(new PutObjectCommand({
+      Bucket: cfg.bucket,
+      Key: key,
+      Body: file.data,
+      ContentType: file.type,
+      // Hashed/random keys are immutable, so allow aggressive caching.
+      CacheControl: 'public, max-age=31536000, immutable',
+    }))
+  }
+  catch (err: unknown) {
+    // Surface storage failures as a 502 (not an opaque 500) and log the real
+    // cause server-side — credentials/endpoint/checksum problems are otherwise
+    // invisible. Never echo the raw error to the client.
+    const detail = err as { name?: string, message?: string }
+    console.error('[uploads] PutObject failed:', detail?.name, detail?.message)
+    throw createError({ statusCode: 502, statusMessage: 'Upload to storage failed' })
+  }
 
   return { key, url: publicUrlForKey(key, cfg) }
 })
