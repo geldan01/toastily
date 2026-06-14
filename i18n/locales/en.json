@@ -93,7 +93,8 @@
       "executives": "Assign executive positions and view history.",
       "roles": "Edit meeting-role definitions.",
       "agenda": "Edit the agenda template.",
-      "settings": "Configure club settings, email and QR."
+      "settings": "Configure club settings, email and QR.",
+      "uploads": "Upload images to object storage for News and content."
     }
   },
   "admin": {
@@ -277,6 +278,18 @@
       "statusSent": "Sent",
       "statusStubbed": "Preview (logged)",
       "statusFailed": "Failed"
+    },
+    "uploads": {
+      "title": "Image uploads",
+      "intro": "Upload an image to object storage and get a persistent URL. Used by News and content blocks.",
+      "choose": "Choose an image",
+      "upload": "Upload",
+      "uploading": "Uploading…",
+      "result": "Uploaded — public URL:",
+      "copy": "Copy",
+      "copied": "Copied",
+      "error": "Upload failed.",
+      "notConfigured": "Image storage isn't configured on this deployment (set the S3_* environment variables)."
     }
   },
   "common": {

@@ -93,7 +93,8 @@
       "executives": "Attribuer les postes exécutifs et consulter l'historique.",
       "roles": "Modifier les définitions des rôles de réunion.",
       "agenda": "Modifier le modèle d'ordre du jour.",
-      "settings": "Configurer les paramètres du club, le courriel et le QR."
+      "settings": "Configurer les paramètres du club, le courriel et le QR.",
+      "uploads": "Téléverser des images vers le stockage objet pour les actualités et le contenu."
     }
   },
   "admin": {
@@ -277,6 +278,18 @@
       "statusSent": "Envoyé",
       "statusStubbed": "Aperçu (journalisé)",
       "statusFailed": "Échec"
+    },
+    "uploads": {
+      "title": "Téléversement d’images",
+      "intro": "Téléversez une image vers le stockage objet et obtenez une URL permanente. Utilisé par les actualités et les blocs de contenu.",
+      "choose": "Choisir une image",
+      "upload": "Téléverser",
+      "uploading": "Téléversement…",
+      "result": "Téléversée — URL publique :",
+      "copy": "Copier",
+      "copied": "Copié",
+      "error": "Échec du téléversement.",
+      "notConfigured": "Le stockage d’images n’est pas configuré sur ce déploiement (définissez les variables d’environnement S3_*)."
     }
   },
   "common": {

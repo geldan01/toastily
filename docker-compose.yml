@@ -16,6 +16,42 @@ services:
       timeout: 5s
       retries: 10
 
+  # S3-compatible object storage for uploaded images (issue #10). Mirrors a
+  # MinIO-on-Coolify deployment for local dev. In production, run MinIO as its
+  # own Coolify service (or use R2/B2) and point the app's S3_* env at it.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-toastily}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-toastily-secret}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"   # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"   # web console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: create the bucket and make it publicly readable, then exit.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-toastily} ${MINIO_ROOT_PASSWORD:-toastily-secret} &&
+      mc mb --ignore-existing local/${MINIO_BUCKET:-toastily-uploads} &&
+      mc anonymous set download local/${MINIO_BUCKET:-toastily-uploads} &&
+      echo 'MinIO bucket ready';
+      "
+    restart: "no"
+
   app:
     build:
       context: .
@@ -29,9 +65,20 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-toastily}:${POSTGRES_PASSWORD:-toastily}@db:5432/${POSTGRES_DB:-toastily}
       NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:-please-change-me-to-a-32+char-secret}
       SITE_URL: ${SITE_URL:-http://localhost:3000}
+      # Image uploads → MinIO over the compose network.
+      S3_ENDPOINT: http://minio:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_BUCKET: ${MINIO_BUCKET:-toastily-uploads}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:-toastily}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-toastily-secret}
+      S3_FORCE_PATH_STYLE: "true"
+      # Browsers reach MinIO on the host, not the compose network — public URL
+      # uses the host-mapped port. Override per deployment.
+      S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9000/${MINIO_BUCKET:-toastily-uploads}}
       NODE_ENV: production
     ports:
       - "3000:3000"
 
 volumes:
   db_data:
+  minio_data:
