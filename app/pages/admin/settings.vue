@@ -122,6 +122,28 @@ async function save() {
   }
 }
 
+// Email delivery diagnostic: send a test message to the admin's own address and
+// surface Resend's actual result (issue #28 — a misconfigured/unverified sender
+// fails silently otherwise).
+const testing = ref(false)
+const testResult = ref<{ ok: boolean, mode: string, stubbed: boolean, sentTo: string, error: string | null } | null>(null)
+const testError = ref('')
+
+async function sendTest() {
+  testing.value = true
+  testResult.value = null
+  testError.value = ''
+  try {
+    testResult.value = await $fetch('/api/admin/email-test', { method: 'POST' })
+  }
+  catch (e) {
+    testError.value = errorMessage(e, t('auth.genericError'))
+  }
+  finally {
+    testing.value = false
+  }
+}
+
 useHead(() => ({ title: t('admin.settings') }))
 
 const sections = [
@@ -190,6 +212,52 @@ const sections = [
               class="text-xs text-muted-foreground"
             >
               {{ t(hintKey(key)) }}
+            </p>
+          </div>
+
+          <!-- Delivery diagnostic for the email section (issue #28). Save first,
+               then send a test to verify the saved key + sender actually work. -->
+          <div
+            v-if="section.titleKey === 'admin.sectionEmail'"
+            class="border-t pt-4 space-y-3"
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              :disabled="testing"
+              @click="sendTest"
+            >
+              {{ testing ? t('admin.emailTest.sending') : t('admin.emailTest.send') }}
+            </Button>
+            <p class="text-xs text-muted-foreground">
+              {{ t('admin.emailTest.hint') }}
+            </p>
+            <p
+              v-if="testError"
+              class="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            >
+              {{ testError }}
+            </p>
+            <p
+              v-else-if="testResult"
+              class="rounded-md border px-3 py-2 text-sm"
+              :class="testResult.ok && !testResult.stubbed
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-amber-300 bg-amber-50 text-amber-900'"
+            >
+              <template v-if="testResult.ok && !testResult.stubbed">
+                {{ t('admin.emailTest.ok', { email: testResult.sentTo }) }}
+              </template>
+              <template v-else-if="testResult.mode === 'misconfigured'">
+                {{ t('admin.emailTest.misconfigured') }}
+              </template>
+              <template v-else-if="testResult.stubbed">
+                {{ t('admin.emailTest.stub') }}
+              </template>
+              <template v-else>
+                {{ t('admin.emailTest.failed', { error: testResult.error || 'unknown' }) }}
+              </template>
             </p>
           </div>
         </CardContent>

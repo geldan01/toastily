@@ -107,6 +107,15 @@
     "sectionSpeech": "Speech timing",
     "sectionQr": "Guest check-in (QR)",
     "sectionEmail": "Email delivery (Resend)",
+    "emailTest": {
+      "send": "Send test email",
+      "sending": "Sending…",
+      "hint": "Save your changes first, then send a test to your own address to confirm delivery actually works.",
+      "ok": "Test email sent to {email}. Delivery is working.",
+      "misconfigured": "Not sent: both the API key and the sender address are required. Fill in the missing field and save.",
+      "stub": "No Resend key is configured, so nothing was sent (the link is logged to the server console in dev).",
+      "failed": "Resend rejected the message: {error}. A common cause is a sender on a domain that isn't verified in Resend."
+    },
     "f": {
       "name": "Club name",
       "tagline_en": "Tagline (EN)",

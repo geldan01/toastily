@@ -107,6 +107,15 @@
     "sectionSpeech": "Durée des discours",
     "sectionQr": "Enregistrement des invités (QR)",
     "sectionEmail": "Envoi de courriels (Resend)",
+    "emailTest": {
+      "send": "Envoyer un courriel de test",
+      "sending": "Envoi…",
+      "hint": "Enregistrez vos modifications, puis envoyez un test à votre propre adresse pour confirmer que l'envoi fonctionne.",
+      "ok": "Courriel de test envoyé à {email}. L'envoi fonctionne.",
+      "misconfigured": "Non envoyé : la clé d'API et l'adresse d'expéditeur sont toutes deux requises. Remplissez le champ manquant et enregistrez.",
+      "stub": "Aucune clé Resend n'est configurée; rien n'a été envoyé (le lien est affiché dans la console du serveur en développement).",
+      "failed": "Resend a rejeté le message : {error}. Une cause fréquente est un expéditeur sur un domaine non vérifié dans Resend."
+    },
     "f": {
       "name": "Nom du club",
       "tagline_en": "Slogan (EN)",
