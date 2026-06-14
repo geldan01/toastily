@@ -27,12 +27,17 @@ test.describe('auth API', () => {
     expect(login.status()).toBe(403)
   })
 
-  test('registering the same email twice is a 409', async ({ apiAs }) => {
+  test('re-registering an UNVERIFIED email restarts registration (resends, no 409)', async ({ apiAs }) => {
     const api = await apiAs('guest')
     const res = await api.post('/api/auth/register', {
-      data: { name: 'Dup', email, password, locale: 'en' },
+      data: { name: 'New User', email, password, locale: 'en' },
     })
-    expect(res.status()).toBe(409)
+    // Idempotent for unverified accounts: a stuck registrant whose link never
+    // arrived can simply register again and get a fresh verification email.
+    expect(res.ok()).toBeTruthy()
+    expect(await res.json()).toMatchObject({ status: 'guest', verified: false })
+    // A (new) verify token exists so the next step can confirm the account.
+    expect(await latestEmailToken(email, 'verify')).toBeTruthy()
   })
 
   test('verifying the emailed token activates the account and logs in', async ({ apiAs }) => {
@@ -51,6 +56,14 @@ test.describe('auth API', () => {
     const fresh = await apiAs('guest')
     const login = await fresh.post('/api/auth/login', { data: { email, password } })
     expect(login.ok()).toBeTruthy()
+  })
+
+  test('re-registering a VERIFIED email is a 409', async ({ apiAs }) => {
+    const api = await apiAs('guest')
+    const res = await api.post('/api/auth/register', {
+      data: { name: 'Dup', email, password, locale: 'en' },
+    })
+    expect(res.status()).toBe(409)
   })
 
   test('a used or bogus token is rejected', async ({ apiAs }) => {
