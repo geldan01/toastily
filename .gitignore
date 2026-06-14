@@ -26,6 +26,14 @@ pnpm-debug.log*
 
 # Test / tooling artifacts
 .playwright-mcp
+# Playwright reports/artifacts + per-role auth storage states (regenerated)
+test-results
+playwright-report
+blob-report
+playwright/.cache
+tests/.auth
+# Coverage output (Vitest V8)
+coverage
 
 # Editor / OS
 .DS_Store
