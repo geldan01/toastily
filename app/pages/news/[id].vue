@@ -60,8 +60,9 @@ useHead(() => ({ title: title.value || t('news.notFound') }))
       class="mt-8 aspect-video w-full rounded-lg object-cover"
     >
 
-    <div class="mt-8 whitespace-pre-line text-lg leading-relaxed text-foreground/90">
-      {{ body }}
-    </div>
+    <NewsContent
+      class="mt-8"
+      :content="body"
+    />
   </article>
 </template>
