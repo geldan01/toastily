@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Award, MessageSquare, Mic, Users } from '@lucide/vue'
+import { Award, MessageSquare, Mic, UserCheck, Users } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -12,6 +12,7 @@ type Row = {
   name: string
   status: 'member' | 'officer' | 'admin'
   positions: Position[]
+  attended: number
   roles: number
   speeches: number
   evaluations: number
@@ -62,6 +63,9 @@ useHead(() => ({ title: t('participation.title') }))
               {{ t('participation.member') }}
             </th>
             <th class="px-3 py-3 text-center font-medium">
+              <span class="inline-flex items-center gap-1"><UserCheck class="size-4" /> <span class="hidden sm:inline">{{ t('participation.attended') }}</span></span>
+            </th>
+            <th class="px-3 py-3 text-center font-medium">
               <span class="inline-flex items-center gap-1"><Users class="size-4" /> <span class="hidden sm:inline">{{ t('participation.roles') }}</span></span>
             </th>
             <th class="px-3 py-3 text-center font-medium">
@@ -105,6 +109,9 @@ useHead(() => ({ title: t('participation.title') }))
               </div>
             </td>
             <td class="px-3 py-3 text-center tabular-nums">
+              {{ r.attended }}
+            </td>
+            <td class="px-3 py-3 text-center tabular-nums">
               {{ r.roles }}
             </td>
             <td class="px-3 py-3 text-center tabular-nums">
@@ -119,7 +126,7 @@ useHead(() => ({ title: t('participation.title') }))
           </tr>
           <tr v-if="!rows.length">
             <td
-              colspan="5"
+              colspan="6"
               class="px-4 py-10 text-center text-muted-foreground"
             >
               {{ t('participation.empty') }}

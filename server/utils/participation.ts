@@ -110,6 +110,7 @@ export async function memberAwardWins(
   return wins
 }
 
+export interface MeetingAttended { meetingId: string, date: string, meetingNumber: number | null, source: 'self' | 'secretary' }
 export interface RoleTaken { meetingId: string, date: string, roleNameEn: string, roleNameFr: string }
 export interface SpeechGiven { meetingId: string, date: string, title: string | null, slot: number }
 export interface EvaluationDone { meetingId: string, date: string, speechTitle: string | null, slot: number }
@@ -118,6 +119,7 @@ export interface StatusChange { fromStatus: string | null, toStatus: string, at:
 
 export interface MemberParticipation {
   member: { id: string, name: string, email: string, status: string, since: string }
+  attendance: MeetingAttended[]
   roles: RoleTaken[]
   speeches: SpeechGiven[]
   evaluations: EvaluationDone[]
@@ -146,6 +148,19 @@ export async function memberParticipation(
     ))
     .limit(1)
   if (!member) return null
+
+  // Meetings the member was marked present at (issue #35), newest first. Distinct
+  // from roles/speeches — a member may simply have attended.
+  const attendance = await db.select({
+    meetingId: schema.meetingAttendance.meetingId,
+    date: schema.meetings.date,
+    meetingNumber: schema.meetings.meetingNumber,
+    source: schema.meetingAttendance.source,
+  })
+    .from(schema.meetingAttendance)
+    .innerJoin(schema.meetings, eq(schema.meetings.id, schema.meetingAttendance.meetingId))
+    .where(eq(schema.meetingAttendance.userId, userId))
+    .orderBy(desc(schema.meetings.date))
 
   const roles = await db.select({
     meetingId: schema.meetingRoleSignups.meetingId,
@@ -215,6 +230,7 @@ export async function memberParticipation(
 
   return {
     member: { ...member, since: member.since as unknown as string },
+    attendance,
     roles,
     speeches,
     evaluations,
@@ -233,6 +249,7 @@ export interface ParticipationSummaryRow {
   name: string
   status: string
   positions: { nameEn: string, nameFr: string }[]
+  attended: number
   roles: number
   speeches: number
   evaluations: number
@@ -255,6 +272,13 @@ export async function participationSummary(
     .from(schema.users)
     .where(inArray(schema.users.status, ['member', 'officer', 'admin']))
     .orderBy(schema.users.name)
+
+  const attendedCounts = await db.select({
+    userId: schema.meetingAttendance.userId,
+    n: count(),
+  })
+    .from(schema.meetingAttendance)
+    .groupBy(schema.meetingAttendance.userId)
 
   const roleCounts = await db.select({
     userId: schema.meetingRoleSignups.userId,
@@ -297,6 +321,7 @@ export async function participationSummary(
 
   const wins = await memberAwardWins(db)
 
+  const attendedByUser = new Map(attendedCounts.map(r => [r.userId, Number(r.n)]))
   const rolesByUser = new Map(roleCounts.map(r => [r.userId!, Number(r.n)]))
   const speechesByUser = new Map(speechCounts.map(r => [r.userId!, Number(r.n)]))
   const evalsByUser = new Map(evalCounts.map(r => [r.userId!, Number(r.n)]))
@@ -314,6 +339,7 @@ export async function participationSummary(
     name: m.name,
     status: m.status,
     positions: positionsByUser.get(m.id) ?? [],
+    attended: attendedByUser.get(m.id) ?? 0,
     roles: rolesByUser.get(m.id) ?? 0,
     speeches: speechesByUser.get(m.id) ?? 0,
     evaluations: evalsByUser.get(m.id) ?? 0,

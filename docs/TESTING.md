@@ -101,7 +101,8 @@ Run a single test: `pnpm test:unit roles` (Vitest filter) or
 | Roster / members area (§7.1) | — | 🔲 `GET /api/members/roster` | ✅ (nav + access) |
 | Executive hub (§7.2) | — | — | ✅ (access) |
 | Settings admin + public split (§13) | — | 🔲 admin-only vs public endpoints | 🔲 |
-| Participation tracking (§11) | — | 🔲 (when built) | 🔲 |
+| Participation tracking (§11) | ✅ winner/award rules | ✅ summary + timeline | 🔲 |
+| Member attendance (§9/§11, #35) | — (DB-bound) | ✅ self/secretary paths, present count, /participation flow-through | 🔲 |
 
 ### Fresh-migration apply (fixed — #22)
 
