@@ -173,6 +173,31 @@ export const guestCheckins = pgTable('guest_checkins', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+/**
+ * How a member's presence at a meeting was recorded (issue #35, PRD §9/§11):
+ * `self` — the member checked themselves in; `secretary` — a meeting manager /
+ * secretary recorded it (e.g. from the minutes). Data-driven authority means we
+ * track *who* recorded it (`recordedBy`) rather than hard-coding a "Secretary".
+ */
+export const attendanceSource = pgEnum('attendance_source', ['self', 'secretary'])
+
+/**
+ * Member attendance for a meeting (issue #35, PRD §9 check-in / §11 tracking).
+ * The member equivalent of `guest_checkins`: one row per member per meeting marks
+ * that they were *present*, independent of taking a role, speaking, or evaluating.
+ * Feeds the per-meeting present count (quorum aid for the secretary) and the
+ * member-visible participation history. `recordedBy` is null for a self check-in,
+ * set to the manager who recorded it; `source` distinguishes the two paths.
+ */
+export const meetingAttendance = pgTable('meeting_attendance', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  meetingId: uuid('meeting_id').notNull().references(() => meetings.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  source: attendanceSource('source').notNull().default('self'),
+  recordedBy: uuid('recorded_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [unique('meeting_attendance_unique').on(t.meetingId, t.userId)])
+
 export type MeetingRole = typeof meetingRoles.$inferSelect
 export type NewMeetingRole = typeof meetingRoles.$inferInsert
 export type AgendaTemplate = typeof agendaTemplates.$inferSelect
@@ -183,3 +208,5 @@ export type MeetingRoleSignup = typeof meetingRoleSignups.$inferSelect
 export type Speech = typeof speeches.$inferSelect
 export type GuestCheckin = typeof guestCheckins.$inferSelect
 export type NewGuestCheckin = typeof guestCheckins.$inferInsert
+export type MeetingAttendance = typeof meetingAttendance.$inferSelect
+export type NewMeetingAttendance = typeof meetingAttendance.$inferInsert

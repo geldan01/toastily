@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Award, Briefcase, History, MessageSquare, Mic, Users } from '@lucide/vue'
+import { Award, Briefcase, History, MessageSquare, Mic, UserCheck, Users } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -8,6 +8,7 @@ const id = computed(() => String(route.params.id))
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 
+type MeetingAttended = { meetingId: string, date: string, meetingNumber: number | null, source: 'self' | 'secretary' }
 type RoleTaken = { meetingId: string, date: string, roleNameEn: string, roleNameFr: string }
 type SpeechGiven = { meetingId: string, date: string, title: string | null, slot: number }
 type EvaluationDone = { meetingId: string, date: string, speechTitle: string | null, slot: number }
@@ -16,6 +17,7 @@ type PositionHeld = { positionNameEn: string, positionNameFr: string, startedAt:
 type StatusChange = { fromStatus: string | null, toStatus: string, at: string }
 type Participation = {
   member: { id: string, name: string, email: string, status: 'member' | 'officer' | 'admin', since: string }
+  attendance: MeetingAttended[]
   roles: RoleTaken[]
   speeches: SpeechGiven[]
   evaluations: EvaluationDone[]
@@ -32,6 +34,7 @@ const member = computed(() => data.value?.member)
 const counts = computed(() => {
   const d = data.value
   return [
+    { key: 'attended', icon: UserCheck, n: d?.attendance.length ?? 0 },
     { key: 'roles', icon: Users, n: d?.roles.length ?? 0 },
     { key: 'speeches', icon: Mic, n: d?.speeches.length ?? 0 },
     { key: 'evaluations', icon: MessageSquare, n: d?.evaluations.length ?? 0 },
@@ -89,7 +92,7 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
       </header>
 
       <!-- Summary counts -->
-      <div class="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Card
           v-for="c in counts"
           :key="c.key"
@@ -106,6 +109,32 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
           </CardHeader>
         </Card>
       </div>
+
+      <!-- Meetings attended -->
+      <section
+        v-if="data?.attendance.length"
+        class="mb-8"
+      >
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <UserCheck class="size-5" /> {{ t('participation.meetingsAttended') }}
+        </h2>
+        <ul class="space-y-2">
+          <li
+            v-for="(a, i) in data.attendance"
+            :key="i"
+            class="flex items-baseline justify-between gap-4 rounded-md border px-4 py-2.5"
+          >
+            <NuxtLink
+              :to="localePath(`/meeting/${a.date}`)"
+              class="min-w-0 font-medium hover:underline"
+            >
+              <template v-if="a.meetingNumber != null">{{ t('meetings.meetingNo', { n: a.meetingNumber }) }}</template>
+              <template v-else>{{ fmtMeetingDate(a.date) }}</template>
+            </NuxtLink>
+            <span class="shrink-0 text-sm text-muted-foreground">{{ fmtMeetingDate(a.date) }}</span>
+          </li>
+        </ul>
+      </section>
 
       <!-- Speeches given -->
       <section
@@ -252,7 +281,7 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
       </section>
 
       <p
-        v-if="!data?.roles.length && !data?.speeches.length && !data?.evaluations.length && !data?.awards.length && !data?.positions.length"
+        v-if="!data?.attendance.length && !data?.roles.length && !data?.speeches.length && !data?.evaluations.length && !data?.awards.length && !data?.positions.length"
         class="rounded-lg border px-4 py-10 text-center text-muted-foreground"
       >
         {{ t('participation.noActivity') }}

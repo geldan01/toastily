@@ -2,15 +2,34 @@
 // Public guest check-in landing (PRD §9). The meeting QR points here; the page
 // resolves the nearest upcoming meeting so a single static QR always lands guests
 // on today's meeting with no per-meeting admin work. Works fully logged-out.
-import { CalendarDays, MapPin } from '@lucide/vue'
+import { CalendarDays, Check, MapPin } from '@lucide/vue'
 
 type CurrentMeeting = { id: string, date: string, themeEn: string | null, themeFr: string | null, location: string | null }
 
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
+const { user } = useUserSession()
 
 const { data } = await useFetch<{ meeting: CurrentMeeting | null }>('/api/checkin/current', { key: 'checkin-current' })
 const meeting = computed(() => data.value?.meeting ?? null)
+
+// Logged-in members get a one-tap self check-in (issue #35) instead of the guest
+// name form — their attendance is recorded against their account.
+const isMember = computed(() => hasMinRole(user.value?.status, 'member'))
+const selfBusy = ref(false)
+const selfDone = ref(false)
+const selfError = ref('')
+async function selfCheckIn() {
+  if (!meeting.value || selfBusy.value) return
+  selfBusy.value = true
+  selfError.value = ''
+  try {
+    await $fetch('/api/meetings/attendance', { method: 'POST', body: { meetingId: meeting.value.id } })
+    selfDone.value = true
+  }
+  catch (e) { selfError.value = errorMessage(e, t('auth.genericError')) }
+  finally { selfBusy.value = false }
+}
 const theme = computed(() => meeting.value ? localized(meeting.value, 'theme', locale.value) : '')
 
 const prettyDate = computed(() => {
@@ -49,7 +68,40 @@ useHead(() => ({ title: t('meetings.checkInTitle') }))
           <MapPin class="size-4" /> {{ meeting.location }}
         </p>
 
-        <div class="mt-5">
+        <!-- Member self check-in: one tap, recorded against their account -->
+        <div
+          v-if="isMember"
+          class="mt-5"
+        >
+          <div
+            v-if="selfDone"
+            class="flex items-center gap-2 rounded-md border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm font-medium text-secondary"
+          >
+            <Check class="size-5" />
+            {{ t('meetings.youArePresent') }}
+          </div>
+          <template v-else>
+            <Button
+              :disabled="selfBusy"
+              @click="selfCheckIn"
+            >
+              <Check class="size-4" />
+              {{ t('meetings.imPresent') }}
+            </Button>
+            <p
+              v-if="selfError"
+              class="mt-2 text-sm font-medium text-destructive"
+            >
+              {{ selfError }}
+            </p>
+          </template>
+        </div>
+
+        <!-- Guests (and logged-out visitors) add their name -->
+        <div
+          v-else
+          class="mt-5"
+        >
           <GuestCheckInForm :meeting-id="meeting.id" />
         </div>
       </div>
