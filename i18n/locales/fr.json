@@ -83,6 +83,30 @@
       "since": "Membre depuis {date}"
     }
   },
+  "participation": {
+    "title": "Participation",
+    "subtitle": "Rôles, discours, évaluations et prix à travers le club.",
+    "cardHint": "Voyez qui a fait quoi — historique par personne et totaux du club.",
+    "searchPlaceholder": "Rechercher un membre…",
+    "member": "Membre",
+    "roles": "Rôles",
+    "speeches": "Discours",
+    "evaluations": "Évaluations",
+    "awards": "Prix",
+    "empty": "Aucun membre à afficher.",
+    "backToSummary": "Retour à la participation",
+    "notFound": "Ce membre est introuvable.",
+    "noActivity": "Aucune participation enregistrée pour l'instant.",
+    "memberSince": "Membre depuis {date}",
+    "rolesTaken": "Rôles assumés",
+    "speechesGiven": "Discours présentés",
+    "evaluationsDone": "Évaluations réalisées",
+    "awardsWon": "Prix remportés",
+    "positionsHeld": "Postes à l'exécutif",
+    "statusHistory": "Historique d'adhésion",
+    "untitledSpeech": "Discours sans titre",
+    "present": "présent"
+  },
   "executive": {
     "title": "Exécutif",
     "subtitle": "L'espace de travail de l'équipe exécutive. Vous ne voyez que les outils permis par votre rôle.",

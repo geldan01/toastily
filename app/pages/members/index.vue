@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Mail, Wrench } from '@lucide/vue'
+import { BarChart3, Mail, Wrench } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
 const { t, locale } = useI18n()
+const localePath = useLocalePath()
 
 type Position = { nameEn: string, nameFr: string }
 type Member = {
@@ -45,8 +46,18 @@ useHead(() => ({ title: t('members.title') }))
       </p>
     </header>
 
-    <!-- Tools + Messages placeholder hub (PRD §7.1) -->
-    <div class="mb-10 grid gap-4 sm:grid-cols-2">
+    <!-- Member hub (PRD §7.1) -->
+    <div class="mb-10 grid gap-4 sm:grid-cols-3">
+      <NuxtLink :to="localePath('/participation')">
+        <Card class="h-full transition-colors hover:border-primary/50 hover:bg-muted/40">
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2 text-base">
+              <BarChart3 class="size-4" /> {{ t('participation.title') }}
+            </CardTitle>
+            <CardDescription>{{ t('participation.cardHint') }}</CardDescription>
+          </CardHeader>
+        </Card>
+      </NuxtLink>
       <Card class="opacity-70">
         <CardHeader>
           <CardTitle class="flex items-center gap-2 text-base">
@@ -81,7 +92,12 @@ useHead(() => ({ title: t('members.title') }))
             <CardHeader class="flex-row items-start justify-between gap-4 space-y-0">
               <div class="min-w-0">
                 <CardTitle class="text-base">
-                  {{ m.name }}
+                  <NuxtLink
+                    :to="localePath(`/participation/${m.id}`)"
+                    class="hover:underline"
+                  >
+                    {{ m.name }}
+                  </NuxtLink>
                 </CardTitle>
                 <CardDescription class="truncate">
                   <a
