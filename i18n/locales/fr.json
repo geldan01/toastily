@@ -71,8 +71,21 @@
     "title": "Membres",
     "subtitle": "L'espace membres : répertoire du club et outils des membres.",
     "messages": {
-      "title": "Messages",
-      "soon": "Annonces internes — bientôt disponible."
+      "title": "Annonces",
+      "soon": "Annonces internes — bientôt disponible.",
+      "empty": "Aucune annonce pour le moment.",
+      "addButton": "Ajouter un message aux membres",
+      "compose": "Publier une annonce",
+      "placeholder": "Partagez une annonce avec les membres…",
+      "post": "Publier",
+      "posting": "Publication…",
+      "pin": "Épingler en haut",
+      "pinned": "Épinglée",
+      "expires": "Expire (facultatif)",
+      "expiresOn": "Expire le {date}",
+      "delete": "Supprimer l'annonce",
+      "confirmDelete": "Supprimer cette annonce ?",
+      "error": "Impossible de publier l'annonce. Veuillez réessayer."
     },
     "tools": {
       "title": "Outils",
@@ -360,6 +373,7 @@
     }
   },
   "common": {
+    "cancel": "Annuler",
     "readMore": "Lire la suite",
     "loading": "Chargement…",
     "backToNews": "Retour aux nouvelles",
