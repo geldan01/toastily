@@ -58,7 +58,17 @@
     "requestMessage": "Message (optional)",
     "requestPending": "Your membership request is pending review.",
     "requestSent": "Membership request submitted.",
-    "memberInfo": "You are a full member. Thank you!"
+    "memberInfo": "You are a full member. Thank you!",
+    "testimonial": {
+      "title": "My testimonial",
+      "description": "Share what your experience with the club has meant to you. A club curator may feature your testimonial publicly on the home page. Editing a featured testimonial sends it back for re-approval before it appears again.",
+      "english": "English",
+      "french": "Français",
+      "placeholder": "Tell us about your experience…",
+      "save": "Save testimonial",
+      "saved": "Saved",
+      "featured": "Featured"
+    }
   },
   "requests": {
     "title": "Membership requests",
@@ -135,7 +145,8 @@
       "agenda": "Edit the agenda template.",
       "settings": "Configure club settings, email and QR.",
       "uploads": "Upload images to object storage for News and content.",
-      "news": "Write, edit and publish bilingual news articles."
+      "news": "Write, edit and publish bilingual news articles.",
+      "testimonials": "Curate member testimonials and feature them on the home page."
     }
   },
   "admin": {
@@ -166,6 +177,18 @@
       "replaceCover": "Replace cover",
       "saveChanges": "Save changes",
       "saved": "Saved"
+    },
+    "testimonials": {
+      "title": "Testimonials",
+      "description": "Curate member testimonials. Feature one or both languages to publish them on the home page, and reorder the featured ones.",
+      "empty": "No member testimonials yet.",
+      "feature": "Feature",
+      "unfeature": "Unfeature",
+      "featured": "Featured",
+      "noEnglish": "No English testimonial.",
+      "noFrench": "No French testimonial.",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
     },
     "settings": "Club settings",
     "settingsIntro": "Only admins can change these values. They drive the public site, emails and PDFs.",
@@ -383,7 +406,8 @@
     "latestNews": "Latest News",
     "viewAllNews": "View all news",
     "joinCta": "Join us",
-    "noContent": "Content coming soon."
+    "noContent": "Content coming soon.",
+    "testimonials": "What our members say"
   },
   "news": {
     "title": "News",

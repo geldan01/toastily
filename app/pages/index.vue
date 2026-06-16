@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight } from '@lucide/vue'
+import { ArrowRight, Quote } from '@lucide/vue'
 
 const { locale, t } = useI18n()
 const localePath = useLocalePath()
@@ -15,6 +15,14 @@ const { data: allNews } = await useFetch<Record<string, unknown>[]>('/api/news',
   key: 'news-list',
   default: () => [],
 })
+
+// Featured member testimonials (issue #27), per-locale and pre-ordered server-side.
+interface Testimonial { id: string, name: string, body: string }
+const { data: testimonials } = await useFetch<{ en: Testimonial[], fr: Testimonial[] }>(
+  '/api/testimonials/featured',
+  { key: 'testimonials-featured', default: () => ({ en: [], fr: [] }) },
+)
+const featured = computed(() => (locale.value === 'fr' ? testimonials.value.fr : testimonials.value.en))
 
 const hero = computed(() => blocks.value.find(b => b.section === 'hero'))
 const benefits = computed(() => blocks.value.filter(b => b.section === 'benefit'))
@@ -120,6 +128,44 @@ useHead(() => ({ title: clubName.value }))
         <p class="mx-auto mt-4 max-w-2xl text-muted-foreground">
           {{ localized(whyJoin, 'body', locale) }}
         </p>
+      </div>
+    </section>
+
+    <!-- Member testimonials -->
+    <section
+      v-if="featured.length"
+      class="mx-auto max-w-6xl px-4 py-16"
+    >
+      <h2 class="mb-8 text-2xl font-bold md:text-3xl">
+        {{ t('landing.testimonials') }}
+      </h2>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Card
+          v-for="quote in featured"
+          :key="quote.id"
+          class="h-full"
+        >
+          <CardContent class="flex h-full flex-col gap-4">
+            <Quote class="size-6 text-primary/40" />
+            <p class="flex-1 text-base italic text-foreground">
+              {{ quote.body }}
+            </p>
+            <div class="flex items-center gap-3 border-t pt-4">
+              <!--
+                Member avatar placeholder: profile photos don't exist yet
+                (future enhancement — featured testimonials should show the
+                member's picture once photos are added). For now we fall back to
+                a circle with the member's initial.
+              -->
+              <div class="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                {{ quote.name.charAt(0).toUpperCase() }}
+              </div>
+              <p class="text-sm font-medium text-muted-foreground">
+                {{ quote.name }}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
 

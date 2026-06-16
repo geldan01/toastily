@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, FileText, ImageUp, ListChecks, Mail, Newspaper, Settings, ShieldCheck, Users, UserSquare } from '@lucide/vue'
+import { CalendarDays, FileText, ImageUp, ListChecks, Mail, Newspaper, Quote, Settings, ShieldCheck, Users, UserSquare } from '@lucide/vue'
 
 definePageMeta({ middleware: 'officer' })
 
@@ -29,6 +29,14 @@ const tools = computed(() => [
     to: localePath('/admin/news'),
     title: t('admin.news.title'),
     desc: t('executive.tools.news'),
+    show: caps.value?.canManageContent ?? false,
+  },
+  {
+    key: 'testimonials',
+    icon: Quote,
+    to: localePath('/admin/testimonials'),
+    title: t('admin.testimonials.title'),
+    desc: t('executive.tools.testimonials'),
     show: caps.value?.canManageContent ?? false,
   },
   {

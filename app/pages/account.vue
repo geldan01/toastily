@@ -16,6 +16,51 @@ const message = ref('')
 const submitting = ref(false)
 const sent = ref(false)
 
+const isGuest = computed(() => me.value?.status === 'guest')
+const hasPending = computed(() => me.value?.membershipRequestStatus === 'pending')
+
+// Member testimonial (issue #27). Members+ may share a testimonial in either or
+// both languages; a content curator may feature it publicly on the home page.
+interface Testimonial {
+  bodyEn: string | null
+  bodyFr: string | null
+  featuredEn: boolean
+  featuredFr: boolean
+}
+
+const { data: testimonial, refresh: refreshTestimonial } = await useFetch<Testimonial>(
+  '/api/me/testimonial',
+  { key: 'me-testimonial' },
+)
+const testimonialForm = reactive({
+  bodyEn: testimonial.value?.bodyEn ?? '',
+  bodyFr: testimonial.value?.bodyFr ?? '',
+})
+const savingTestimonial = ref(false)
+const savedTestimonial = ref(false)
+const testimonialError = ref('')
+
+async function saveTestimonial() {
+  savingTestimonial.value = true
+  savedTestimonial.value = false
+  testimonialError.value = ''
+  try {
+    await $fetch('/api/me/testimonial', {
+      method: 'PUT',
+      body: { bodyEn: testimonialForm.bodyEn, bodyFr: testimonialForm.bodyFr },
+    })
+    savedTestimonial.value = true
+    setTimeout(() => (savedTestimonial.value = false), 1500)
+    await refreshTestimonial()
+  }
+  catch (e) {
+    testimonialError.value = errorMessage(e, t('auth.genericError'))
+  }
+  finally {
+    savingTestimonial.value = false
+  }
+}
+
 const statusLabel = computed(() => {
   switch (me.value?.status) {
     case 'admin': return t('account.statusAdmin')
@@ -24,9 +69,6 @@ const statusLabel = computed(() => {
     default: return t('account.statusGuest')
   }
 })
-
-const isGuest = computed(() => me.value?.status === 'guest')
-const hasPending = computed(() => me.value?.membershipRequestStatus === 'pending')
 
 async function requestMembership() {
   submitting.value = true
@@ -113,5 +155,70 @@ useHead(() => ({ title: t('account.title') }))
     >
       {{ t('account.memberInfo') }}
     </p>
+
+    <!-- Member testimonial (issue #27): members+ only -->
+    <Card
+      v-if="!isGuest"
+      class="mt-6"
+    >
+      <CardHeader>
+        <CardTitle class="text-lg">
+          {{ t('account.testimonial.title') }}
+        </CardTitle>
+        <CardDescription>{{ t('account.testimonial.description') }}</CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <Label for="testimonialEn">{{ t('account.testimonial.english') }}</Label>
+            <Badge
+              v-if="testimonial?.featuredEn"
+              variant="secondary"
+            >
+              {{ t('account.testimonial.featured') }}
+            </Badge>
+          </div>
+          <textarea
+            id="testimonialEn"
+            v-model="testimonialForm.bodyEn"
+            rows="4"
+            :placeholder="t('account.testimonial.placeholder')"
+            class="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <Label for="testimonialFr">{{ t('account.testimonial.french') }}</Label>
+            <Badge
+              v-if="testimonial?.featuredFr"
+              variant="secondary"
+            >
+              {{ t('account.testimonial.featured') }}
+            </Badge>
+          </div>
+          <textarea
+            id="testimonialFr"
+            v-model="testimonialForm.bodyFr"
+            rows="4"
+            :placeholder="t('account.testimonial.placeholder')"
+            class="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </div>
+
+        <p
+          v-if="testimonialError"
+          class="text-sm text-destructive"
+        >
+          {{ testimonialError }}
+        </p>
+
+        <Button
+          :disabled="savingTestimonial"
+          @click="saveTestimonial"
+        >
+          {{ savedTestimonial ? t('account.testimonial.saved') : t('account.testimonial.save') }}
+        </Button>
+      </CardContent>
+    </Card>
   </div>
 </template>
