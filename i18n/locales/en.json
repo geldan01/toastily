@@ -83,6 +83,30 @@
       "since": "Member since {date}"
     }
   },
+  "participation": {
+    "title": "Participation",
+    "subtitle": "Roles, speeches, evaluations and awards across the club.",
+    "cardHint": "See who's done what — per-person history and club totals.",
+    "searchPlaceholder": "Search members…",
+    "member": "Member",
+    "roles": "Roles",
+    "speeches": "Speeches",
+    "evaluations": "Evaluations",
+    "awards": "Awards",
+    "empty": "No members to show.",
+    "backToSummary": "Back to participation",
+    "notFound": "This member could not be found.",
+    "noActivity": "No participation recorded yet.",
+    "memberSince": "Member since {date}",
+    "rolesTaken": "Roles taken",
+    "speechesGiven": "Speeches given",
+    "evaluationsDone": "Evaluations done",
+    "awardsWon": "Awards won",
+    "positionsHeld": "Executive positions",
+    "statusHistory": "Membership history",
+    "untitledSpeech": "Untitled speech",
+    "present": "present"
+  },
   "executive": {
     "title": "Executive",
     "subtitle": "The executive team workspace. You see only the tools your role allows.",
