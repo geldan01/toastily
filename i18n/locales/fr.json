@@ -117,6 +117,7 @@
       "meetings": "Ajouter des réunions, générer l'année, gérer les congés.",
       "notifications": "Écrire aux membres et gérer les envois planifiés.",
       "executives": "Attribuer les postes exécutifs et consulter l'historique.",
+      "permissions": "Déléguer les permissions de calendrier et de contenu aux membres",
       "roles": "Modifier les définitions des rôles de réunion.",
       "agenda": "Modifier le modèle d'ordre du jour.",
       "settings": "Configurer les paramètres du club, le courriel et le QR.",
@@ -295,6 +296,17 @@
       "capOfficers": "Nommer des officiers",
       "delete": "Supprimer le poste",
       "addTitle": "Ajouter un poste"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "intro": "Déléguez les capacités de gestion du calendrier et du contenu à des membres précis. Les autorisations prennent effet immédiatement et sont conservées dans l’historique lorsqu’elles sont révoquées — aucun nom de rôle n’est codé en dur.",
+      "member": "Membre",
+      "capCalendar": "Gérer le calendrier",
+      "capContent": "Gérer le contenu",
+      "grant": "Accorder",
+      "granted": "Accordée",
+      "empty": "Aucun membre pour le moment.",
+      "note": "Ces autorisations sont distinctes des postes du comité : un officier peut déjà détenir une capacité grâce à son poste. Les administrateurs détiennent toujours toutes les capacités."
     },
     "notifications": {
       "title": "Notifications par courriel",

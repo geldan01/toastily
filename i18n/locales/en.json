@@ -117,6 +117,7 @@
       "meetings": "Add meetings, generate the year, manage holidays.",
       "notifications": "Email members and manage scheduled sends.",
       "executives": "Assign executive positions and view history.",
+      "permissions": "Delegate calendar and content permissions to members",
       "roles": "Edit meeting-role definitions.",
       "agenda": "Edit the agenda template.",
       "settings": "Configure club settings, email and QR.",
@@ -295,6 +296,17 @@
       "capOfficers": "Assign officers",
       "delete": "Delete position",
       "addTitle": "Add a position"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "intro": "Delegate the calendar-manage and content-edit capabilities to specific members. Grants take effect immediately and are kept as history when revoked — no role names are hard-coded.",
+      "member": "Member",
+      "capCalendar": "Manage calendar",
+      "capContent": "Manage content",
+      "grant": "Grant",
+      "granted": "Granted",
+      "empty": "No members yet.",
+      "note": "These grants are separate from executive positions: an officer may already hold a capability through their position. Admins always hold every capability."
     },
     "notifications": {
       "title": "Email notifications",

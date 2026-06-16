@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, FileText, ImageUp, ListChecks, Mail, Newspaper, Settings, Users, UserSquare } from '@lucide/vue'
+import { CalendarDays, FileText, ImageUp, ListChecks, Mail, Newspaper, Settings, ShieldCheck, Users, UserSquare } from '@lucide/vue'
 
 definePageMeta({ middleware: 'officer' })
 
@@ -53,6 +53,14 @@ const tools = computed(() => [
     to: localePath('/admin/executives'),
     title: t('admin.executives.title'),
     desc: t('executive.tools.executives'),
+    show: isAdmin.value || (caps.value?.canAssignOfficers ?? false),
+  },
+  {
+    key: 'permissions',
+    icon: ShieldCheck,
+    to: localePath('/admin/permission-grants'),
+    title: t('admin.permissions.title'),
+    desc: t('executive.tools.permissions'),
     show: isAdmin.value || (caps.value?.canAssignOfficers ?? false),
   },
   {
