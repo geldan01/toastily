@@ -71,8 +71,21 @@
     "title": "Members",
     "subtitle": "The members area: club roster and member tools.",
     "messages": {
-      "title": "Messages",
-      "soon": "Internal announcements — coming soon."
+      "title": "Announcements",
+      "soon": "Internal announcements — coming soon.",
+      "empty": "No announcements right now.",
+      "addButton": "Add message to members",
+      "compose": "Post an announcement",
+      "placeholder": "Share an announcement with members…",
+      "post": "Post",
+      "posting": "Posting…",
+      "pin": "Pin to top",
+      "pinned": "Pinned",
+      "expires": "Expires (optional)",
+      "expiresOn": "Expires {date}",
+      "delete": "Delete announcement",
+      "confirmDelete": "Delete this announcement?",
+      "error": "Could not post the announcement. Please try again."
     },
     "tools": {
       "title": "Tools",
@@ -360,6 +373,7 @@
     }
   },
   "common": {
+    "cancel": "Cancel",
     "readMore": "Read more",
     "loading": "Loading…",
     "backToNews": "Back to all news",
