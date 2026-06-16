@@ -58,7 +58,17 @@
     "requestMessage": "Message (facultatif)",
     "requestPending": "Votre demande d'adhésion est en attente d'examen.",
     "requestSent": "Demande d'adhésion envoyée.",
-    "memberInfo": "Vous êtes membre à part entière. Merci!"
+    "memberInfo": "Vous êtes membre à part entière. Merci!",
+    "testimonial": {
+      "title": "Mon témoignage",
+      "description": "Partagez ce que votre expérience au club représente pour vous. Un responsable du club peut mettre votre témoignage en vedette sur la page d'accueil. Modifier un témoignage en vedette le renvoie pour réapprobation avant qu'il ne réapparaisse.",
+      "english": "English",
+      "french": "Français",
+      "placeholder": "Parlez-nous de votre expérience…",
+      "save": "Enregistrer le témoignage",
+      "saved": "Enregistré",
+      "featured": "En vedette"
+    }
   },
   "requests": {
     "title": "Demandes d'adhésion",
@@ -135,7 +145,8 @@
       "agenda": "Modifier le modèle d'ordre du jour.",
       "settings": "Configurer les paramètres du club, le courriel et le QR.",
       "uploads": "Téléverser des images vers le stockage objet pour les actualités et le contenu.",
-      "news": "Rédiger, modifier et publier des articles d'actualité bilingues."
+      "news": "Rédiger, modifier et publier des articles d'actualité bilingues.",
+      "testimonials": "Sélectionner les témoignages des membres et les mettre en vedette sur la page d'accueil."
     }
   },
   "admin": {
@@ -166,6 +177,18 @@
       "replaceCover": "Remplacer la couverture",
       "saveChanges": "Enregistrer les modifications",
       "saved": "Enregistré"
+    },
+    "testimonials": {
+      "title": "Témoignages",
+      "description": "Sélectionnez les témoignages des membres. Mettez une langue ou les deux en vedette pour les publier sur la page d'accueil, et réorganisez ceux qui sont en vedette.",
+      "empty": "Aucun témoignage de membre pour l'instant.",
+      "feature": "Mettre en vedette",
+      "unfeature": "Retirer de la vedette",
+      "featured": "En vedette",
+      "noEnglish": "Aucun témoignage en anglais.",
+      "noFrench": "Aucun témoignage en français.",
+      "moveUp": "Monter",
+      "moveDown": "Descendre"
     },
     "settings": "Paramètres du club",
     "settingsIntro": "Seuls les administrateurs peuvent modifier ces valeurs. Elles alimentent le site public, les courriels et les PDF.",
@@ -383,7 +406,8 @@
     "latestNews": "Dernières nouvelles",
     "viewAllNews": "Voir toutes les nouvelles",
     "joinCta": "Rejoignez-nous",
-    "noContent": "Contenu à venir."
+    "noContent": "Contenu à venir.",
+    "testimonials": "Ce que disent nos membres"
   },
   "news": {
     "title": "Nouvelles",

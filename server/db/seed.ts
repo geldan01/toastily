@@ -357,6 +357,72 @@ async function seedMeetingRolesAndAgenda() {
   )
 }
 
+/**
+ * Member testimonials (issue #27). Generic, club-agnostic quotes. Users are NOT
+ * seeded by this file (they come from registration / the test harness), so we
+ * attach testimonials to whichever member/officer users already exist, in a
+ * stable order. Idempotent: clears the table then inserts. No-ops gracefully
+ * when there aren't enough members yet.
+ */
+const testimonialsSeed = [
+  {
+    bodyEn: 'Joining this club gave me the confidence to speak up at work. Every meeting is a friendly place to practise and grow.',
+    bodyFr: 'Rejoindre ce club m\'a donné la confiance de prendre la parole au travail. Chaque réunion est un endroit amical pour pratiquer et progresser.',
+    featuredEn: true,
+    featuredFr: false,
+    featuredOrderEn: 0,
+    featuredOrderFr: 0,
+  },
+  {
+    bodyEn: 'The supportive feedback helped me become a clearer, more compelling speaker than I ever imagined.',
+    bodyFr: 'Les commentaires bienveillants m\'ont aidé à devenir un orateur plus clair et plus convaincant que je ne l\'aurais imaginé.',
+    featuredEn: false,
+    featuredFr: true,
+    featuredOrderEn: 0,
+    featuredOrderFr: 0,
+  },
+  {
+    bodyEn: 'I came as a nervous guest and stayed for the people. Taking on roles built real leadership skills I use every day.',
+    bodyFr: null,
+    featuredEn: true,
+    featuredFr: false,
+    featuredOrderEn: 1,
+    featuredOrderFr: 0,
+  },
+  {
+    bodyEn: null,
+    bodyFr: 'Un environnement accueillant et bilingue où j\'ai pu pratiquer dans la langue de mon choix sans jugement.',
+    featuredEn: false,
+    featuredFr: false,
+    featuredOrderEn: 0,
+    featuredOrderFr: 0,
+  },
+]
+
+async function seedTestimonials() {
+  const { asc, inArray } = await import('drizzle-orm')
+
+  // Attach to existing member/officer/admin users, in a stable order.
+  const candidates = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(inArray(schema.users.status, ['member', 'officer', 'admin']))
+    .orderBy(asc(schema.users.createdAt), asc(schema.users.email))
+    .limit(testimonialsSeed.length)
+
+  console.log('Reseeding testimonials…')
+  await db.delete(schema.testimonials)
+
+  if (candidates.length === 0) {
+    console.log('No member/officer users present — skipping testimonials seed.')
+    return
+  }
+
+  await db.insert(schema.testimonials).values(
+    candidates.map((u, i) => ({ userId: u.id, ...testimonialsSeed[i]! })),
+  )
+}
+
 async function main() {
   console.log('Seeding settings…')
   for (const s of settingsSeed) {
@@ -397,6 +463,7 @@ async function main() {
   await seedMeetingRolesAndAgenda()
   await seedExecutivePositions()
   await seedEmailNotifications()
+  await seedTestimonials()
 
   console.log('✓ Seed complete.')
 }
