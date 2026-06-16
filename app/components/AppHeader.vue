@@ -14,12 +14,14 @@ const clubName = computed(() => setting('club.name', 'Toastily'))
 const logoUrl = computed(() => setting('branding.logo_url', ''))
 const logoFailed = ref(false)
 
-// Functional nav for this phase. Meetings / Our Club / Contact arrive in
-// later phases (PRD §5.2) and are added here as their pages ship.
+// Public nav (PRD §5.2). Members/Executive hubs live under the account menu.
 const links = computed(() => [
   { to: localePath('/'), label: t('nav.home') },
   { to: localePath('/news'), label: t('nav.news') },
   { to: localePath('/meetings'), label: t('nav.meetings') },
+  { to: localePath('/about'), label: t('nav.about') },
+  { to: localePath('/faq'), label: t('nav.faq') },
+  { to: localePath('/contact'), label: t('nav.contact') },
 ])
 
 const isMember = computed(() => hasMinRole(user.value?.status, 'member'))

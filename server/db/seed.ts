@@ -146,6 +146,52 @@ const newsSeed = [
 ]
 
 /**
+ * Standalone rich pages (issue #16): About / FAQ. Generic, club-agnostic copy
+ * authored as Editor.js block JSON — content managers edit them in-app. Seeded
+ * published so the nav links resolve out of the box.
+ */
+const pagesSeed = [
+  {
+    slug: 'about',
+    titleEn: 'About our club',
+    titleFr: 'À propos de notre club',
+    contentEn: JSON.stringify({ blocks: [
+      { type: 'header', data: { text: 'Who we are', level: 2 } },
+      { type: 'paragraph', data: { text: 'We are a welcoming Toastmasters club where members practise public speaking and leadership in a supportive, bilingual environment.' } },
+      { type: 'header', data: { text: 'What to expect', level: 2 } },
+      { type: 'paragraph', data: { text: 'Every meeting blends prepared speeches, impromptu speaking, and constructive evaluation. Guests are always welcome — no experience needed.' } },
+    ] }),
+    contentFr: JSON.stringify({ blocks: [
+      { type: 'header', data: { text: 'Qui nous sommes', level: 2 } },
+      { type: 'paragraph', data: { text: 'Nous sommes un club Toastmasters accueillant où les membres pratiquent l\'art oratoire et le leadership dans un environnement bilingue et bienveillant.' } },
+      { type: 'header', data: { text: 'À quoi s\'attendre', level: 2 } },
+      { type: 'paragraph', data: { text: 'Chaque réunion combine discours préparés, prise de parole improvisée et évaluation constructive. Les invités sont toujours les bienvenus — aucune expérience requise.' } },
+    ] }),
+  },
+  {
+    slug: 'faq',
+    titleEn: 'Frequently asked questions',
+    titleFr: 'Foire aux questions',
+    contentEn: JSON.stringify({ blocks: [
+      { type: 'header', data: { text: 'Do I need to be a member to attend?', level: 2 } },
+      { type: 'paragraph', data: { text: 'No. Guests are welcome at any meeting. Come and see how it works before deciding to join.' } },
+      { type: 'header', data: { text: 'How much does it cost?', level: 2 } },
+      { type: 'paragraph', data: { text: 'Membership dues vary by club. Reach out through our contact page and we will share the current rates.' } },
+      { type: 'header', data: { text: 'Are meetings in English or French?', level: 2 } },
+      { type: 'paragraph', data: { text: 'Both! Our meetings are bilingual and you are welcome to speak in either language.' } },
+    ] }),
+    contentFr: JSON.stringify({ blocks: [
+      { type: 'header', data: { text: 'Dois-je être membre pour assister?', level: 2 } },
+      { type: 'paragraph', data: { text: 'Non. Les invités sont les bienvenus à toute réunion. Venez voir comment cela se déroule avant de décider d\'adhérer.' } },
+      { type: 'header', data: { text: 'Combien cela coûte-t-il?', level: 2 } },
+      { type: 'paragraph', data: { text: 'Les cotisations varient selon le club. Contactez-nous via notre page de contact et nous vous communiquerons les tarifs en vigueur.' } },
+      { type: 'header', data: { text: 'Les réunions sont-elles en anglais ou en français?', level: 2 } },
+      { type: 'paragraph', data: { text: 'Les deux! Nos réunions sont bilingues et vous pouvez vous exprimer dans la langue de votre choix.' } },
+    ] }),
+  },
+]
+
+/**
  * Generic Toastmasters meeting roles (PRD §3.3). These are the standard,
  * club-agnostic role names — admins rename/reorder/deactivate per club.
  * `grantsMeetingAuthority` marks roles whose signed-up holder may manage that
@@ -340,6 +386,12 @@ async function main() {
       image: '',
       publishedAt: new Date(now - n.daysAgo * 24 * 60 * 60 * 1000),
     })),
+  )
+
+  console.log('Reseeding pages…')
+  await db.delete(schema.pages)
+  await db.insert(schema.pages).values(
+    pagesSeed.map(p => ({ ...p, published: true })),
   )
 
   await seedMeetingRolesAndAgenda()
