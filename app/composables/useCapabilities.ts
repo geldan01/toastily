@@ -2,6 +2,7 @@ interface Capabilities {
   canManageCalendar: boolean
   canManageContent: boolean
   canAssignOfficers: boolean
+  canManageMinutes: boolean
 }
 
 /**
@@ -12,6 +13,6 @@ interface Capabilities {
 export function useCapabilities() {
   return useFetch<Capabilities>('/api/me/capabilities', {
     key: 'me-capabilities',
-    default: () => ({ canManageCalendar: false, canManageContent: false, canAssignOfficers: false }),
+    default: () => ({ canManageCalendar: false, canManageContent: false, canAssignOfficers: false, canManageMinutes: false }),
   })
 }

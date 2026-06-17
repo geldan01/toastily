@@ -120,6 +120,13 @@
       "when": 1781626181495,
       "tag": "0016_useful_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1781641965985,
+      "tag": "0017_cynical_norrin_radd",
+      "breakpoints": true
     }
   ]
 }

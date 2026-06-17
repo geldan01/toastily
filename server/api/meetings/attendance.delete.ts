@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     .limit(1)
   if (!existing) throw createError({ statusCode: 404, statusMessage: 'Attendance record not found.' })
 
-  if (existing.userId !== user.id && !(await isMeetingManager(user, existing.meetingId))) {
+  if (existing.userId !== user.id && !(await canRecordAttendance(user, existing.meetingId))) {
     throw createError({ statusCode: 403, statusMessage: 'Only meeting managers can remove others’ attendance.' })
   }
 

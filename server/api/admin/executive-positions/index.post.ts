@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
     canManageCalendar: !!body?.canManageCalendar,
     canManageContent: !!body?.canManageContent,
     canAssignOfficers: !!body?.canAssignOfficers,
+    canManageMinutes: !!body?.canManageMinutes,
     sortOrder: next,
   }).returning()
   return { position: row }

@@ -204,7 +204,7 @@ const meetingRolesSeed = [
   { nameEn: 'Toastmaster', nameFr: 'Animateur', grantsMeetingAuthority: true, isMeetingOfficer: true },
   { nameEn: 'General Evaluator', nameFr: 'Évaluateur général', isMeetingOfficer: true },
   { nameEn: 'Table Topics Master', nameFr: 'Maître des sujets impromptus', isMeetingOfficer: true },
-  { nameEn: 'Secretary', nameFr: 'Secrétaire', isMeetingOfficer: true },
+  { nameEn: 'Secretary', nameFr: 'Secrétaire', isMeetingOfficer: true, isMinutesSecretary: true },
   { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier', grantsMeetingAuthority: true, isMeetingOfficer: true },
   { nameEn: 'Toast', nameFr: 'Toast' },
   { nameEn: 'Moment of Reflection', nameFr: 'Moment de réflexion' },
@@ -247,11 +247,12 @@ const agendaTemplateSeed = {
 
 /**
  * Standard Toastmasters executive positions (PRD §3.2). Capability flags are
- * data, not hard-coded role checks: President manages everything, VP Education
- * manages the calendar, VP Public Relations manages content. Admins adjust.
+ * data, not hard-coded role checks: President manages everything (including
+ * minutes), VP Education manages the calendar, VP Public Relations manages
+ * content. Admins adjust.
  */
 const executivePositionsSeed = [
-  { nameEn: 'President', nameFr: 'Président', canManageCalendar: true, canManageContent: true, canAssignOfficers: true },
+  { nameEn: 'President', nameFr: 'Président', canManageCalendar: true, canManageContent: true, canAssignOfficers: true, canManageMinutes: true },
   { nameEn: 'VP Education', nameFr: 'VP Éducation', canManageCalendar: true },
   { nameEn: 'VP Membership', nameFr: 'VP Adhésion' },
   { nameEn: 'VP Public Relations', nameFr: 'VP Relations publiques', canManageContent: true },

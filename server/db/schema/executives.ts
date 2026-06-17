@@ -7,7 +7,8 @@ import { users } from './users'
  * against a position name (CLAUDE.md: roles are data, not enums):
  *  - `canManageCalendar` — add/generate meetings, manage holidays;
  *  - `canManageContent`  — edit landing content & news;
- *  - `canAssignOfficers` — assign members to executive positions (President).
+ *  - `canAssignOfficers` — assign members to executive positions (President);
+ *  - `canManageMinutes`  — author/approve meeting minutes club-wide (President).
  * Seeded with the standard Toastmasters set; admins adjust per club.
  */
 export const executivePositions = pgTable('executive_positions', {
@@ -17,6 +18,10 @@ export const executivePositions = pgTable('executive_positions', {
   canManageCalendar: boolean('can_manage_calendar').notNull().default(false),
   canManageContent: boolean('can_manage_content').notNull().default(false),
   canAssignOfficers: boolean('can_assign_officers').notNull().default(false),
+  // Whether the holder may manage meeting minutes club-wide (author any meeting's
+  // minutes, approve prior minutes) — the President by default (PRD §6, issue
+  // #14). Data-driven so authority is never hard-coded against a position name.
+  canManageMinutes: boolean('can_manage_minutes').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   active: boolean('active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

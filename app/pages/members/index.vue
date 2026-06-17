@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BarChart3, Mail, Pin, Plus, Trash2, Wrench } from '@lucide/vue'
+import { BarChart3, FileText, Mail, Pin, Plus, Trash2, Wrench } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -39,6 +39,48 @@ const { data: messageData, refresh: refreshMessages } = await useFetch<{ message
   { key: 'members-messages', default: () => ({ messages: [] }) },
 )
 const messages = computed(() => messageData.value?.messages ?? [])
+
+// Submitted meeting minutes (newest first), from the secretary feature.
+type MinutesApprovalStatus = 'pending' | 'read' | 'amended'
+type MinutesEntry = {
+  meetingId: string
+  date: string
+  meetingNumber: number | null
+  unfinishedBusiness: string | null
+  newBusiness: string | null
+  upcomingEvents: string | null
+  specialReminders: string | null
+  generalEvaluatorMention: string | null
+  submitterName: string | null
+  submittedAt: string | null
+  approvalStatus: MinutesApprovalStatus
+  approverName: string | null
+  approvedAt: string | null
+  amendmentNotes: string | null
+}
+const { data: minutesData } = await useFetch<{ minutes: MinutesEntry[] }>('/api/meetings/minutes', {
+  key: 'members-minutes',
+  default: () => ({ minutes: [] }),
+})
+const minutesList = computed(() => minutesData.value?.minutes ?? [])
+
+const MINUTES_SECTIONS = [
+  { key: 'unfinishedBusiness', label: 'meetings.minutesUnfinishedBusiness' },
+  { key: 'newBusiness', label: 'meetings.minutesNewBusiness' },
+  { key: 'upcomingEvents', label: 'meetings.minutesUpcomingEvents' },
+  { key: 'specialReminders', label: 'meetings.minutesSpecialReminders' },
+  { key: 'generalEvaluatorMention', label: 'meetings.minutesGeneralEvaluatorMention' },
+] as const
+
+const openMinutes = reactive<Record<string, boolean>>({})
+function toggleMinutes(id: string) {
+  openMinutes[id] = !openMinutes[id]
+}
+const minutesStatusLabel = (s: MinutesApprovalStatus) => t(
+  s === 'read' ? 'meetings.minutesStatusRead' : s === 'amended' ? 'meetings.minutesStatusAmended' : 'meetings.minutesStatusPending',
+)
+const minutesStatusVariant = (s: MinutesApprovalStatus) => (s === 'pending' ? 'outline' : 'secondary')
+const minutesStatusWord = (s: MinutesApprovalStatus) => t(s === 'amended' ? 'meetings.minutesStatusAmended' : 'meetings.minutesStatusRead')
 
 // Officer compose form (hidden behind a button until opened)
 const composing = ref(false)
@@ -106,6 +148,13 @@ function fmtDateTime(date: string) {
   return new Date(date).toLocaleDateString(locale.value === 'fr' ? 'fr-CA' : 'en-CA', {
     year: 'numeric', month: 'short', day: 'numeric',
   })
+}
+
+// Meeting date is a YYYY-MM-DD string — anchor to local midnight to avoid TZ drift.
+function fmtMeetingDate(date: string) {
+  return new Intl.DateTimeFormat(locale.value === 'fr' ? 'fr-CA' : 'en-CA', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  }).format(new Date(`${date}T00:00:00`))
 }
 
 useHead(() => ({ title: t('members.title') }))
@@ -270,6 +319,88 @@ useHead(() => ({ title: t('members.title') }))
                 <Trash2 class="size-4" />
               </Button>
             </CardHeader>
+          </Card>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Meeting minutes (secretary feature, issue #14) -->
+    <section class="mb-10">
+      <h2 class="mb-4 flex items-center gap-2 text-xl font-semibold tracking-tight">
+        <FileText class="size-5" /> {{ t('meetings.minutesTitle') }}
+      </h2>
+
+      <Card
+        v-if="!minutesList.length"
+        class="opacity-70"
+      >
+        <CardHeader>
+          <CardDescription>{{ t('meetings.minutesNone') }}</CardDescription>
+        </CardHeader>
+      </Card>
+
+      <ul
+        v-else
+        class="space-y-3"
+      >
+        <li
+          v-for="m in minutesList"
+          :key="m.meetingId"
+        >
+          <Card>
+            <CardHeader class="flex-row flex-wrap items-center justify-between gap-3 space-y-0">
+              <CardTitle class="text-base">
+                <template v-if="m.meetingNumber != null">
+                  {{ t('meetings.meetingNo', { n: m.meetingNumber }) }} ·
+                </template>{{ fmtMeetingDate(m.date) }}
+              </CardTitle>
+              <Badge :variant="minutesStatusVariant(m.approvalStatus)">
+                {{ minutesStatusLabel(m.approvalStatus) }}
+              </Badge>
+            </CardHeader>
+            <CardContent class="space-y-3">
+              <Button
+                variant="outline"
+                size="sm"
+                @click="toggleMinutes(m.meetingId)"
+              >
+                {{ openMinutes[m.meetingId] ? t('meetings.minutesHide') : t('meetings.minutesView') }}
+              </Button>
+
+              <template v-if="openMinutes[m.meetingId]">
+                <dl class="space-y-4 border-t border-border pt-3">
+                  <div
+                    v-for="s in MINUTES_SECTIONS"
+                    :key="s.key"
+                  >
+                    <dt class="text-sm font-semibold text-secondary">
+                      {{ t(s.label) }}
+                    </dt>
+                    <dd class="mt-1 whitespace-pre-line text-sm">
+                      {{ m[s.key] || '—' }}
+                    </dd>
+                  </div>
+                </dl>
+                <footer class="border-t border-border pt-3 text-xs text-muted-foreground">
+                  <p v-if="m.submittedAt">
+                    {{ t('meetings.minutesSubmittedBy', { name: m.submitterName ?? '—', date: fmtDateTime(m.submittedAt) }) }}
+                  </p>
+                  <p
+                    v-if="m.approvalStatus !== 'pending' && m.approvedAt"
+                    class="mt-1"
+                  >
+                    {{ t('meetings.minutesApprovedBy', { status: minutesStatusWord(m.approvalStatus), name: m.approverName ?? '—', date: fmtDateTime(m.approvedAt) }) }}
+                  </p>
+                  <p
+                    v-if="m.amendmentNotes"
+                    class="mt-2 whitespace-pre-line"
+                  >
+                    <span class="font-medium">{{ t('meetings.minutesAmendmentNotes') }}:</span>
+                    {{ m.amendmentNotes }}
+                  </p>
+                </footer>
+              </template>
+            </CardContent>
           </Card>
         </li>
       </ul>

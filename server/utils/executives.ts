@@ -6,6 +6,7 @@ export interface Capabilities {
   canManageCalendar: boolean
   canManageContent: boolean
   canAssignOfficers: boolean
+  canManageMinutes: boolean
 }
 
 /**
@@ -19,6 +20,7 @@ export async function executiveCapabilities(userId: string): Promise<Capabilitie
       cal: schema.executivePositions.canManageCalendar,
       content: schema.executivePositions.canManageContent,
       officers: schema.executivePositions.canAssignOfficers,
+      minutes: schema.executivePositions.canManageMinutes,
     })
     .from(schema.executiveAssignments)
     .innerJoin(schema.executivePositions, eq(schema.executivePositions.id, schema.executiveAssignments.positionId))
@@ -32,6 +34,7 @@ export async function executiveCapabilities(userId: string): Promise<Capabilitie
     canManageCalendar: rows.some(r => r.cal),
     canManageContent: rows.some(r => r.content),
     canAssignOfficers: rows.some(r => r.officers),
+    canManageMinutes: rows.some(r => r.minutes),
   }
 }
 
@@ -42,12 +45,13 @@ export async function executiveCapabilities(userId: string): Promise<Capabilitie
  */
 export async function effectiveCapabilities(user: User): Promise<Capabilities> {
   if (user.status === 'admin') {
-    return { canManageCalendar: true, canManageContent: true, canAssignOfficers: true }
+    return { canManageCalendar: true, canManageContent: true, canAssignOfficers: true, canManageMinutes: true }
   }
   const exec = await executiveCapabilities(user.id)
   return {
     canManageCalendar: exec.canManageCalendar || (await hasCapability(user.id, 'calendar_manage')),
     canManageContent: exec.canManageContent || (await hasCapability(user.id, 'content_edit')),
     canAssignOfficers: exec.canAssignOfficers,
+    canManageMinutes: exec.canManageMinutes,
   }
 }
