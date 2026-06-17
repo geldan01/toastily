@@ -15,14 +15,19 @@ const logoUrl = computed(() => setting('branding.logo_url', ''))
 const logoFailed = ref(false)
 
 // Public nav (PRD §5.2). Members/Executive hubs live under the account menu.
+// Meetings is surfaced separately as an always-visible button (see below).
+const meetingsLink = computed(() => ({ to: localePath('/meetings'), label: t('nav.meetings') }))
 const links = computed(() => [
   { to: localePath('/'), label: t('nav.home') },
   { to: localePath('/news'), label: t('nav.news') },
-  { to: localePath('/meetings'), label: t('nav.meetings') },
+  meetingsLink.value,
   { to: localePath('/about'), label: t('nav.about') },
   { to: localePath('/faq'), label: t('nav.faq') },
   { to: localePath('/contact'), label: t('nav.contact') },
 ])
+// On mobile, Meetings gets its own persistent button outside the hamburger, so
+// drop it from the sheet to avoid duplication.
+const mobileLinks = computed(() => links.value.filter(l => l.to !== meetingsLink.value.to))
 
 const isMember = computed(() => hasMinRole(user.value?.status, 'member'))
 const isOfficer = computed(() => hasMinRole(user.value?.status, 'officer'))
@@ -75,6 +80,16 @@ async function logout() {
       </nav>
 
       <div class="flex items-center gap-1">
+        <!-- Meetings: always visible on mobile, never hidden in the hamburger -->
+        <Button
+          as-child
+          variant="secondary"
+          size="sm"
+          class="md:hidden"
+        >
+          <NuxtLink :to="meetingsLink.to">{{ meetingsLink.label }}</NuxtLink>
+        </Button>
+
         <LangToggle />
 
         <!-- Account (desktop) -->
@@ -152,7 +167,7 @@ async function logout() {
             </SheetHeader>
             <nav class="mt-4 flex flex-col gap-1 px-2">
               <NuxtLink
-                v-for="link in links"
+                v-for="link in mobileLinks"
                 :key="link.to"
                 :to="link.to"
                 class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"

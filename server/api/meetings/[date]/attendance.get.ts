@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     .orderBy(asc(schema.users.name))
 
   const count = await meetingPresentCount(db, meeting.id)
-  const canManage = await isMeetingManager(viewer, meeting.id)
+  const canManage = await canRecordAttendance(viewer, meeting.id)
   const selfPresent = present.some(p => p.userId === viewer?.id)
 
   return { meetingId: meeting.id, present, count, selfPresent, canManage }

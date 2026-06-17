@@ -169,4 +169,70 @@ test.describe('attendance API', () => {
     })
     expect(res.ok(), await res.text()).toBeTruthy()
   })
+
+  // --- Widened authority: the meeting's MINUTES SECRETARY (issue #14 follow-up)
+  //
+  // Recording attendance for others is part of the secretary's job (the present
+  // count feeds quorum and the minutes). So a plain member signed up for a role
+  // flagged `isMinutesSecretary` (the seeded Secretary) — which does NOT grant
+  // general meeting-manager authority (`grantsMeetingAuthority`) — may now record
+  // others and sees `canManage: true`. Self-contained: its own meeting + the
+  // `manager` account as Secretary there, cleaned up afterward.
+
+  const secMeetingDate = (() => {
+    const d = new Date(Date.UTC(2096, 0, 1))
+    d.setUTCDate(d.getUTCDate() + (Date.now() % 20000))
+    return d.toISOString().slice(0, 10)
+  })()
+  const secMeetingId = { value: '' }
+  let secretaryRoleId = ''
+
+  test.afterAll(async ({ apiAs }) => {
+    if (secMeetingId.value) {
+      const admin = await apiAs('admin')
+      await admin.delete(`/api/admin/meetings/${secMeetingId.value}`)
+    }
+  })
+
+  test('the meeting’s minutes secretary can record others and sees canManage true', async ({ apiAs }) => {
+    const db = testDb()
+    // The seeded role flagged isMinutesSecretary (Secretary). Sanity-check it is
+    // NOT also a general meeting-authority role, so this proves the widened path.
+    const [secretary] = await db.select({
+      id: schema.meetingRoles.id,
+      grantsMeetingAuthority: schema.meetingRoles.grantsMeetingAuthority,
+    })
+      .from(schema.meetingRoles)
+      .where(eq(schema.meetingRoles.isMinutesSecretary, true))
+      .limit(1)
+    secretaryRoleId = secretary!.id
+    expect(secretary!.grantsMeetingAuthority).toBe(false)
+
+    const admin = await apiAs('admin')
+    const created = await admin.post('/api/admin/meetings', { data: { date: secMeetingDate } })
+    expect(created.ok(), await created.text()).toBeTruthy()
+    secMeetingId.value = (await created.json()).meeting.id
+
+    // Sign the plain-member "manager" account up for the Secretary role on this
+    // meeting — contextual minutes-secretary authority, not exec rank.
+    const assign = await admin.post('/api/meetings/signup', {
+      data: { meetingId: secMeetingId.value, roleId: secretaryRoleId, userId: managerId },
+    })
+    expect(assign.ok(), await assign.text()).toBeTruthy()
+
+    // The secretary records ANOTHER member present (source: 'secretary').
+    const manager = await apiAs('manager')
+    const record = await manager.post('/api/meetings/attendance', {
+      data: { meetingId: secMeetingId.value, userId: officerId },
+    })
+    expect(record.ok(), await record.text()).toBeTruthy()
+    const { attendance } = await record.json()
+    expect(attendance.userId).toBe(officerId)
+    expect(attendance.source).toBe('secretary')
+    expect(attendance.recordedBy).toBe(managerId)
+
+    // And the secretary sees canManage true on the attendance detail.
+    const asManager = await (await manager.get(`/api/meetings/${secMeetingDate}/attendance`)).json()
+    expect(asManager.canManage).toBe(true)
+  })
 })

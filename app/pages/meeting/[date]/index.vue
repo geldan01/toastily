@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ClipboardList, Printer, UserCheck, Users, Vote } from '@lucide/vue'
+import { CheckCircle2, ClipboardList, LogIn, NotebookPen, Printer, UserCheck, Users, Vote } from '@lucide/vue'
 
 type AgendaSection = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
 interface AgendaLine {
@@ -52,6 +52,66 @@ const { data } = await useFetch<AgendaData>(() => `/api/agenda/${date.value}`, {
 
 const meeting = computed(() => data.value?.meeting ?? null)
 const cancelled = computed(() => meeting.value?.status === 'cancelled')
+
+// Minutes meta — member-gated endpoint (guests get 401), so only fetch for members.
+type MinutesApprovalStatus = 'pending' | 'read' | 'amended'
+interface MinutesRecord {
+  unfinishedBusiness: string | null
+  newBusiness: string | null
+  upcomingEvents: string | null
+  specialReminders: string | null
+  generalEvaluatorMention: string | null
+  submitterName: string | null
+  submittedAt: string | null
+  approvalStatus: MinutesApprovalStatus
+  approverName: string | null
+  approvedAt: string | null
+  amendmentNotes: string | null
+}
+interface MinutesMeta { canManage: boolean, minutes: MinutesRecord | null }
+const { data: minutesMeta } = await useFetch<MinutesMeta | null>(() => `/api/meetings/${date.value}/minutes`, {
+  key: () => `minutes-meta-${date.value}`,
+  immediate: isMember.value,
+  default: () => null,
+})
+
+const minutesRecord = computed(() => minutesMeta.value?.minutes ?? null)
+
+// Member self check-in (member-gated endpoint; guests get 401). The big button
+// near the top lets a logged-in member mark themselves present for this meeting;
+// it turns light once checked in, and tapping again clears it.
+interface AttendanceMeta { meetingId: string | null, selfPresent: boolean }
+const { data: attendanceMeta, refresh: refreshAttendance } = await useFetch<AttendanceMeta | null>(
+  () => `/api/meetings/${date.value}/attendance`,
+  { key: () => `attendance-self-${date.value}`, immediate: isMember.value, default: () => null },
+)
+const selfPresent = computed(() => attendanceMeta.value?.selfPresent ?? false)
+const checkinBusy = ref(false)
+async function toggleSelfCheckin() {
+  const mid = attendanceMeta.value?.meetingId
+  if (!mid || checkinBusy.value) return
+  checkinBusy.value = true
+  try {
+    await $fetch('/api/meetings/attendance', selfPresent.value
+      ? { method: 'DELETE', body: { meetingId: mid, userId: user.value?.id } }
+      : { method: 'POST', body: { meetingId: mid } })
+    await refreshAttendance()
+  }
+  finally { checkinBusy.value = false }
+}
+const MINUTES_SECTIONS = [
+  { key: 'unfinishedBusiness', label: 'meetings.minutesUnfinishedBusiness' },
+  { key: 'newBusiness', label: 'meetings.minutesNewBusiness' },
+  { key: 'upcomingEvents', label: 'meetings.minutesUpcomingEvents' },
+  { key: 'specialReminders', label: 'meetings.minutesSpecialReminders' },
+  { key: 'generalEvaluatorMention', label: 'meetings.minutesGeneralEvaluatorMention' },
+] as const
+const minutesStatusWord = (s: MinutesApprovalStatus) => t(s === 'amended' ? 'meetings.minutesStatusAmended' : 'meetings.minutesStatusRead')
+function fmtMinutesDate(iso: string) {
+  return new Intl.DateTimeFormat(locale.value === 'fr' ? 'fr-CA' : 'en-CA', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  }).format(new Date(iso))
+}
 const theme = computed(() => meeting.value ? localized(meeting.value, 'theme', locale.value) : '')
 const notes = computed(() => meeting.value ? localized(meeting.value, 'notes', locale.value) : '')
 const lines = computed(() => data.value?.lines ?? [])
@@ -201,6 +261,28 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
           </p>
         </header>
 
+        <!-- Member self check-in: prominent near the top, turns light when in -->
+        <div
+          v-if="isMember && !cancelled"
+          class="mt-5 print:hidden"
+        >
+          <button
+            type="button"
+            :disabled="checkinBusy || !attendanceMeta?.meetingId"
+            class="flex w-full items-center justify-center gap-2 rounded-xl border px-6 py-4 text-base font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+            :class="selfPresent
+              ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300'
+              : 'border-transparent bg-blue-600 text-white shadow-sm hover:bg-blue-700'"
+            @click="toggleSelfCheckin"
+          >
+            <component
+              :is="selfPresent ? CheckCircle2 : LogIn"
+              class="size-5"
+            />
+            {{ selfPresent ? t('meetings.checkedIn') : t('meetings.checkInButton') }}
+          </button>
+        </div>
+
         <!-- Meeting officers (introduced by the chair) — prints with the agenda -->
         <section
           v-if="!cancelled && officers.length"
@@ -336,6 +418,48 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
         </table>
       </article>
 
+      <!-- Submitted minutes (members only) — readable on screen and on print -->
+      <section
+        v-if="isMember && minutesRecord"
+        class="mt-8 border-t border-border pt-6"
+      >
+        <h2 class="flex items-center gap-2 text-lg font-semibold">
+          <NotebookPen class="size-5 print:hidden" />
+          {{ t('meetings.minutesTitle') }}
+        </h2>
+        <dl class="mt-4 space-y-4">
+          <div
+            v-for="s in MINUTES_SECTIONS"
+            :key="s.key"
+          >
+            <dt class="text-sm font-semibold text-secondary">
+              {{ t(s.label) }}
+            </dt>
+            <dd class="mt-1 whitespace-pre-line text-sm">
+              {{ minutesRecord[s.key] || '—' }}
+            </dd>
+          </div>
+        </dl>
+        <footer class="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
+          <p v-if="minutesRecord.submittedAt">
+            {{ t('meetings.minutesSubmittedBy', { name: minutesRecord.submitterName ?? '—', date: fmtMinutesDate(minutesRecord.submittedAt) }) }}
+          </p>
+          <p
+            v-if="minutesRecord.approvalStatus !== 'pending' && minutesRecord.approvedAt"
+            class="mt-1"
+          >
+            {{ t('meetings.minutesApprovedBy', { status: minutesStatusWord(minutesRecord.approvalStatus), name: minutesRecord.approverName ?? '—', date: fmtMinutesDate(minutesRecord.approvedAt) }) }}
+          </p>
+          <p
+            v-if="minutesRecord.amendmentNotes"
+            class="mt-2 whitespace-pre-line"
+          >
+            <span class="font-medium">{{ t('meetings.minutesAmendmentNotes') }}:</span>
+            {{ minutesRecord.amendmentNotes }}
+          </p>
+        </footer>
+      </section>
+
       <!-- Actions: signup & guests for members, voting for everyone in the room -->
       <div
         v-if="!cancelled"
@@ -378,6 +502,16 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
           <NuxtLink :to="localePath(`/meeting/${date}/attendance`)">
             <UserCheck class="size-4" />
             {{ t('meetings.attendanceTitle') }}
+          </NuxtLink>
+        </Button>
+        <Button
+          v-if="minutesMeta?.canManage"
+          as-child
+          variant="secondary"
+        >
+          <NuxtLink :to="localePath(`/meeting/${date}/minutes`)">
+            <NotebookPen class="size-4" />
+            {{ t('meetings.secretaryTitle') }}
           </NuxtLink>
         </Button>
         <Button

@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
   const patch: Record<string, unknown> = {}
-  for (const f of ['themeEn', 'themeFr', 'location', 'notesEn', 'notesFr', 'minutesEn', 'minutesFr'] as const) {
+  for (const f of ['themeEn', 'themeFr', 'location', 'notesEn', 'notesFr'] as const) {
     if (body?.[f] !== undefined) patch[f] = body[f] ? String(body[f]) : null
   }
   if (body?.templateId !== undefined) patch.templateId = body.templateId || null

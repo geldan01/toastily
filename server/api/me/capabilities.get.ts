@@ -6,7 +6,7 @@
 export default defineEventHandler(async (event) => {
   const user = await getCurrentUser(event)
   if (!user) {
-    return { canManageCalendar: false, canManageContent: false, canAssignOfficers: false }
+    return { canManageCalendar: false, canManageContent: false, canAssignOfficers: false, canManageMinutes: false }
   }
   return await effectiveCapabilities(user)
 })

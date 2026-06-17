@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   // Recording someone else requires meeting-manager authority; members may only
   // mark themselves present.
   const isSelf = targetId === user.id
-  if (!isSelf && !(await isMeetingManager(user, meetingId))) {
+  if (!isSelf && !(await canRecordAttendance(user, meetingId))) {
     throw createError({ statusCode: 403, statusMessage: 'Only meeting managers can record attendance for others.' })
   }
 

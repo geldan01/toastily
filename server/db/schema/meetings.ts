@@ -26,6 +26,10 @@ export const meetingRoles = pgTable('meeting_roles', {
   // Officers block so the chair can introduce them at the start of the meeting.
   // Data-driven so officer-ness is never hard-coded against a role name.
   isMeetingOfficer: boolean('is_meeting_officer').notNull().default(false),
+  // Whether the member signed up for this role is the meeting's minutes secretary
+  // (may author this meeting's minutes — PRD §6, issue #14). Data-driven so the
+  // secretary is identified by flag per meeting, never by the literal name.
+  isMinutesSecretary: boolean('is_minutes_secretary').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -87,8 +91,8 @@ export const meetingStatus = pgEnum('meeting_status', ['scheduled', 'cancelled']
  * A scheduled meeting (PRD §6.1). One per calendar date. Theme/notes are
  * bilingual user content. `templateId` chooses the agenda template to expand.
  * `meetingNumber` is auto-assigned contiguously across non-cancelled meetings
- * in date order (see server/utils/meetings.ts renumberMeetings). `minutes_*`
- * hold the post-meeting minutes (entered later).
+ * in date order (see server/utils/meetings.ts renumberMeetings). Post-meeting
+ * minutes live in their own `meeting_minutes` table (structured, single-language).
  */
 export const meetings = pgTable('meetings', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -100,8 +104,6 @@ export const meetings = pgTable('meetings', {
   location: text('location'),
   notesEn: text('notes_en'),
   notesFr: text('notes_fr'),
-  minutesEn: text('minutes_en'),
-  minutesFr: text('minutes_fr'),
   templateId: uuid('template_id').references(() => agendaTemplates.id, { onDelete: 'set null' }),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -210,3 +212,45 @@ export type GuestCheckin = typeof guestCheckins.$inferSelect
 export type NewGuestCheckin = typeof guestCheckins.$inferInsert
 export type MeetingAttendance = typeof meetingAttendance.$inferSelect
 export type NewMeetingAttendance = typeof meetingAttendance.$inferInsert
+
+/**
+ * Approval status of a meeting's minutes (PRD §6, issue #14). `pending` until a
+ * later reviewer (the next meeting's secretary, the president, or admin) approves
+ * the minutes as `read` (accepted as written) or `amended` (accepted with the
+ * corrections captured in `amendmentNotes`).
+ */
+export const minutesApprovalStatus = pgEnum('minutes_approval_status', ['pending', 'read', 'amended'])
+
+/**
+ * Meeting minutes (PRD §6, issue #14). One record per meeting, authored by the
+ * meeting's secretary (or president/admin). DELIBERATELY single-language — the
+ * secretary writes in whichever language they choose, so there are NO paired
+ * `*_en`/`*_fr` columns here (an explicit exception to the bilingual-content
+ * rule, which still governs News and landing content). The body is the five
+ * structured sections. Two attestations are recorded: who submitted it
+ * (`submittedBy`/`submittedAt`) and who approved it as read/amended
+ * (`approvedBy`/`approvedAt` + `approvalStatus`/`amendmentNotes`), the latter
+ * captured when a subsequent secretary reviews prior minutes.
+ */
+export const meetingMinutes = pgTable('meeting_minutes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  meetingId: uuid('meeting_id').notNull().references(() => meetings.id, { onDelete: 'cascade' }).unique(),
+  unfinishedBusiness: text('unfinished_business'),
+  newBusiness: text('new_business'),
+  upcomingEvents: text('upcoming_events'),
+  specialReminders: text('special_reminders'),
+  generalEvaluatorMention: text('general_evaluator_mention'),
+  // Author attestation: the secretary who submitted the minutes.
+  submittedBy: uuid('submitted_by').references(() => users.id, { onDelete: 'set null' }),
+  submittedAt: timestamp('submitted_at', { withTimezone: true }),
+  // Approval attestation: the reviewer who accepted the minutes as read/amended.
+  approvalStatus: minutesApprovalStatus('approval_status').notNull().default('pending'),
+  approvedBy: uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  amendmentNotes: text('amendment_notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type MeetingMinutes = typeof meetingMinutes.$inferSelect
+export type NewMeetingMinutes = typeof meetingMinutes.$inferInsert
