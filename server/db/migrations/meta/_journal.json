@@ -127,6 +127,13 @@
       "when": 1781641965985,
       "tag": "0017_cynical_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781742521050,
+      "tag": "0018_tough_nitro",
+      "breakpoints": true
     }
   ]
 }

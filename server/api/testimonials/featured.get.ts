@@ -13,6 +13,7 @@ export default defineEventHandler(async () => {
     .select({
       id: schema.testimonials.id,
       name: schema.users.name,
+      avatarKey: schema.users.avatarKey,
       body: schema.testimonials.bodyEn,
     })
     .from(schema.testimonials)
@@ -28,6 +29,7 @@ export default defineEventHandler(async () => {
     .select({
       id: schema.testimonials.id,
       name: schema.users.name,
+      avatarKey: schema.users.avatarKey,
       body: schema.testimonials.bodyFr,
     })
     .from(schema.testimonials)
@@ -39,5 +41,10 @@ export default defineEventHandler(async () => {
     ))
     .orderBy(asc(schema.testimonials.featuredOrderFr), asc(schema.testimonials.createdAt))
 
-  return { en, fr }
+  const withAvatar = ({ avatarKey, ...t }: typeof en[number]) => ({
+    ...t,
+    avatarUrl: avatarKey ? publicUrlForKey(avatarKey) : null,
+  })
+
+  return { en: en.map(withAvatar), fr: fr.map(withAvatar) }
 })

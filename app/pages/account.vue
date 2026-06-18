@@ -7,10 +7,56 @@ type Me = {
   name: string
   email: string
   status: 'guest' | 'member' | 'officer' | 'admin'
+  avatarUrl: string | null
   membershipRequestStatus: string | null
 }
 
 const { data: me, refresh } = await useFetch<Me>('/api/auth/me', { key: 'account-me' })
+
+// Profile picture (issue #43). Members+ can upload/replace/remove their own.
+const avatarInput = ref<HTMLInputElement | null>(null)
+const avatarBusy = ref(false)
+const avatarError = ref('')
+
+function pickAvatar() {
+  avatarError.value = ''
+  avatarInput.value?.click()
+}
+
+async function uploadAvatar(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  avatarBusy.value = true
+  avatarError.value = ''
+  try {
+    const form = new FormData()
+    form.append('file', file)
+    await $fetch('/api/me/avatar', { method: 'POST', body: form })
+    await refresh()
+  }
+  catch (err) {
+    avatarError.value = errorMessage(err, t('auth.genericError'))
+  }
+  finally {
+    avatarBusy.value = false
+    if (avatarInput.value) avatarInput.value.value = ''
+  }
+}
+
+async function removeAvatar() {
+  avatarBusy.value = true
+  avatarError.value = ''
+  try {
+    await $fetch('/api/me/avatar', { method: 'DELETE' })
+    await refresh()
+  }
+  catch (err) {
+    avatarError.value = errorMessage(err, t('auth.genericError'))
+  }
+  finally {
+    avatarBusy.value = false
+  }
+}
 
 const message = ref('')
 const submitting = ref(false)
@@ -92,14 +138,66 @@ useHead(() => ({ title: t('account.title') }))
     </h1>
 
     <Card class="mt-8">
-      <CardHeader>
-        <CardTitle>{{ me?.name }}</CardTitle>
-        <CardDescription>{{ me?.email }}</CardDescription>
+      <CardHeader class="flex-row items-center gap-4 space-y-0">
+        <MemberAvatar
+          :name="me?.name ?? ''"
+          :src="me?.avatarUrl"
+          :size="64"
+        />
+        <div class="min-w-0">
+          <CardTitle>{{ me?.name }}</CardTitle>
+          <CardDescription>{{ me?.email }}</CardDescription>
+        </div>
       </CardHeader>
-      <CardContent class="space-y-2">
+      <CardContent class="space-y-4">
         <div class="flex items-center gap-2">
           <span class="text-sm text-muted-foreground">{{ t('account.status') }}:</span>
           <Badge>{{ statusLabel }}</Badge>
+        </div>
+
+        <!-- Profile picture controls (issue #43): members+ only -->
+        <div
+          v-if="!isGuest"
+          class="space-y-2 border-t pt-4"
+        >
+          <p class="text-sm font-medium">
+            {{ t('account.avatar.title') }}
+          </p>
+          <p class="text-sm text-muted-foreground">
+            {{ t('account.avatar.hint') }}
+          </p>
+          <input
+            ref="avatarInput"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="uploadAvatar"
+          >
+          <div class="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="avatarBusy"
+              @click="pickAvatar"
+            >
+              {{ avatarBusy ? t('account.avatar.uploading') : (me?.avatarUrl ? t('account.avatar.change') : t('account.avatar.upload')) }}
+            </Button>
+            <Button
+              v-if="me?.avatarUrl"
+              variant="ghost"
+              size="sm"
+              :disabled="avatarBusy"
+              @click="removeAvatar"
+            >
+              {{ t('account.avatar.remove') }}
+            </Button>
+          </div>
+          <p
+            v-if="avatarError"
+            class="text-sm text-destructive"
+          >
+            {{ avatarError }}
+          </p>
         </div>
       </CardContent>
     </Card>

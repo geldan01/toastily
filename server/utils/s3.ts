@@ -1,5 +1,6 @@
-import { S3Client } from '@aws-sdk/client-s3'
-import { createError } from 'h3'
+import type { H3Event } from 'h3'
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { createError, readMultipartFormData } from 'h3'
 
 /**
  * S3-compatible object storage for uploaded images (issue #10, PRD §2/§15).
@@ -92,6 +93,67 @@ export function publicUrlForKey(key: string, cfg: S3Config = s3Config()): string
     return `${cfg.publicBaseUrl.replace(/\/$/, '')}/${key}`
   }
   return `/api/uploads/${key}`
+}
+
+/**
+ * Read a single multipart `file` field from the request, validate its type/size
+ * and store it under a random, year/month-partitioned key. Returns the object
+ * key and its persistent public URL. Throws 503 when storage is unconfigured,
+ * 400 when no file is present, 4xx on validation failure, and 502 on a storage
+ * error. Shared by the content-manager upload route and self-service avatars —
+ * the caller is responsible for authorization before calling this.
+ */
+export async function storeImageUpload(event: H3Event): Promise<{ key: string, url: string }> {
+  const cfg = s3Config()
+  if (!isStorageConfigured(cfg)) {
+    throw createError({ statusCode: 503, statusMessage: 'Image storage is not configured on this deployment' })
+  }
+
+  const parts = await readMultipartFormData(event)
+  const file = parts?.find(p => p.name === 'file' && p.filename)
+  if (!file) {
+    throw createError({ statusCode: 400, statusMessage: 'Expected a multipart "file" field' })
+  }
+
+  const ext = validateImageUpload(file.type, file.data.length, cfg)
+  const key = generateImageKey(ext)
+
+  try {
+    await useS3Client(cfg).send(new PutObjectCommand({
+      Bucket: cfg.bucket,
+      Key: key,
+      Body: file.data,
+      ContentType: file.type,
+      // Hashed/random keys are immutable, so allow aggressive caching.
+      CacheControl: 'public, max-age=31536000, immutable',
+    }))
+  }
+  catch (err: unknown) {
+    // Surface storage failures as a 502 (not an opaque 500) and log the real
+    // cause server-side — credentials/endpoint/checksum problems are otherwise
+    // invisible. Never echo the raw error to the client.
+    const detail = err as { name?: string, message?: string }
+    console.error('[uploads] PutObject failed:', detail?.name, detail?.message)
+    throw createError({ statusCode: 502, statusMessage: 'Upload to storage failed' })
+  }
+
+  return { key, url: publicUrlForKey(key, cfg) }
+}
+
+/**
+ * Best-effort delete of a stored object (e.g. a replaced/removed avatar). Never
+ * throws: a failed cleanup must not fail the user's request — the orphaned
+ * object is harmless. No-op when storage is unconfigured.
+ */
+export async function deleteStoredObject(key: string, cfg: S3Config = s3Config()): Promise<void> {
+  if (!isStorageConfigured(cfg) || !key) return
+  try {
+    await useS3Client(cfg).send(new DeleteObjectCommand({ Bucket: cfg.bucket, Key: key }))
+  }
+  catch (err: unknown) {
+    const detail = err as { name?: string, message?: string }
+    console.error('[uploads] DeleteObject failed:', detail?.name, detail?.message)
+  }
 }
 
 let client: S3Client | null = null
