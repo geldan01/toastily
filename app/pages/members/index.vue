@@ -16,6 +16,7 @@ type Member = {
   email: string
   status: 'member' | 'officer' | 'admin'
   since: string
+  avatarUrl: string | null
   positions: Position[]
 }
 type Message = {
@@ -420,33 +421,41 @@ useHead(() => ({ title: t('members.title') }))
         >
           <Card>
             <CardHeader class="flex-row items-start justify-between gap-4 space-y-0">
-              <div class="min-w-0">
-                <CardTitle class="text-base">
-                  <NuxtLink
-                    :to="localePath(`/participation/${m.id}`)"
-                    class="hover:underline"
+              <div class="flex min-w-0 items-start gap-3">
+                <MemberAvatar
+                  :name="m.name"
+                  :src="m.avatarUrl"
+                  :size="40"
+                  class="mt-0.5"
+                />
+                <div class="min-w-0">
+                  <CardTitle class="text-base">
+                    <NuxtLink
+                      :to="localePath(`/participation/${m.id}`)"
+                      class="hover:underline"
+                    >
+                      {{ m.name }}
+                    </NuxtLink>
+                  </CardTitle>
+                  <CardDescription class="truncate">
+                    <a
+                      :href="`mailto:${m.email}`"
+                      class="hover:underline"
+                    >{{ m.email }}</a>
+                    · {{ t('members.roster.since', { date: fmt(m.since) }) }}
+                  </CardDescription>
+                  <div
+                    v-if="m.positions.length"
+                    class="mt-2 flex flex-wrap gap-1.5"
                   >
-                    {{ m.name }}
-                  </NuxtLink>
-                </CardTitle>
-                <CardDescription class="truncate">
-                  <a
-                    :href="`mailto:${m.email}`"
-                    class="hover:underline"
-                  >{{ m.email }}</a>
-                  · {{ t('members.roster.since', { date: fmt(m.since) }) }}
-                </CardDescription>
-                <div
-                  v-if="m.positions.length"
-                  class="mt-2 flex flex-wrap gap-1.5"
-                >
-                  <Badge
-                    v-for="p in m.positions"
-                    :key="p.nameEn"
-                    variant="secondary"
-                  >
-                    {{ positionLabel(p) }}
-                  </Badge>
+                    <Badge
+                      v-for="p in m.positions"
+                      :key="p.nameEn"
+                      variant="secondary"
+                    >
+                      {{ positionLabel(p) }}
+                    </Badge>
+                  </div>
                 </div>
               </div>
               <Badge :variant="m.status === 'member' ? 'outline' : 'default'">

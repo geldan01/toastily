@@ -25,6 +25,9 @@ export const users = pgTable('users', {
   status: accountStatus('status').notNull().default('guest'),
   locale: text('locale').notNull().default('en'),
   emailVerified: boolean('email_verified').notNull().default(false),
+  // Self-service profile picture (issue #43): the S3 object key for the member's
+  // avatar (see server/utils/s3.ts). Null ⇒ render a default initials avatar.
+  avatarKey: text('avatar_key'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

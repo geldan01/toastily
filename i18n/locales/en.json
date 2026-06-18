@@ -59,6 +59,14 @@
     "requestPending": "Your membership request is pending review.",
     "requestSent": "Membership request submitted.",
     "memberInfo": "You are a full member. Thank you!",
+    "avatar": {
+      "title": "Profile picture",
+      "hint": "Upload a square photo (JPG, PNG, WebP or GIF, up to 5 MB). It appears on the roster and your featured testimonial.",
+      "upload": "Upload a picture",
+      "change": "Change picture",
+      "remove": "Remove",
+      "uploading": "Uploading…"
+    },
     "testimonial": {
       "title": "My testimonial",
       "description": "Share what your experience with the club has meant to you. A club curator may feature your testimonial publicly on the home page. Editing a featured testimonial sends it back for re-approval before it appears again.",

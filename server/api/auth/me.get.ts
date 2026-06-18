@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
     status: user.status,
     locale: user.locale,
     emailVerified: user.emailVerified,
+    avatarUrl: user.avatarKey ? publicUrlForKey(user.avatarKey) : null,
     membershipRequestStatus: latestRequest?.status ?? null,
   }
 })

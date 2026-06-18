@@ -17,7 +17,7 @@ const { data: allNews } = await useFetch<Record<string, unknown>[]>('/api/news',
 })
 
 // Featured member testimonials (issue #27), per-locale and pre-ordered server-side.
-interface Testimonial { id: string, name: string, body: string }
+interface Testimonial { id: string, name: string, body: string, avatarUrl: string | null }
 const { data: testimonials } = await useFetch<{ en: Testimonial[], fr: Testimonial[] }>(
   '/api/testimonials/featured',
   { key: 'testimonials-featured', default: () => ({ en: [], fr: [] }) },
@@ -151,15 +151,11 @@ useHead(() => ({ title: clubName.value }))
               {{ quote.body }}
             </p>
             <div class="flex items-center gap-3 border-t pt-4">
-              <!--
-                Member avatar placeholder: profile photos don't exist yet
-                (future enhancement — featured testimonials should show the
-                member's picture once photos are added). For now we fall back to
-                a circle with the member's initial.
-              -->
-              <div class="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                {{ quote.name.charAt(0).toUpperCase() }}
-              </div>
+              <MemberAvatar
+                :name="quote.name"
+                :src="quote.avatarUrl"
+                :size="40"
+              />
               <p class="text-sm font-medium text-muted-foreground">
                 {{ quote.name }}
               </p>

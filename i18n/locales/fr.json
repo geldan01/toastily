@@ -59,6 +59,14 @@
     "requestPending": "Votre demande d'adhésion est en attente d'examen.",
     "requestSent": "Demande d'adhésion envoyée.",
     "memberInfo": "Vous êtes membre à part entière. Merci!",
+    "avatar": {
+      "title": "Photo de profil",
+      "hint": "Téléversez une photo carrée (JPG, PNG, WebP ou GIF, jusqu'à 5 Mo). Elle apparaît dans le bottin et avec votre témoignage en vedette.",
+      "upload": "Téléverser une photo",
+      "change": "Changer la photo",
+      "remove": "Retirer",
+      "uploading": "Téléversement…"
+    },
     "testimonial": {
       "title": "Mon témoignage",
       "description": "Partagez ce que votre expérience au club représente pour vous. Un responsable du club peut mettre votre témoignage en vedette sur la page d'accueil. Modifier un témoignage en vedette le renvoie pour réapprobation avant qu'il ne réapparaisse.",

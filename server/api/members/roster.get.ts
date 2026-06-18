@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
       email: schema.users.email,
       status: schema.users.status,
       since: schema.users.createdAt,
+      avatarKey: schema.users.avatarKey,
     })
     .from(schema.users)
     .where(inArray(schema.users.status, ['member', 'officer', 'admin']))
@@ -50,8 +51,9 @@ export default defineEventHandler(async (event) => {
   }
 
   return {
-    members: people.map(p => ({
+    members: people.map(({ avatarKey, ...p }) => ({
       ...p,
+      avatarUrl: avatarKey ? publicUrlForKey(avatarKey) : null,
       positions: positionsByUser.get(p.id) ?? [],
     })),
   }
