@@ -135,6 +135,14 @@
   "executive": {
     "title": "Executive",
     "subtitle": "The executive team workspace. You see only the tools your role allows.",
+    "kicker": "Team workspace",
+    "groups": {
+      "people": "Membership & People",
+      "meetings": "Meetings & Agenda",
+      "content": "Content",
+      "communication": "Communication",
+      "config": "Configuration"
+    },
     "tools": {
       "requests": "Review and approve membership requests.",
       "meetings": "Add meetings, generate the year, manage holidays.",

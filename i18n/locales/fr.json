@@ -135,6 +135,14 @@
   "executive": {
     "title": "Exécutif",
     "subtitle": "L'espace de travail de l'équipe exécutive. Vous ne voyez que les outils permis par votre rôle.",
+    "kicker": "Espace d'équipe",
+    "groups": {
+      "people": "Membres et personnes",
+      "meetings": "Réunions et ordre du jour",
+      "content": "Contenu",
+      "communication": "Communication",
+      "config": "Configuration"
+    },
     "tools": {
       "requests": "Examiner et approuver les demandes d'adhésion.",
       "meetings": "Ajouter des réunions, générer l'année, gérer les congés.",
