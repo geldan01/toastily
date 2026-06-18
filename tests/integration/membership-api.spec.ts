@@ -19,7 +19,7 @@ test.describe('membership API', () => {
   test('a verified guest can request membership', async ({ apiAs }) => {
     const guest = await apiAs('guest')
     await guest.post('/api/auth/register', {
-      data: { name: 'Applicant', email, password, locale: 'en' },
+      data: { name: 'Applicant', email, password, locale: 'en', consent: true },
     })
     const token = await latestEmailToken(email, 'verify')
     await guest.post('/api/auth/verify', { data: { token } })

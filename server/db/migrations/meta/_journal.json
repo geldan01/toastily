@@ -141,6 +141,13 @@
       "when": 1790000000000,
       "tag": "0019_smart_permission_matrix",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790000000001,
+      "tag": "0020_happy_bloodstrike",
+      "breakpoints": true
     }
   ]
 }

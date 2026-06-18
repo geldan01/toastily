@@ -22,7 +22,7 @@ async function globalSetup(_config: FullConfig) {
 
   for (const acct of ALL_ACCOUNTS) {
     const res = await api.post('/api/auth/register', {
-      data: { name: acct.name, email: acct.email, password: acct.password, locale: 'en' },
+      data: { name: acct.name, email: acct.email, password: acct.password, locale: 'en', consent: true },
     })
     if (!res.ok() && res.status() !== 409) {
       throw new Error(`Failed to seed ${acct.email}: ${res.status()} ${await res.text()}`)

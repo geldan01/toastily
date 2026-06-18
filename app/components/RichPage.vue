@@ -17,7 +17,7 @@ interface PageData {
   updatedAt: string | null
 }
 
-const props = defineProps<{ slug: 'about' | 'faq', titleKey: string }>()
+const props = defineProps<{ slug: 'about' | 'faq' | 'privacy', titleKey: string }>()
 
 const { locale, t } = useI18n()
 const localePath = useLocalePath()

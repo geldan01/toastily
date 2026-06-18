@@ -7,7 +7,7 @@ import { ArrowLeft, Check } from '@lucide/vue'
 // enforced by the PUT endpoint and surfaced here.
 definePageMeta({ middleware: 'content' })
 
-const PAGE_SLUGS = ['about', 'faq'] as const
+const PAGE_SLUGS = ['about', 'faq', 'privacy'] as const
 type PageSlug = (typeof PAGE_SLUGS)[number]
 
 const route = useRoute()
