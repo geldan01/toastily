@@ -4,16 +4,32 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  Toastily theme — Toastmasters International palette.
+  Toastily brand kit — Toastmasters International official palette.
   Brand colors live as CSS variables so a club fork can re-skin via one file
   (or, later, via DB-configured branding accents) without touching components.
-    maroon #772432 · navy #004165 · gold #F2DF74 · gray #A9B2B1
+
+  Official brand colours (Toastmasters International brand manual):
+    Loyal · Maroon  #772432    Happy · Yellow  #F2DF74
+    True  · Blue    #004165    Cool  · Gray    #A9B2B1
+
+  Each gets a `-bright` (lighter, for dark-mode text + gradient highlights) and
+  a `-deep` (darker, for gradient ends + light-mode text) derived shade so the
+  four brand hues can carry full UI states while staying on-brand.
 */
 :root {
   --tm-maroon: #772432;
+  --tm-maroon-bright: #a23448;
+  --tm-maroon-deep: #5a1a25;
   --tm-navy: #004165;
+  --tm-navy-bright: #0c6b9e;
+  --tm-navy-deep: #002d47;
   --tm-gold: #f2df74;
+  --tm-gold-bright: #f7ea9f;
+  --tm-gold-deep: #c9a227;
   --tm-gray: #a9b2b1;
+  --tm-gray-bright: #c7cdcc;
+  --tm-gray-deep: #5d6665;
+  --tm-gray-darker: #3f4746;
 
   --radius: 0.625rem;
 
@@ -96,9 +112,18 @@
   --color-ring: var(--ring);
 
   --color-tm-maroon: var(--tm-maroon);
+  --color-tm-maroon-bright: var(--tm-maroon-bright);
+  --color-tm-maroon-deep: var(--tm-maroon-deep);
   --color-tm-navy: var(--tm-navy);
+  --color-tm-navy-bright: var(--tm-navy-bright);
+  --color-tm-navy-deep: var(--tm-navy-deep);
   --color-tm-gold: var(--tm-gold);
+  --color-tm-gold-bright: var(--tm-gold-bright);
+  --color-tm-gold-deep: var(--tm-gold-deep);
   --color-tm-gray: var(--tm-gray);
+  --color-tm-gray-bright: var(--tm-gray-bright);
+  --color-tm-gray-deep: var(--tm-gray-deep);
+  --color-tm-gray-darker: var(--tm-gray-darker);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
