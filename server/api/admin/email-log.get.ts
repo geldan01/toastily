@@ -3,7 +3,7 @@ import { schema, useDrizzle } from '../../db/client'
 
 /** Recent notification send history (officer/admin). PRD §10. */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'officer')
+  await requireCommunicationManager(event)
   const rows = await useDrizzle()
     .select({
       id: schema.emailSendLog.id,

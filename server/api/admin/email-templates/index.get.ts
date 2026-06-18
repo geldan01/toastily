@@ -3,7 +3,7 @@ import { schema, useDrizzle } from '../../../db/client'
 
 /** List notification templates (officer/admin). PRD §10. */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'officer')
+  await requireCommunicationManager(event)
   const templates = await useDrizzle()
     .select()
     .from(schema.emailTemplates)

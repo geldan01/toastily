@@ -4,15 +4,12 @@ import { Check, Plus, Trash2, UserX } from '@lucide/vue'
 definePageMeta({ middleware: 'admin' })
 
 const { t } = useI18n()
+const localePath = useLocalePath()
 
 interface Position {
   id: string
   nameEn: string
   nameFr: string
-  canManageCalendar: boolean
-  canManageContent: boolean
-  canAssignOfficers: boolean
-  canManageMinutes: boolean
   active: boolean
   holderId: string | null
   holderName: string | null
@@ -47,7 +44,7 @@ async function saveAll() {
     for (const p of positions.value) {
       await $fetch(`/api/admin/executive-positions/${p.id}`, {
         method: 'PATCH',
-        body: { nameEn: p.nameEn, nameFr: p.nameFr, canManageCalendar: p.canManageCalendar, canManageContent: p.canManageContent, canAssignOfficers: p.canAssignOfficers, canManageMinutes: p.canManageMinutes, active: p.active },
+        body: { nameEn: p.nameEn, nameFr: p.nameFr, active: p.active },
       })
     }
     saved.value = true
@@ -203,40 +200,8 @@ useHead(() => ({ title: t('admin.executives.title') }))
             </Button>
           </div>
 
-          <!-- Capability flags + active + delete -->
+          <!-- Active + delete; write access is set in the Permissions matrix -->
           <div class="flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border pt-3 text-sm">
-            <label class="flex items-center gap-2">
-              <input
-                v-model="p.canManageCalendar"
-                type="checkbox"
-                class="size-4 rounded border-input accent-primary"
-              >
-              {{ t('admin.executives.capCalendar') }}
-            </label>
-            <label class="flex items-center gap-2">
-              <input
-                v-model="p.canManageContent"
-                type="checkbox"
-                class="size-4 rounded border-input accent-primary"
-              >
-              {{ t('admin.executives.capContent') }}
-            </label>
-            <label class="flex items-center gap-2">
-              <input
-                v-model="p.canAssignOfficers"
-                type="checkbox"
-                class="size-4 rounded border-input accent-primary"
-              >
-              {{ t('admin.executives.capOfficers') }}
-            </label>
-            <label class="flex items-center gap-2">
-              <input
-                v-model="p.canManageMinutes"
-                type="checkbox"
-                class="size-4 rounded border-input accent-primary"
-              >
-              {{ t('admin.executives.capMinutes') }}
-            </label>
             <label class="flex items-center gap-2">
               <input
                 v-model="p.active"
@@ -245,6 +210,12 @@ useHead(() => ({ title: t('admin.executives.title') }))
               >
               {{ t('admin.roles.active') }}
             </label>
+            <NuxtLink
+              :to="localePath('/admin/permission-grants')"
+              class="text-xs font-medium text-primary hover:underline"
+            >
+              {{ t('admin.executives.permissionsLink') }}
+            </NuxtLink>
             <Button
               variant="ghost"
               size="icon"

@@ -246,18 +246,18 @@ const agendaTemplateSeed = {
 }
 
 /**
- * Standard Toastmasters executive positions (PRD §3.2). Capability flags are
- * data, not hard-coded role checks: President manages everything (including
- * minutes), VP Education manages the calendar, VP Public Relations manages
- * content. Admins adjust.
+ * Standard Toastmasters executive positions (PRD §3.2, issue #47). Per-group
+ * write access is data, not hard-coded role checks: President writes to every
+ * group, VP Education to meetings/agenda, VP Public Relations to content +
+ * communication, Secretary to meetings (minutes). Admins adjust the matrix.
  */
 const executivePositionsSeed = [
-  { nameEn: 'President', nameFr: 'Président', canManageCalendar: true, canManageContent: true, canAssignOfficers: true, canManageMinutes: true },
-  { nameEn: 'VP Education', nameFr: 'VP Éducation', canManageCalendar: true },
+  { nameEn: 'President', nameFr: 'Président', writePeople: true, writeMeetings: true, writeContent: true, writeCommunication: true, writeConfig: true },
+  { nameEn: 'VP Education', nameFr: 'VP Éducation', writeMeetings: true },
   { nameEn: 'VP Membership', nameFr: 'VP Adhésion' },
-  { nameEn: 'VP Public Relations', nameFr: 'VP Relations publiques', canManageContent: true },
+  { nameEn: 'VP Public Relations', nameFr: 'VP Relations publiques', writeContent: true, writeCommunication: true },
   { nameEn: 'Treasurer', nameFr: 'Trésorier' },
-  { nameEn: 'Secretary', nameFr: 'Secrétaire' },
+  { nameEn: 'Secretary', nameFr: 'Secrétaire', writeMeetings: true },
   { nameEn: 'Sergeant-at-Arms', nameFr: 'Huissier' },
 ]
 
@@ -316,9 +316,11 @@ async function seedExecutivePositions() {
     executivePositionsSeed.map((p, i) => ({
       nameEn: p.nameEn,
       nameFr: p.nameFr,
-      canManageCalendar: p.canManageCalendar ?? false,
-      canManageContent: p.canManageContent ?? false,
-      canAssignOfficers: p.canAssignOfficers ?? false,
+      writePeople: p.writePeople ?? false,
+      writeMeetings: p.writeMeetings ?? false,
+      writeContent: p.writeContent ?? false,
+      writeCommunication: p.writeCommunication ?? false,
+      writeConfig: p.writeConfig ?? false,
       sortOrder: i,
     })),
   )

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { schema, useDrizzle } from '../../../db/client'
 
-/** Update an executive position's names, capability flags, or active state (admin). */
+/** Update an executive position's names, per-group write access, or active state (admin). */
 export default defineEventHandler(async (event) => {
   await requireMinRole(event, 'admin')
   const id = getRouterParam(event, 'id')!
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     if (!v) throw createError({ statusCode: 400, statusMessage: 'French name cannot be empty.' })
     patch.nameFr = v
   }
-  for (const f of ['canManageCalendar', 'canManageContent', 'canAssignOfficers', 'canManageMinutes', 'active'] as const) {
+  for (const f of ['writePeople', 'writeMeetings', 'writeContent', 'writeCommunication', 'writeConfig', 'active'] as const) {
     if (body?.[f] !== undefined) patch[f] = Boolean(body[f])
   }
   if (Object.keys(patch).length === 0) throw createError({ statusCode: 400, statusMessage: 'No fields to update.' })
