@@ -28,6 +28,12 @@ export const users = pgTable('users', {
   // Self-service profile picture (issue #43): the S3 object key for the member's
   // avatar (see server/utils/s3.ts). Null ⇒ render a default initials avatar.
   avatarKey: text('avatar_key'),
+  // Privacy consent (issue #25): recorded when the user agreed to the privacy
+  // terms at registration, with the policy version in force at the time so a
+  // future policy revision can require re-consent. Null ⇒ never consented
+  // (pre-#25 accounts; no destructive backfill).
+  privacyConsentAt: timestamp('privacy_consent_at', { withTimezone: true }),
+  privacyConsentVersion: text('privacy_consent_version'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

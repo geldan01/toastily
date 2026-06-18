@@ -6,6 +6,7 @@ const { t, locale } = useI18n()
 const name = ref('')
 const email = ref('')
 const password = ref('')
+const consent = ref(false)
 const error = ref('')
 const loading = ref(false)
 const done = ref<null | 'verified' | 'pending'>(null)
@@ -18,7 +19,7 @@ async function submit() {
   try {
     const res = await $fetch<{ verified: boolean }>('/api/auth/register', {
       method: 'POST',
-      body: { name: name.value, email: email.value, password: password.value, locale: locale.value },
+      body: { name: name.value, email: email.value, password: password.value, locale: locale.value, consent: consent.value },
     })
     if (res.verified) {
       // First user (admin) is logged in immediately.
@@ -96,6 +97,32 @@ useHead(() => ({ title: t('auth.register') }))
               {{ t('auth.passwordHint') }}
             </p>
           </div>
+          <div class="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-3">
+            <input
+              id="consent"
+              v-model="consent"
+              type="checkbox"
+              required
+              class="mt-0.5 size-4 shrink-0 rounded border-input accent-primary"
+            >
+            <Label
+              for="consent"
+              class="text-xs font-normal leading-relaxed text-muted-foreground"
+            >
+              <i18n-t
+                keypath="auth.consentLabel"
+                tag="span"
+              >
+                <template #policy>
+                  <NuxtLink
+                    :to="localePath('/privacy')"
+                    target="_blank"
+                    class="font-medium text-primary hover:underline"
+                  >{{ t('auth.consentPolicyLink') }}</NuxtLink>
+                </template>
+              </i18n-t>
+            </Label>
+          </div>
           <p
             v-if="error"
             class="text-sm text-destructive"
@@ -105,7 +132,7 @@ useHead(() => ({ title: t('auth.register') }))
           <Button
             type="submit"
             class="w-full"
-            :disabled="loading"
+            :disabled="loading || !consent"
           >
             {{ t('auth.registerCta') }}
           </Button>

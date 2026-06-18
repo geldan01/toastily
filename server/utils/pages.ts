@@ -6,7 +6,7 @@ import { hasContent } from './news'
  * the allowed slugs are an allow-list here rather than free text. Adding a new
  * standalone page = add its slug here + a route under app/pages/.
  */
-export const PAGE_SLUGS = ['about', 'faq'] as const
+export const PAGE_SLUGS = ['about', 'faq', 'privacy'] as const
 export type PageSlug = (typeof PAGE_SLUGS)[number]
 
 export function isPageSlug(slug: string | undefined): slug is PageSlug {

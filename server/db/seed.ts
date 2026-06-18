@@ -36,6 +36,10 @@ const settingsSeed: { key: string, value: string, isAdminOnly?: boolean }[] = [
   // with generic bundled photos; clubs point these at their own images.
   { key: 'landing.hero_images', value: '/images/hero/speaker.jpg,/images/hero/meeting.jpg,/images/hero/networking.jpg' },
   { key: 'default.locale', value: 'en' },
+  // Privacy policy version (issue #25). Bumped when the /privacy content changes
+  // materially; the value in force is stamped onto each user's consent record so
+  // a revision can later require re-consent.
+  { key: 'privacy.version', value: '1' },
   { key: 'speeches.max_per_meeting', value: '3' },
   // Speech timing (PRD §6.3). Window default 5–7 min; the agenda allots each
   // speech its max plus a buffer for transitions/applause.
@@ -187,6 +191,41 @@ const pagesSeed = [
       { type: 'paragraph', data: { text: 'Les cotisations varient selon le club. Contactez-nous via notre page de contact et nous vous communiquerons les tarifs en vigueur.' } },
       { type: 'header', data: { text: 'Les réunions sont-elles en anglais ou en français?', level: 2 } },
       { type: 'paragraph', data: { text: 'Les deux! Nos réunions sont bilingues et vous pouvez vous exprimer dans la langue de votre choix.' } },
+    ] }),
+  },
+  {
+    slug: 'privacy',
+    titleEn: 'Privacy policy',
+    titleFr: 'Politique de confidentialité',
+    contentEn: JSON.stringify({ blocks: [
+      { type: 'paragraph', data: { text: 'This policy explains what personal information we collect when you create an account or take part in club activities, how we use it, and who can see it. By creating an account you agree to the terms below.' } },
+      { type: 'header', data: { text: 'What we collect', level: 2 } },
+      { type: 'paragraph', data: { text: 'When you register we collect your name, email address, and password. As a member you may also add a profile picture and a phone number, and we record your participation in meetings (roles, speeches, evaluations, attendance, and votes).' } },
+      { type: 'header', data: { text: 'How your information is shared', level: 2 } },
+      { type: 'list', data: { style: 'unordered', items: [
+        'Your name and profile picture may be shown publicly on the club website and to other members (for example in the roster, agendas, and participation history).',
+        'Your email address and phone number are shared only with signed-in club members — never with guests or the general public.',
+        'Your password is stored securely (hashed) and is never visible to anyone, including club officers.',
+      ] } },
+      { type: 'header', data: { text: 'How we use your information', level: 2 } },
+      { type: 'paragraph', data: { text: 'We use your information to run the club: to organise meetings and agendas, to let members reach one another, to track participation, and to send you club-related emails. We do not sell your personal information.' } },
+      { type: 'header', data: { text: 'Your choices', level: 2 } },
+      { type: 'paragraph', data: { text: 'You can review or update your profile, including your photo and phone number, from your account page at any time. To request removal of your account or data, contact a club officer.' } },
+    ] }),
+    contentFr: JSON.stringify({ blocks: [
+      { type: 'paragraph', data: { text: 'Cette politique explique quels renseignements personnels nous recueillons lorsque vous créez un compte ou participez aux activités du club, comment nous les utilisons et qui peut les consulter. En créant un compte, vous acceptez les conditions ci-dessous.' } },
+      { type: 'header', data: { text: 'Ce que nous recueillons', level: 2 } },
+      { type: 'paragraph', data: { text: 'Lors de votre inscription, nous recueillons votre nom, votre adresse courriel et votre mot de passe. En tant que membre, vous pouvez aussi ajouter une photo de profil et un numéro de téléphone, et nous consignons votre participation aux réunions (rôles, discours, évaluations, présence et votes).' } },
+      { type: 'header', data: { text: 'Partage de vos renseignements', level: 2 } },
+      { type: 'list', data: { style: 'unordered', items: [
+        'Votre nom et votre photo de profil peuvent être affichés publiquement sur le site du club et auprès des autres membres (par exemple dans le répertoire, les ordres du jour et l\'historique de participation).',
+        'Votre adresse courriel et votre numéro de téléphone ne sont partagés qu\'avec les membres connectés du club — jamais avec les invités ni le grand public.',
+        'Votre mot de passe est stocké de façon sécurisée (haché) et n\'est jamais visible par quiconque, y compris les dirigeants du club.',
+      ] } },
+      { type: 'header', data: { text: 'Comment nous utilisons vos renseignements', level: 2 } },
+      { type: 'paragraph', data: { text: 'Nous utilisons vos renseignements pour faire fonctionner le club : organiser les réunions et les ordres du jour, permettre aux membres de communiquer entre eux, suivre la participation et vous envoyer des courriels liés au club. Nous ne vendons pas vos renseignements personnels.' } },
+      { type: 'header', data: { text: 'Vos choix', level: 2 } },
+      { type: 'paragraph', data: { text: 'Vous pouvez consulter ou mettre à jour votre profil, y compris votre photo et votre numéro de téléphone, depuis votre page de compte à tout moment. Pour demander la suppression de votre compte ou de vos données, communiquez avec un dirigeant du club.' } },
     ] }),
   },
 ]

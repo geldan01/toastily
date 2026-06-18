@@ -3,6 +3,7 @@ import { Clock, Mail, MapPin } from '@lucide/vue'
 
 const { setting } = useSettings()
 const { locale, t } = useI18n()
+const localePath = useLocalePath()
 
 const clubName = computed(() => setting('club.name', 'Toastily'))
 const meetingDay = computed(() => setting(locale.value === 'fr' ? 'meeting.day_fr' : 'meeting.day_en'))
@@ -81,9 +82,15 @@ const identityParts = computed(() => [
     </div>
 
     <div class="border-t border-border py-4">
-      <p class="mx-auto max-w-6xl px-4 text-xs text-muted-foreground">
-        © {{ year }} {{ clubName }}. {{ $t('footer.rights') }}
-      </p>
+      <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <p>© {{ year }} {{ clubName }}. {{ $t('footer.rights') }}</p>
+        <NuxtLink
+          :to="localePath('/privacy')"
+          class="hover:text-foreground"
+        >
+          {{ $t('footer.privacy') }}
+        </NuxtLink>
+      </div>
     </div>
   </footer>
 </template>

@@ -13,6 +13,7 @@
     "members": "Membres",
     "faq": "FAQ",
     "contact": "Contact",
+    "privacy": "Confidentialité",
     "login": "Connexion",
     "account": "Mon compte",
     "logout": "Déconnexion",
@@ -45,7 +46,9 @@
     "resetTitle": "Choisir un nouveau mot de passe",
     "resetCta": "Mettre à jour le mot de passe",
     "resetDone": "Votre mot de passe a été mis à jour. Vous pouvez maintenant vous connecter.",
-    "passwordHint": "Au moins 8 caractères."
+    "passwordHint": "Au moins 8 caractères.",
+    "consentLabel": "J'accepte la {policy}. Je comprends que mon nom et ma photo de profil peuvent être affichés publiquement, et que mon courriel et mon numéro de téléphone ne sont partagés qu'avec les membres du club.",
+    "consentPolicyLink": "politique de confidentialité"
   },
   "account": {
     "title": "Mon compte",
@@ -445,6 +448,7 @@
   "pages": {
     "about": "À propos",
     "faq": "FAQ",
+    "privacy": "Politique de confidentialité",
     "edit": "Modifier la page",
     "empty": "Cette page n'a pas encore été publiée.",
     "notFound": "Page introuvable.",
@@ -666,7 +670,8 @@
     "division": "Division",
     "district": "District",
     "rights": "Tous droits réservés.",
-    "poweredBy": "Propulsé par Toastily"
+    "poweredBy": "Propulsé par Toastily",
+    "privacy": "Politique de confidentialité"
   },
   "error": {
     "title": "Une erreur est survenue",

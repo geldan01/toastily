@@ -13,6 +13,7 @@
     "members": "Members",
     "faq": "FAQ",
     "contact": "Contact",
+    "privacy": "Privacy",
     "login": "Log in",
     "account": "My account",
     "logout": "Log out",
@@ -45,7 +46,9 @@
     "resetTitle": "Choose a new password",
     "resetCta": "Update password",
     "resetDone": "Your password has been updated. You can now log in.",
-    "passwordHint": "At least 8 characters."
+    "passwordHint": "At least 8 characters.",
+    "consentLabel": "I agree to the {policy}. I understand my name and profile picture may be shown publicly, and my email and phone number are shared only with club members.",
+    "consentPolicyLink": "privacy policy"
   },
   "account": {
     "title": "My account",
@@ -445,6 +448,7 @@
   "pages": {
     "about": "About",
     "faq": "FAQ",
+    "privacy": "Privacy policy",
     "edit": "Edit page",
     "empty": "This page hasn’t been published yet.",
     "notFound": "Page not found.",
@@ -666,7 +670,8 @@
     "division": "Division",
     "district": "District",
     "rights": "All rights reserved.",
-    "poweredBy": "Powered by Toastily"
+    "poweredBy": "Powered by Toastily",
+    "privacy": "Privacy policy"
   },
   "error": {
     "title": "Something went wrong",
