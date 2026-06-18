@@ -5,7 +5,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 
 /** Create an email schedule (officer/admin). PRD §10. */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'officer')
+  await requireCommunicationManager(event)
   const body = await readBody(event)
 
   const templateKey = String(body?.templateKey ?? '').trim()

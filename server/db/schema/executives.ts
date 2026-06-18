@@ -2,30 +2,40 @@ import { boolean, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg
 import { users } from './users'
 
 /**
- * Executive officer positions (PRD §3.2) — DB-managed, EN/FR, fully editable by
- * admin. Authority is data-driven via capability flags rather than hard-coded
- * against a position name (CLAUDE.md: roles are data, not enums):
- *  - `canManageCalendar` — add/generate meetings, manage holidays;
- *  - `canManageContent`  — edit landing content & news;
- *  - `canAssignOfficers` — assign members to executive positions (President);
- *  - `canManageMinutes`  — author/approve meeting minutes club-wide (President).
+ * Executive officer positions (PRD §3.2, issue #47) — DB-managed, EN/FR, fully
+ * editable by admin. Write authority is data-driven (CLAUDE.md: roles are data,
+ * not enums) and modelled as one boolean per **functional group** of the
+ * executive hub, so the per-position write-access matrix (Permissions page) maps
+ * one cell ↔ one column:
+ *  - `writePeople`        — assign executive positions, manage permissions;
+ *  - `writeMeetings`      — meetings/holidays, agenda, meeting minutes;
+ *  - `writeContent`       — News, testimonials, landing content;
+ *  - `writeCommunication` — email members, scheduled/triggered notifications;
+ *  - `writeConfig`        — club settings.
+ * The matrix is keyed to positions, not people: reassigning a position to a new
+ * member never changes its write access. Admins implicitly hold every group.
  * Seeded with the standard Toastmasters set; admins adjust per club.
  */
 export const executivePositions = pgTable('executive_positions', {
   id: uuid('id').defaultRandom().primaryKey(),
   nameEn: text('name_en').notNull(),
   nameFr: text('name_fr').notNull(),
-  canManageCalendar: boolean('can_manage_calendar').notNull().default(false),
-  canManageContent: boolean('can_manage_content').notNull().default(false),
-  canAssignOfficers: boolean('can_assign_officers').notNull().default(false),
-  // Whether the holder may manage meeting minutes club-wide (author any meeting's
-  // minutes, approve prior minutes) — the President by default (PRD §6, issue
-  // #14). Data-driven so authority is never hard-coded against a position name.
-  canManageMinutes: boolean('can_manage_minutes').notNull().default(false),
+  writePeople: boolean('write_people').notNull().default(false),
+  writeMeetings: boolean('write_meetings').notNull().default(false),
+  writeContent: boolean('write_content').notNull().default(false),
+  writeCommunication: boolean('write_communication').notNull().default(false),
+  writeConfig: boolean('write_config').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   active: boolean('active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+/**
+ * The functional groups of the executive hub that carry a write-access column in
+ * the per-position permissions matrix (issue #47). Order matches the hub.
+ */
+export const PERMISSION_GROUPS = ['people', 'meetings', 'content', 'communication', 'config'] as const
+export type PermissionGroup = typeof PERMISSION_GROUPS[number]
 
 /**
  * Executive-position assignments over time (PRD §3.2, §11). Append/temporal:

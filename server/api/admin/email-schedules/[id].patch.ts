@@ -5,7 +5,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 
 /** Update an email schedule (officer/admin). Partial — only sent fields change. PRD §10. */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'officer')
+  await requireCommunicationManager(event)
   const id = getRouterParam(event, 'id')!
   const body = await readBody(event)
 

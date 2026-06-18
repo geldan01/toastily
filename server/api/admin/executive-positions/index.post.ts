@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm'
 import { schema, useDrizzle } from '../../../db/client'
 
-/** Create an executive position (admin). Capability flags default off. */
+/** Create an executive position (admin). Per-group write access defaults off. */
 export default defineEventHandler(async (event) => {
   await requireMinRole(event, 'admin')
   const body = await readBody(event)
@@ -17,10 +17,11 @@ export default defineEventHandler(async (event) => {
   const [row] = await db.insert(schema.executivePositions).values({
     nameEn,
     nameFr,
-    canManageCalendar: !!body?.canManageCalendar,
-    canManageContent: !!body?.canManageContent,
-    canAssignOfficers: !!body?.canAssignOfficers,
-    canManageMinutes: !!body?.canManageMinutes,
+    writePeople: !!body?.writePeople,
+    writeMeetings: !!body?.writeMeetings,
+    writeContent: !!body?.writeContent,
+    writeCommunication: !!body?.writeCommunication,
+    writeConfig: !!body?.writeConfig,
     sortOrder: next,
   }).returning()
   return { position: row }

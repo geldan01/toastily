@@ -96,7 +96,7 @@ const tools = computed(() => [
     to: localePath('/admin/uploads'),
     title: t('admin.uploads.title'),
     desc: t('executive.tools.uploads'),
-    show: isAdmin.value,
+    show: caps.value?.canManageContent ?? false,
   },
   {
     key: 'notifications',
@@ -105,7 +105,7 @@ const tools = computed(() => [
     to: localePath('/admin/notifications'),
     title: t('admin.notifications.title'),
     desc: t('executive.tools.notifications'),
-    show: isOfficer.value,
+    show: isAdmin.value || (caps.value?.canManageCommunication ?? false),
   },
   {
     key: 'settings',
@@ -114,7 +114,7 @@ const tools = computed(() => [
     to: localePath('/admin/settings'),
     title: t('admin.settings'),
     desc: t('executive.tools.settings'),
-    show: isAdmin.value,
+    show: isAdmin.value || (caps.value?.canManageConfig ?? false),
   },
 ].filter(tool => tool.show))
 

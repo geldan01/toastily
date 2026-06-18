@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check, Plus, Send, Trash2, TriangleAlert } from '@lucide/vue'
 
-definePageMeta({ middleware: 'officer' })
+definePageMeta({ middleware: 'communication' })
 
 const { t, locale } = useI18n()
 const localePath = useLocalePath()

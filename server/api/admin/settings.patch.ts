@@ -46,7 +46,7 @@ function validate(key: string, value: string): void {
  * their value updated. Clears the public-settings cache afterwards.
  */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'admin')
+  await requireConfigManager(event)
 
   const body = await readBody(event)
   const updates = body?.settings

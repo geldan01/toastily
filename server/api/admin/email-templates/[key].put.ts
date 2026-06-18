@@ -7,7 +7,7 @@ import { schema, useDrizzle } from '../../../db/client'
  * only the editable copy fields change. PRD §10.
  */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'officer')
+  await requireCommunicationManager(event)
   const key = getRouterParam(event, 'key')!
   const body = await readBody(event)
 

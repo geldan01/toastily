@@ -134,6 +134,13 @@
       "when": 1781742521050,
       "tag": "0018_tough_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790000000000,
+      "tag": "0019_smart_permission_matrix",
+      "breakpoints": true
     }
   ]
 }

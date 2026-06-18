@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check } from '@lucide/vue'
 
-definePageMeta({ middleware: 'admin' })
+definePageMeta({ middleware: 'config' })
 
 const { t, te } = useI18n()
 
