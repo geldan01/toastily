@@ -6,6 +6,10 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const email = String(body?.email ?? '').trim().toLowerCase()
 
+  // Bot protection (issue #26): this endpoint sends an email, so gate it behind
+  // the same CAPTCHA as registration. No-op when Turnstile is unconfigured.
+  await requireTurnstile(event, body?.turnstileToken)
+
   if (email.includes('@')) {
     const [user] = await useDrizzle()
       .select({ id: schema.users.id, passwordHash: schema.users.passwordHash })

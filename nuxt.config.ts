@@ -53,8 +53,20 @@ export default defineNuxtConfig({
       // Max upload size in bytes (default 5 MB).
       maxBytes: Number(process.env.S3_MAX_BYTES) || 5 * 1024 * 1024,
     },
+    // Cloudflare Turnstile CAPTCHA (issue #26) — bot protection on the
+    // unauthenticated, email-sending endpoints (register, password reset).
+    // Server-only secret; resolved from the admin `settings` table first, then
+    // this env var (see server/utils/turnstile.ts). Empty ⇒ CAPTCHA is bypassed
+    // (graceful dev/test degradation, like the email stub). The matching public
+    // site key lives under `public.turnstileSiteKey` below — set both together.
+    turnstile: {
+      secretKey: process.env.TURNSTILE_SECRET_KEY || '',
+    },
     public: {
       siteUrl: process.env.SITE_URL || '', // NUXT_PUBLIC_SITE_URL
+      // Public Turnstile site key — safe to ship to the browser. Empty ⇒ the
+      // widget is not rendered and the form submits without a CAPTCHA.
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',
     },
   },
   compatibilityDate: '2025-01-01',

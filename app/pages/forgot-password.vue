@@ -2,15 +2,26 @@
 const localePath = useLocalePath()
 const { t } = useI18n()
 
+const config = useRuntimeConfig()
+const captchaRequired = Boolean(config.public.turnstileSiteKey)
+
 const email = ref('')
 const sent = ref(false)
 const loading = ref(false)
+const captchaToken = ref('')
+const captcha = useTemplateRef('captcha')
+
+const captchaReady = computed(() => !captchaRequired || Boolean(captchaToken.value))
 
 async function submit() {
   loading.value = true
   try {
-    await $fetch('/api/auth/request-reset', { method: 'POST', body: { email: email.value } })
+    await $fetch('/api/auth/request-reset', { method: 'POST', body: { email: email.value, turnstileToken: captchaToken.value } })
     sent.value = true
+  }
+  catch {
+    // Turnstile tokens are single-use — reset so the user can retry.
+    captcha.value?.reset()
   }
   finally {
     loading.value = false
@@ -53,10 +64,15 @@ useHead(() => ({ title: t('auth.forgotTitle') }))
               autocomplete="email"
             />
           </div>
+          <TurnstileWidget
+            ref="captcha"
+            v-model="captchaToken"
+            action="password-reset"
+          />
           <Button
             type="submit"
             class="w-full"
-            :disabled="loading"
+            :disabled="loading || !captchaReady"
           >
             {{ t('auth.forgotCta') }}
           </Button>

@@ -19,6 +19,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Privacy consent is required' })
   }
 
+  // Bot protection (issue #26): verify the CAPTCHA before creating any account
+  // or sending a confirmation email. No-op when Turnstile is unconfigured.
+  await requireTurnstile(event, body?.turnstileToken)
+
   const db = useDrizzle()
   const consentAt = new Date()
   const consentVersion = (await getSetting('privacy.version')) || '1'
