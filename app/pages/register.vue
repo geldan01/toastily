@@ -3,13 +3,21 @@ const { fetch: refreshSession, loggedIn } = useUserSession()
 const localePath = useLocalePath()
 const { t, locale } = useI18n()
 
+const config = useRuntimeConfig()
+const captchaRequired = Boolean(config.public.turnstileSiteKey)
+
 const name = ref('')
 const email = ref('')
 const password = ref('')
 const consent = ref(false)
+const captchaToken = ref('')
+const captcha = useTemplateRef('captcha')
 const error = ref('')
 const loading = ref(false)
 const done = ref<null | 'verified' | 'pending'>(null)
+
+// Submit is blocked until the CAPTCHA is solved (when one is configured).
+const captchaReady = computed(() => !captchaRequired || Boolean(captchaToken.value))
 
 if (loggedIn.value) await navigateTo(localePath('/account'))
 
@@ -19,7 +27,7 @@ async function submit() {
   try {
     const res = await $fetch<{ verified: boolean }>('/api/auth/register', {
       method: 'POST',
-      body: { name: name.value, email: email.value, password: password.value, locale: locale.value, consent: consent.value },
+      body: { name: name.value, email: email.value, password: password.value, locale: locale.value, consent: consent.value, turnstileToken: captchaToken.value },
     })
     if (res.verified) {
       // First user (admin) is logged in immediately.
@@ -32,6 +40,8 @@ async function submit() {
   }
   catch (e) {
     error.value = errorMessage(e, t('auth.genericError'))
+    // Turnstile tokens are single-use — reset so the user can retry.
+    captcha.value?.reset()
   }
   finally {
     loading.value = false
@@ -123,6 +133,11 @@ useHead(() => ({ title: t('auth.register') }))
               </i18n-t>
             </Label>
           </div>
+          <TurnstileWidget
+            ref="captcha"
+            v-model="captchaToken"
+            action="register"
+          />
           <p
             v-if="error"
             class="text-sm text-destructive"
@@ -132,7 +147,7 @@ useHead(() => ({ title: t('auth.register') }))
           <Button
             type="submit"
             class="w-full"
-            :disabled="loading || !consent"
+            :disabled="loading || !consent || !captchaReady"
           >
             {{ t('auth.registerCta') }}
           </Button>
