@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BarChart3, FileText, Mail, Pin, Plus, Trash2, Wrench } from '@lucide/vue'
+import { BarChart3, FileText, Mail, Pin, Plus, Trash2, UserMinus, Wrench } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -28,12 +28,36 @@ type Message = {
   authorName: string | null
 }
 
-const { data } = await useFetch<{ members: Member[] }>('/api/members/roster', {
+const { data, refresh: refreshRoster } = await useFetch<{ members: Member[] }>('/api/members/roster', {
   key: 'members-roster',
   default: () => ({ members: [] }),
 })
 
 const members = computed(() => data.value?.members ?? [])
+
+// People-management capability gates the revoke action (issue #50): admin or a
+// `canAssignOfficers` (President) position. Authority is data, not a role name.
+const { data: caps } = useCapabilities()
+const canManagePeople = computed(() => caps.value?.canAssignOfficers ?? false)
+
+// A member/officer (not self, not an admin) may be revoked back to guest.
+function canRevoke(m: Member) {
+  return canManagePeople.value && m.id !== user.value?.id && m.status !== 'admin'
+}
+
+const revoking = ref<string | null>(null)
+
+async function revokeMember(m: Member) {
+  if (!window.confirm(t('members.roster.confirmRevoke', { name: m.name }))) return
+  revoking.value = m.id
+  try {
+    await $fetch(`/api/members/${m.id}/revoke`, { method: 'POST' })
+    await refreshRoster()
+  }
+  finally {
+    revoking.value = null
+  }
+}
 
 const { data: messageData, refresh: refreshMessages } = await useFetch<{ messages: Message[] }>(
   '/api/messages',
@@ -458,9 +482,21 @@ useHead(() => ({ title: t('members.title') }))
                   </div>
                 </div>
               </div>
-              <Badge :variant="m.status === 'member' ? 'outline' : 'default'">
-                {{ statusLabel(m.status) }}
-              </Badge>
+              <div class="flex shrink-0 flex-col items-end gap-2">
+                <Badge :variant="m.status === 'member' ? 'outline' : 'default'">
+                  {{ statusLabel(m.status) }}
+                </Badge>
+                <Button
+                  v-if="canRevoke(m)"
+                  variant="ghost"
+                  size="sm"
+                  class="h-7 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  :disabled="revoking === m.id"
+                  @click="revokeMember(m)"
+                >
+                  <UserMinus class="size-3.5" /> {{ t('members.roster.revoke') }}
+                </Button>
+              </div>
             </CardHeader>
           </Card>
         </li>

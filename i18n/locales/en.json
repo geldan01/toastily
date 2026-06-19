@@ -114,7 +114,9 @@
     },
     "roster": {
       "title": "Roster",
-      "since": "Member since {date}"
+      "since": "Member since {date}",
+      "revoke": "Revoke",
+      "confirmRevoke": "Revoke {name}'s membership? They will return to guest status."
     }
   },
   "participation": {
@@ -156,6 +158,7 @@
     },
     "tools": {
       "requests": "Review and approve membership requests.",
+      "requestsPending": "{count} pending",
       "meetings": "Add meetings, generate the year, manage holidays.",
       "notifications": "Email members and manage scheduled sends.",
       "executives": "Assign executive positions and view history.",
@@ -339,6 +342,7 @@
       "title": "Executive team",
       "intro": "Assign members to executive positions. Write access for each position is set in the Permissions matrix — no role names are hard-coded.",
       "permissionsLink": "Edit write access →",
+      "notifyMemberRequests": "Email on new member requests",
       "nameEn": "Position (EN)",
       "nameFr": "Position (FR)",
       "holder": "Current holder",

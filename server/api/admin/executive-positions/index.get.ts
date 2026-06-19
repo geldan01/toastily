@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
     writeContent: schema.executivePositions.writeContent,
     writeCommunication: schema.executivePositions.writeCommunication,
     writeConfig: schema.executivePositions.writeConfig,
+    notifyMemberRequests: schema.executivePositions.notifyMemberRequests,
     active: schema.executivePositions.active,
     sortOrder: schema.executivePositions.sortOrder,
     holderId: schema.executiveAssignments.userId,

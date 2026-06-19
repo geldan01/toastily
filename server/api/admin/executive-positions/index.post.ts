@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
     writeContent: !!body?.writeContent,
     writeCommunication: !!body?.writeCommunication,
     writeConfig: !!body?.writeConfig,
+    notifyMemberRequests: !!body?.notifyMemberRequests,
     sortOrder: next,
   }).returning()
   return { position: row }

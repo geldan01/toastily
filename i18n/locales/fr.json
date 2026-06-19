@@ -114,7 +114,9 @@
     },
     "roster": {
       "title": "Répertoire",
-      "since": "Membre depuis {date}"
+      "since": "Membre depuis {date}",
+      "revoke": "Révoquer",
+      "confirmRevoke": "Révoquer l'adhésion de {name}? Le compte redeviendra invité."
     }
   },
   "participation": {
@@ -156,6 +158,7 @@
     },
     "tools": {
       "requests": "Examiner et approuver les demandes d'adhésion.",
+      "requestsPending": "{count} en attente",
       "meetings": "Ajouter des réunions, générer l'année, gérer les congés.",
       "notifications": "Écrire aux membres et gérer les envois planifiés.",
       "executives": "Attribuer les postes exécutifs et consulter l'historique.",
@@ -339,6 +342,7 @@
       "title": "Équipe de direction",
       "intro": "Assignez des membres aux postes de direction. Les droits d’écriture de chaque poste se règlent dans la matrice des permissions — aucun nom de poste n'est codé en dur.",
       "permissionsLink": "Modifier les droits d’écriture →",
+      "notifyMemberRequests": "Courriel lors d’une nouvelle demande d’adhésion",
       "nameEn": "Poste (EN)",
       "nameFr": "Poste (FR)",
       "holder": "Titulaire actuel",

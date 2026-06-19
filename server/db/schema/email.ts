@@ -45,8 +45,12 @@ export const emailSchedules = pgTable('email_schedules', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
-/** How a send was triggered (PRD §10). */
-export const emailTrigger = pgEnum('email_trigger', ['manual', 'scheduled'])
+/**
+ * How a send was triggered (PRD §10). `triggered` covers system-event sends
+ * (e.g. the membership-request notification, issue #50) — neither a human
+ * clicking "Send now" nor the scheduler.
+ */
+export const emailTrigger = pgEnum('email_trigger', ['manual', 'scheduled', 'triggered'])
 
 /** Outcome of a send attempt — recorded for the history log (PRD §10). */
 export const emailSendStatus = pgEnum('email_send_status', ['sent', 'stubbed', 'failed'])

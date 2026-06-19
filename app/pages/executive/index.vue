@@ -11,6 +11,14 @@ const { data: caps } = useCapabilities()
 const isAdmin = computed(() => hasMinRole(user.value?.status, 'admin'))
 const isOfficer = computed(() => hasMinRole(user.value?.status, 'officer'))
 
+// Pending membership-request count, surfaced as a badge on the Requests card
+// (issue #50). Officer-gated endpoint; refreshes when the hub is revisited.
+const { data: requestCount } = await useFetch<{ pending: number }>('/api/membership/requests/count', {
+  key: 'membership-requests-count',
+  default: () => ({ pending: 0 }),
+})
+const pendingRequests = computed(() => requestCount.value?.pending ?? 0)
+
 // Each tool surfaces an existing management page, gated by the capability the
 // server already enforces. Authority is data (capabilities), not a position
 // name (CLAUDE.md). Hidden when the user lacks the capability. Tools are
@@ -25,6 +33,7 @@ const tools = computed(() => [
     title: t('nav.requests'),
     desc: t('executive.tools.requests'),
     show: isOfficer.value,
+    badge: pendingRequests.value,
   },
   {
     key: 'executives',
@@ -255,13 +264,20 @@ useHead(() => ({ title: t('executive.title') }))
 
             <div class="relative flex items-start gap-4">
               <div
-                class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-lg transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"
+                class="relative flex size-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br shadow-lg transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"
                 :class="[group.meta.tile, group.meta.iconText]"
               >
                 <component
                   :is="tool.icon"
                   class="size-5"
                 />
+                <span
+                  v-if="tool.badge"
+                  class="absolute -right-1.5 -top-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-xs font-bold leading-5 text-destructive-foreground shadow ring-2 ring-card"
+                  :aria-label="t('executive.tools.requestsPending', { count: tool.badge })"
+                >
+                  {{ tool.badge }}
+                </span>
               </div>
               <div class="min-w-0">
                 <h3 class="font-semibold leading-tight text-foreground">
