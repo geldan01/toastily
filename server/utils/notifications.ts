@@ -120,6 +120,129 @@ export async function getMemberRecipients(): Promise<{ email: string, locale: Lo
     .map(r => ({ email: r.email, locale: r.locale === 'fr' ? 'fr' : 'en' }))
 }
 
+/** Minimal HTML escaping for user-supplied values interpolated into emails. */
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('\'', '&#39;')
+}
+
+/**
+ * Recipients of the membership-request notification (issue #50): the current
+ * holder(s) of any executive position flagged `notifyMemberRequests`, plus every
+ * site admin. Routing is data-driven — never a hard-coded position name
+ * (CLAUDE.md). Deduplicated by email.
+ */
+export async function getMembershipRequestRecipients(): Promise<{ email: string, locale: Locale }[]> {
+  const db = useDrizzle()
+
+  const admins = await db
+    .select({ email: schema.users.email, locale: schema.users.locale })
+    .from(schema.users)
+    .where(eq(schema.users.status, 'admin'))
+
+  const flagged = await db
+    .select({ email: schema.users.email, locale: schema.users.locale })
+    .from(schema.executiveAssignments)
+    .innerJoin(schema.executivePositions, eq(schema.executivePositions.id, schema.executiveAssignments.positionId))
+    .innerJoin(schema.users, eq(schema.users.id, schema.executiveAssignments.userId))
+    .where(and(
+      isNull(schema.executiveAssignments.endedAt),
+      eq(schema.executivePositions.active, true),
+      eq(schema.executivePositions.notifyMemberRequests, true),
+    ))
+
+  const byEmail = new Map<string, { email: string, locale: Locale }>()
+  for (const r of [...admins, ...flagged]) {
+    if (!r.email?.includes('@')) continue
+    const key = r.email.toLowerCase()
+    if (byEmail.has(key)) continue
+    byEmail.set(key, { email: r.email, locale: r.locale === 'fr' ? 'fr' : 'en' })
+  }
+  return [...byEmail.values()]
+}
+
+export interface NotifyMembershipRequestInput {
+  /** Display name of the guest who requested membership. */
+  requesterName: string
+  /** Optional free-text message from the requester. */
+  message?: string | null
+  /** The requesting user's id, recorded as `triggeredBy` on the send log. */
+  requesterId?: string | null
+}
+
+/**
+ * Email the President / VP Membership / admins that a new membership request
+ * arrived (issue #50). Renders the `membership_request_received` template per
+ * recipient locale, delivers via Resend (or the log stub), and records one row
+ * in `email_send_log` (trigger `triggered`). Never throws — a delivery problem
+ * must not fail the underlying request; failures are captured in the log.
+ */
+export async function notifyMembershipRequest(input: NotifyMembershipRequestInput): Promise<SendNotificationResult> {
+  const db = useDrizzle()
+  const templateKey = 'membership_request_received'
+
+  const [template] = await db.select().from(schema.emailTemplates)
+    .where(eq(schema.emailTemplates.key, templateKey)).limit(1)
+  if (!template) {
+    return { status: 'failed', recipientCount: 0, error: `Unknown email template: ${templateKey}` }
+  }
+
+  const recipients = await getMembershipRequestRecipients()
+  const requestsLink = `${siteUrl()}/membership/requests`
+  const name = escapeHtml(input.requesterName)
+
+  const renderForLocale = (subject: string, body: string, locale: Locale) => {
+    const messageHtml = input.message
+      ? `<blockquote>${escapeHtml(input.message)}</blockquote>`
+      : (locale === 'fr' ? '<p><em>(Aucun message)</em></p>' : '<p><em>(No message)</em></p>')
+    const html = body
+      .replaceAll('{{requester_name}}', name)
+      .replaceAll('{{message}}', messageHtml)
+      .replaceAll('{{requests_link}}', requestsLink)
+    return { subject, html }
+  }
+
+  const rendered: Record<Locale, { subject: string, html: string }> = {
+    en: renderForLocale(template.subjectEn, template.bodyEn, 'en'),
+    fr: renderForLocale(template.subjectFr, template.bodyFr, 'fr'),
+  }
+
+  let anyFailed = false
+  let allStubbed = true
+  let lastError: string | undefined
+  let sentCount = 0
+
+  for (const r of recipients) {
+    const { subject, html } = rendered[r.locale]
+    const res = await sendEmail({ to: r.email, subject, html })
+    if (!res.ok) {
+      anyFailed = true
+      lastError = res.error
+      continue
+    }
+    if (!res.stubbed) allStubbed = false
+    sentCount++
+  }
+
+  const status: SendNotificationResult['status']
+    = anyFailed ? 'failed' : (recipients.length > 0 && allStubbed ? 'stubbed' : 'sent')
+
+  await db.insert(schema.emailSendLog).values({
+    templateKey,
+    trigger: 'triggered',
+    status,
+    recipientCount: sentCount,
+    triggeredBy: input.requesterId ?? null,
+    error: lastError ?? null,
+  })
+
+  return { status, recipientCount: sentCount, error: lastError }
+}
+
 function localizedDate(date: string, locale: Locale): string {
   return new Date(`${date}T00:00:00`).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-CA', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',

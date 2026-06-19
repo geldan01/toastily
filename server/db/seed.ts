@@ -291,9 +291,9 @@ const agendaTemplateSeed = {
  * communication, Secretary to meetings (minutes). Admins adjust the matrix.
  */
 const executivePositionsSeed = [
-  { nameEn: 'President', nameFr: 'Président', writePeople: true, writeMeetings: true, writeContent: true, writeCommunication: true, writeConfig: true },
+  { nameEn: 'President', nameFr: 'Président', writePeople: true, writeMeetings: true, writeContent: true, writeCommunication: true, writeConfig: true, notifyMemberRequests: true },
   { nameEn: 'VP Education', nameFr: 'VP Éducation', writeMeetings: true },
-  { nameEn: 'VP Membership', nameFr: 'VP Adhésion' },
+  { nameEn: 'VP Membership', nameFr: 'VP Adhésion', notifyMemberRequests: true },
   { nameEn: 'VP Public Relations', nameFr: 'VP Relations publiques', writeContent: true, writeCommunication: true },
   { nameEn: 'Treasurer', nameFr: 'Trésorier' },
   { nameEn: 'Secretary', nameFr: 'Secrétaire', writeMeetings: true },
@@ -314,6 +314,18 @@ const emailTemplatesSeed = [
     subjectFr: 'Rôles encore vacants pour notre prochaine réunion',
     bodyEn: '<p>{{intro}}</p>\n{{unfilled_roles}}\n<p><a href="{{signup_link}}">Sign up here</a></p>\n<p>{{outro}}</p>',
     bodyFr: '<p>{{intro}}</p>\n{{unfilled_roles}}\n<p><a href="{{signup_link}}">Inscrivez-vous ici</a></p>\n<p>{{outro}}</p>',
+  },
+  {
+    // System-triggered when a guest requests membership (issue #50). Sent to the
+    // President, VP Membership, and site admin(s). Placeholders substituted at
+    // send time: {{requester_name}} {{message}} {{requests_link}}.
+    key: 'membership_request_received',
+    descriptionEn: 'Notifies the President, VP Membership, and admins when a new membership request is submitted.',
+    descriptionFr: 'Avise le président, le VP Adhésion et les administrateurs lorsqu\'une nouvelle demande d\'adhésion est soumise.',
+    subjectEn: 'New membership request',
+    subjectFr: 'Nouvelle demande d\'adhésion',
+    bodyEn: '<p><strong>{{requester_name}}</strong> has requested to become a member.</p>\n{{message}}\n<p><a href="{{requests_link}}">Review membership requests</a></p>',
+    bodyFr: '<p><strong>{{requester_name}}</strong> a demandé à devenir membre.</p>\n{{message}}\n<p><a href="{{requests_link}}">Examiner les demandes d\'adhésion</a></p>',
   },
 ]
 
@@ -360,6 +372,7 @@ async function seedExecutivePositions() {
       writeContent: p.writeContent ?? false,
       writeCommunication: p.writeCommunication ?? false,
       writeConfig: p.writeConfig ?? false,
+      notifyMemberRequests: p.notifyMemberRequests ?? false,
       sortOrder: i,
     })),
   )

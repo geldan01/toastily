@@ -23,5 +23,10 @@ export default defineEventHandler(async (event) => {
   if (existing) return { ok: true, status: 'pending' }
 
   await db.insert(schema.membershipRequests).values({ userId: user.id, message })
+
+  // Notify the President / VP Membership / admins (issue #50). Never let a
+  // delivery problem fail the request — failures are captured in email_send_log.
+  await notifyMembershipRequest({ requesterName: user.name, message, requesterId: user.id })
+
   return { ok: true, status: 'pending' }
 })

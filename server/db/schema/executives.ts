@@ -25,6 +25,10 @@ export const executivePositions = pgTable('executive_positions', {
   writeContent: boolean('write_content').notNull().default(false),
   writeCommunication: boolean('write_communication').notNull().default(false),
   writeConfig: boolean('write_config').notNull().default(false),
+  // Whether the current holder of this position is emailed when a new membership
+  // request arrives (issue #50). Data-driven routing — never a hard-coded
+  // position name (CLAUDE.md). Seeded true for President + VP Membership.
+  notifyMemberRequests: boolean('notify_member_requests').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   active: boolean('active').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

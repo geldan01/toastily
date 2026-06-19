@@ -11,6 +11,7 @@ interface Position {
   nameEn: string
   nameFr: string
   active: boolean
+  notifyMemberRequests: boolean
   holderId: string | null
   holderName: string | null
 }
@@ -44,7 +45,7 @@ async function saveAll() {
     for (const p of positions.value) {
       await $fetch(`/api/admin/executive-positions/${p.id}`, {
         method: 'PATCH',
-        body: { nameEn: p.nameEn, nameFr: p.nameFr, active: p.active },
+        body: { nameEn: p.nameEn, nameFr: p.nameFr, active: p.active, notifyMemberRequests: p.notifyMemberRequests },
       })
     }
     saved.value = true
@@ -209,6 +210,14 @@ useHead(() => ({ title: t('admin.executives.title') }))
                 class="size-4 rounded border-input accent-primary"
               >
               {{ t('admin.roles.active') }}
+            </label>
+            <label class="flex items-center gap-2">
+              <input
+                v-model="p.notifyMemberRequests"
+                type="checkbox"
+                class="size-4 rounded border-input accent-primary"
+              >
+              {{ t('admin.executives.notifyMemberRequests') }}
             </label>
             <NuxtLink
               :to="localePath('/admin/permission-grants')"

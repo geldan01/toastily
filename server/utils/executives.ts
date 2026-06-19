@@ -1,3 +1,4 @@
+import type { H3Event } from 'h3'
 import { and, eq, isNull } from 'drizzle-orm'
 import { schema, useDrizzle } from '../db/client'
 import type { User } from '../db/schema'
@@ -107,4 +108,22 @@ export async function effectiveCapabilities(user: User): Promise<Capabilities> {
     canManageCommunication: exec.canManageCommunication,
     canManageConfig: exec.canManageConfig,
   }
+}
+
+/**
+ * Require permission to manage people (PRD §3, issue #50): admin or a holder of a
+ * `canAssignOfficers` (people-group) executive position. Authority is data, never
+ * a hard-coded position name. Returns the DB actor; throws 401/403. Mirrors
+ * `requireGrantManager` — used for officer assignment and member revocation.
+ */
+export async function requirePeopleManager(event: H3Event): Promise<User> {
+  const user = await getCurrentUser(event)
+  if (!user) {
+    throw createError({ statusCode: 401, statusMessage: 'Authentication required' })
+  }
+  const caps = await effectiveCapabilities(user)
+  if (!caps.canAssignOfficers) {
+    throw createError({ statusCode: 403, statusMessage: 'Only the President or an admin can manage members.' })
+  }
+  return user
 }

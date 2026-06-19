@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     if (!v) throw createError({ statusCode: 400, statusMessage: 'French name cannot be empty.' })
     patch.nameFr = v
   }
-  for (const f of ['writePeople', 'writeMeetings', 'writeContent', 'writeCommunication', 'writeConfig', 'active'] as const) {
+  for (const f of ['writePeople', 'writeMeetings', 'writeContent', 'writeCommunication', 'writeConfig', 'notifyMemberRequests', 'active'] as const) {
     if (body?.[f] !== undefined) patch[f] = Boolean(body[f])
   }
   if (Object.keys(patch).length === 0) throw createError({ statusCode: 400, statusMessage: 'No fields to update.' })
