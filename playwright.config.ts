@@ -62,6 +62,11 @@ export default defineConfig({
       // already-set var) so the upload route's gating is deterministic
       // regardless of a developer's local .env — see uploads-api.spec.ts.
       S3_ENDPOINT: '',
+      // Likewise keep CAPTCHA unconfigured so register/reset flows (and the
+      // account-seeding global-setup) run without a Turnstile token, matching
+      // CI — see server/utils/turnstile.ts.
+      TURNSTILE_SECRET_KEY: '',
+      NUXT_PUBLIC_TURNSTILE_SITE_KEY: '',
     },
   },
 })
