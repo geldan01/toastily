@@ -61,6 +61,7 @@ async function removeAvatar() {
 const message = ref('')
 const submitting = ref(false)
 const sent = ref(false)
+const confirming = ref(false)
 
 const isGuest = computed(() => me.value?.status === 'guest')
 const hasPending = computed(() => me.value?.membershipRequestStatus === 'pending')
@@ -121,11 +122,17 @@ async function requestMembership() {
   try {
     await $fetch('/api/membership/request', { method: 'POST', body: { message: message.value } })
     sent.value = true
+    confirming.value = false
     await refresh()
   }
   finally {
     submitting.value = false
   }
+}
+
+function cancelRequest() {
+  confirming.value = false
+  message.value = ''
 }
 
 useHead(() => ({ title: t('account.title') }))
@@ -225,25 +232,49 @@ useHead(() => ({ title: t('account.title') }))
         >
           {{ t('account.requestSent') }}
         </p>
-        <form
+        <div
           v-else
           class="space-y-4"
-          @submit.prevent="requestMembership"
         >
-          <div class="space-y-2">
-            <Label for="msg">{{ t('account.requestMessage') }}</Label>
-            <Input
-              id="msg"
-              v-model="message"
-            />
-          </div>
+          <p class="text-sm text-muted-foreground">
+            {{ t('account.requestExplanation') }}
+          </p>
           <Button
-            type="submit"
-            :disabled="submitting"
+            v-if="!confirming"
+            @click="confirming = true"
           >
             {{ t('account.requestMembership') }}
           </Button>
-        </form>
+          <form
+            v-else
+            class="space-y-4"
+            @submit.prevent="requestMembership"
+          >
+            <div class="space-y-2">
+              <Label for="msg">{{ t('account.requestMessage') }}</Label>
+              <Input
+                id="msg"
+                v-model="message"
+              />
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <Button
+                type="submit"
+                :disabled="submitting"
+              >
+                {{ t('account.requestConfirm') }}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                :disabled="submitting"
+                @click="cancelRequest"
+              >
+                {{ t('account.requestCancel') }}
+              </Button>
+            </div>
+          </form>
+        </div>
       </CardContent>
     </Card>
 
