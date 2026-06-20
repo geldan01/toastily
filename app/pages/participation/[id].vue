@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Award, Briefcase, History, MessageSquare, Mic, UserCheck, Users } from '@lucide/vue'
+import { Award, Briefcase, History, MessageSquare, Mic, Star, UserCheck, Users } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -12,6 +12,19 @@ type MeetingAttended = { meetingId: string, date: string, meetingNumber: number 
 type RoleTaken = { meetingId: string, date: string, roleNameEn: string, roleNameFr: string }
 type SpeechGiven = { meetingId: string, date: string, title: string | null, slot: number }
 type EvaluationDone = { meetingId: string, date: string, speechTitle: string | null, slot: number }
+type EvaluationReceived = {
+  meetingId: string
+  date: string
+  speechTitle: string | null
+  slot: number
+  evaluatorName: string | null
+  liked: string | null
+  recommend: string | null
+  structureRating: number
+  vocalVarietyRating: number
+  gesturesRating: number
+  createdAt: string
+}
 type AwardWin = { category: string, date: string, meetingNumber: number | null, votes: number }
 type PositionHeld = { positionNameEn: string, positionNameFr: string, startedAt: string, endedAt: string | null }
 type StatusChange = { fromStatus: string | null, toStatus: string, at: string }
@@ -21,6 +34,7 @@ type Participation = {
   roles: RoleTaken[]
   speeches: SpeechGiven[]
   evaluations: EvaluationDone[]
+  evaluationsReceived: EvaluationReceived[]
   awards: AwardWin[]
   positions: PositionHeld[]
   statusHistory: StatusChange[]
@@ -157,6 +171,83 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
               {{ s.title || t('participation.untitledSpeech') }}
             </NuxtLink>
             <span class="shrink-0 text-sm text-muted-foreground">{{ fmtMeetingDate(s.date) }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Evaluations received (private — speaker or admin only, issue #60) -->
+      <section
+        v-if="data?.evaluationsReceived?.length"
+        class="mb-8"
+      >
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <Star class="size-5" /> {{ t('participation.evaluationsReceived') }}
+        </h2>
+        <ul class="space-y-3">
+          <li
+            v-for="(e, i) in data.evaluationsReceived"
+            :key="i"
+            class="rounded-md border px-4 py-3"
+          >
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <NuxtLink
+                :to="localePath(`/meeting/${e.date}`)"
+                class="font-medium hover:underline"
+              >
+                {{ e.speechTitle || t('participation.untitledSpeech') }}
+              </NuxtLink>
+              <span class="text-sm text-muted-foreground">{{ fmtMeetingDate(e.date) }}</span>
+            </div>
+            <p
+              v-if="e.evaluatorName"
+              class="mt-0.5 text-xs text-muted-foreground"
+            >
+              {{ t('participation.evaluationBy', { name: e.evaluatorName }) }}
+            </p>
+            <div class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <span class="flex items-center gap-2">
+                <span class="text-muted-foreground">{{ t('meetings.evalStructure') }}</span>
+                <StarRating
+                  :model-value="e.structureRating"
+                  readonly
+                />
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="text-muted-foreground">{{ t('meetings.evalVocalVariety') }}</span>
+                <StarRating
+                  :model-value="e.vocalVarietyRating"
+                  readonly
+                />
+              </span>
+              <span class="flex items-center gap-2">
+                <span class="text-muted-foreground">{{ t('meetings.evalGestures') }}</span>
+                <StarRating
+                  :model-value="e.gesturesRating"
+                  readonly
+                />
+              </span>
+            </div>
+            <dl
+              v-if="e.liked || e.recommend"
+              class="mt-2 space-y-1 text-sm"
+            >
+              <div v-if="e.liked">
+                <dt class="inline font-medium text-secondary">
+                  {{ t('meetings.evalLiked') }}:
+                </dt>
+                <dd class="inline whitespace-pre-line">
+                  {{ e.liked }}
+                </dd>
+              </div>
+              <div v-if="e.recommend">
+                <dt class="inline font-medium text-secondary">
+                  {{ t('meetings.evalRecommend') }}:
+                </dt>
+                <dd class="inline whitespace-pre-line">
+                  {{ e.recommend }}
+                </dd>
+              </div>
+            </dl>
           </li>
         </ul>
       </section>

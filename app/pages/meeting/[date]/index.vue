@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckCircle2, ClipboardList, LogIn, NotebookPen, Printer, UserCheck, Users, Vote } from '@lucide/vue'
+import { CheckCircle2, ClipboardList, LogIn, MessageSquarePlus, NotebookPen, Printer, UserCheck, Users, Vote } from '@lucide/vue'
 
 type AgendaSection = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
 interface AgendaLine {
@@ -482,6 +482,15 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
           <NuxtLink :to="localePath(`/meeting/${date}/vote`)">
             <Vote class="size-4" />
             {{ t('voting.title') }}
+          </NuxtLink>
+        </Button>
+        <Button
+          as-child
+          variant="secondary"
+        >
+          <NuxtLink :to="localePath(`/meeting/${date}/evaluations`)">
+            <MessageSquarePlus class="size-4" />
+            {{ t('meetings.evalTitle') }}
           </NuxtLink>
         </Button>
         <Button

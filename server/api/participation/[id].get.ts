@@ -13,8 +13,12 @@ export default defineEventHandler(async (event) => {
   if (!UUID_RE.test(id)) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid member id.' })
   }
+  // Written peer evaluations a member received are private to that speaker — only
+  // include them for the member themselves or an admin (issue #60).
+  const viewer = await getCurrentUser(event)
+  const includeReceivedEvaluations = viewer?.id === id || viewer?.status === 'admin'
   const db = useDrizzle()
-  const participation = await memberParticipation(db, id)
+  const participation = await memberParticipation(db, id, { includeReceivedEvaluations })
   if (!participation) {
     throw createError({ statusCode: 404, statusMessage: 'Member not found.' })
   }

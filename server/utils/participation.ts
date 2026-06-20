@@ -1,4 +1,5 @@
 import { and, count, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import type { useDrizzle } from '../db/client'
 import { schema } from '../db/client'
 import type { VoteCategory } from '../db/schema/voting'
@@ -114,6 +115,21 @@ export interface MeetingAttended { meetingId: string, date: string, meetingNumbe
 export interface RoleTaken { meetingId: string, date: string, roleNameEn: string, roleNameFr: string }
 export interface SpeechGiven { meetingId: string, date: string, title: string | null, slot: number }
 export interface EvaluationDone { meetingId: string, date: string, speechTitle: string | null, slot: number }
+/** A written peer evaluation a member *received* on a speech they gave (issue
+ * #60). Private — surfaced only to the speaker themselves (and admins). */
+export interface EvaluationReceived {
+  meetingId: string
+  date: string
+  speechTitle: string | null
+  slot: number
+  evaluatorName: string | null
+  liked: string | null
+  recommend: string | null
+  structureRating: number
+  vocalVarietyRating: number
+  gesturesRating: number
+  createdAt: string
+}
 export interface PositionHeld { positionNameEn: string, positionNameFr: string, startedAt: string, endedAt: string | null }
 export interface StatusChange { fromStatus: string | null, toStatus: string, at: string }
 
@@ -123,16 +139,23 @@ export interface MemberParticipation {
   roles: RoleTaken[]
   speeches: SpeechGiven[]
   evaluations: EvaluationDone[]
+  evaluationsReceived: EvaluationReceived[]
   awards: (AwardWin & { meetingNumber: number | null })[]
   positions: PositionHeld[]
   statusHistory: StatusChange[]
 }
 
 /** Full participation timeline for one member, newest first within each
- * category. Returns null when the id is not a member/officer/admin. */
+ * category. Returns null when the id is not a member/officer/admin.
+ *
+ * `includeReceivedEvaluations` gates the written peer evaluations the member
+ * received (issue #60) — candid feedback meant only for the speaker, so the API
+ * passes `true` only when the requester is that member (or an admin); otherwise
+ * the array is empty. */
 export async function memberParticipation(
   db: ReturnType<typeof useDrizzle>,
   userId: string,
+  opts: { includeReceivedEvaluations?: boolean } = {},
 ): Promise<MemberParticipation | null> {
   const [member] = await db.select({
     id: schema.users.id,
@@ -196,6 +219,45 @@ export async function memberParticipation(
     .where(eq(schema.speeches.evaluatorUserId, userId))
     .orderBy(desc(schema.meetings.date))
 
+  // Written peer evaluations received on this member's speeches (issue #60),
+  // newest first. Only computed when authorized — it's private to the speaker.
+  const evaluator = alias(schema.users, 'evaluator')
+  const evaluationsReceived = opts.includeReceivedEvaluations
+    ? (await db.select({
+        meetingId: schema.writtenEvaluations.meetingId,
+        date: schema.meetings.date,
+        speechTitle: schema.speeches.title,
+        slot: schema.speeches.slot,
+        evaluatorUserName: evaluator.name,
+        evaluatorGuestName: schema.writtenEvaluations.evaluatorGuestName,
+        liked: schema.writtenEvaluations.liked,
+        recommend: schema.writtenEvaluations.recommend,
+        structureRating: schema.writtenEvaluations.structureRating,
+        vocalVarietyRating: schema.writtenEvaluations.vocalVarietyRating,
+        gesturesRating: schema.writtenEvaluations.gesturesRating,
+        createdAt: schema.writtenEvaluations.createdAt,
+      })
+        .from(schema.writtenEvaluations)
+        .innerJoin(schema.speeches, eq(schema.speeches.id, schema.writtenEvaluations.speechId))
+        .innerJoin(schema.meetings, eq(schema.meetings.id, schema.writtenEvaluations.meetingId))
+        .leftJoin(evaluator, eq(evaluator.id, schema.writtenEvaluations.evaluatorUserId))
+        .where(eq(schema.speeches.presenterUserId, userId))
+        .orderBy(desc(schema.meetings.date)))
+        .map(e => ({
+          meetingId: e.meetingId,
+          date: e.date,
+          speechTitle: e.speechTitle,
+          slot: e.slot,
+          evaluatorName: e.evaluatorUserName ?? e.evaluatorGuestName,
+          liked: e.liked,
+          recommend: e.recommend,
+          structureRating: e.structureRating,
+          vocalVarietyRating: e.vocalVarietyRating,
+          gesturesRating: e.gesturesRating,
+          createdAt: e.createdAt as unknown as string,
+        }))
+    : []
+
   const positions = await db.select({
     positionNameEn: schema.executivePositions.nameEn,
     positionNameFr: schema.executivePositions.nameFr,
@@ -234,6 +296,7 @@ export async function memberParticipation(
     roles,
     speeches,
     evaluations,
+    evaluationsReceived,
     awards,
     positions: positions.map(p => ({
       ...p,

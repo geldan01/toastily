@@ -166,7 +166,9 @@
     "untitledSpeech": "Untitled speech",
     "present": "present",
     "attended": "Attended",
-    "meetingsAttended": "Meetings attended"
+    "meetingsAttended": "Meetings attended",
+    "evaluationsReceived": "Evaluations received",
+    "evaluationBy": "by {name}"
   },
   "executive": {
     "title": "Executive",
@@ -621,7 +623,25 @@
     "quorumMet": "Quorum met",
     "quorumNotMet": "Below quorum",
     "quorumGuests": "Guests present: {n}",
-    "quorumTotalPresent": "Total present: {n}"
+    "quorumTotalPresent": "Total present: {n}",
+    "evalTitle": "Written evaluations",
+    "evalIntro": "Leave quick feedback on a speech. Anyone checked in to the meeting can evaluate.",
+    "evalNoSpeeches": "No speeches to evaluate yet.",
+    "evalCheckInFirst": "Check in to this meeting before leaving an evaluation.",
+    "evalCheckInLink": "Check in",
+    "evalYourName": "Your name (as checked in)",
+    "evalYourNameHint": "Enter the name you checked in with so we know who's giving feedback.",
+    "evalStructure": "Structure",
+    "evalVocalVariety": "Vocal variety",
+    "evalGestures": "Gestures",
+    "evalLiked": "What you liked",
+    "evalRecommend": "What you recommend",
+    "evalSubmit": "Submit evaluation",
+    "evalUpdate": "Update evaluation",
+    "evalSubmitting": "Submitting…",
+    "evalSubmitted": "Saved — thank you!",
+    "evalRatingsRequired": "Please give a 1–5 rating for each criterion.",
+    "evalYourSpeech": "This is your speech — you can read the feedback you receive in your participation history."
   },
   "voting": {
     "title": "Voting",

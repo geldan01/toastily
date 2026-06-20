@@ -166,7 +166,9 @@
     "untitledSpeech": "Discours sans titre",
     "present": "présent",
     "attended": "Présences",
-    "meetingsAttended": "Réunions fréquentées"
+    "meetingsAttended": "Réunions fréquentées",
+    "evaluationsReceived": "Évaluations reçues",
+    "evaluationBy": "par {name}"
   },
   "executive": {
     "title": "Exécutif",
@@ -621,7 +623,25 @@
     "quorumMet": "Quorum atteint",
     "quorumNotMet": "Sous le quorum",
     "quorumGuests": "Invités présents : {n}",
-    "quorumTotalPresent": "Total des présences : {n}"
+    "quorumTotalPresent": "Total des présences : {n}",
+    "evalTitle": "Évaluations écrites",
+    "evalIntro": "Laissez une rétroaction rapide sur un discours. Toute personne inscrite à la réunion peut évaluer.",
+    "evalNoSpeeches": "Aucun discours à évaluer pour l'instant.",
+    "evalCheckInFirst": "Inscrivez votre présence à cette réunion avant de laisser une évaluation.",
+    "evalCheckInLink": "S'inscrire",
+    "evalYourName": "Votre nom (tel qu'inscrit)",
+    "evalYourNameHint": "Entrez le nom avec lequel vous vous êtes inscrit pour qu'on sache qui donne la rétroaction.",
+    "evalStructure": "Structure",
+    "evalVocalVariety": "Variété vocale",
+    "evalGestures": "Gestuelle",
+    "evalLiked": "Ce que vous avez aimé",
+    "evalRecommend": "Ce que vous recommandez",
+    "evalSubmit": "Soumettre l'évaluation",
+    "evalUpdate": "Mettre à jour l'évaluation",
+    "evalSubmitting": "Envoi en cours…",
+    "evalSubmitted": "Enregistré — merci!",
+    "evalRatingsRequired": "Veuillez attribuer une note de 1 à 5 pour chaque critère.",
+    "evalYourSpeech": "C'est votre discours — vous pourrez lire la rétroaction reçue dans votre historique de participation."
   },
   "voting": {
     "title": "Vote",
