@@ -155,6 +155,13 @@
       "when": 1790000000002,
       "tag": "0021_pink_cloak",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790000000003,
+      "tag": "0022_acoustic_microbe",
+      "breakpoints": true
     }
   ]
 }
