@@ -478,6 +478,34 @@ async function seedTestimonials() {
   )
 }
 
+// The 11 official Toastmasters International learning paths (issue #58). Global
+// and fixed worldwide — not club-specific config — so they ship as generic seed
+// data. Idempotent: only seeded when the table is empty.
+const pathwaysPathsSeed = [
+  { nameEn: 'Dynamic Leadership', nameFr: 'Leadership dynamique' },
+  { nameEn: 'Effective Coaching', nameFr: 'Coaching efficace' },
+  { nameEn: 'Engaging Humor', nameFr: 'Humour engageant' },
+  { nameEn: 'Innovative Planning', nameFr: 'Planification innovante' },
+  { nameEn: 'Leadership Development', nameFr: 'Perfectionnement du leadership' },
+  { nameEn: 'Motivational Strategies', nameFr: 'Stratégies de motivation' },
+  { nameEn: 'Persuasive Influence', nameFr: 'Influence persuasive' },
+  { nameEn: 'Presentation Mastery', nameFr: 'Maîtrise de la présentation' },
+  { nameEn: 'Strategic Relationships', nameFr: 'Relations stratégiques' },
+  { nameEn: 'Team Collaboration', nameFr: 'Collaboration en équipe' },
+  { nameEn: 'Visionary Communication', nameFr: 'Communication visionnaire' },
+]
+
+async function seedPathwaysPaths() {
+  const existing = await db.select({ id: schema.pathwaysPaths.id }).from(schema.pathwaysPaths).limit(1)
+  if (existing.length > 0) {
+    console.log('Pathways paths already present — skipping.')
+    return
+  }
+  console.log('Seeding Pathways paths…')
+  await db.insert(schema.pathwaysPaths)
+    .values(pathwaysPathsSeed.map((p, i) => ({ ...p, sortOrder: i })))
+}
+
 async function main() {
   console.log('Seeding settings…')
   for (const s of settingsSeed) {
@@ -519,6 +547,7 @@ async function main() {
   await seedExecutivePositions()
   await seedEmailNotifications()
   await seedTestimonials()
+  await seedPathwaysPaths()
 
   console.log('✓ Seed complete.')
 }
