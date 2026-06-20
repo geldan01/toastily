@@ -113,6 +113,12 @@ async function logout() {
                 v-if="isMember"
                 as-child
               >
+                <NuxtLink :to="localePath('/dashboard')">{{ t('nav.dashboard') }}</NuxtLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                v-if="isMember"
+                as-child
+              >
                 <NuxtLink :to="localePath('/members')">{{ t('nav.membersArea') }}</NuxtLink>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -185,6 +191,14 @@ async function logout() {
                   @click="open = false"
                 >
                   {{ t('nav.account') }}
+                </NuxtLink>
+                <NuxtLink
+                  v-if="isMember"
+                  :to="localePath('/dashboard')"
+                  class="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                  @click="open = false"
+                >
+                  {{ t('nav.dashboard') }}
                 </NuxtLink>
                 <NuxtLink
                   v-if="isMember"
