@@ -66,13 +66,15 @@ async function logout() {
         <span class="truncate text-base">{{ clubName }}</span>
       </NuxtLink>
 
-      <!-- Desktop nav -->
+      <!-- Desktop nav. Meetings is emphasised as a filled (blue) button — the most
+           used destination — matching the standout button it gets on mobile; the
+           rest stay ghost links. -->
       <nav class="hidden items-center gap-1 md:flex">
         <Button
           v-for="link in links"
           :key="link.to"
           as-child
-          variant="ghost"
+          :variant="link.to === meetingsLink.to ? 'secondary' : 'ghost'"
           size="sm"
         >
           <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
