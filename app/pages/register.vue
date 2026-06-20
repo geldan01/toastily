@@ -1,10 +1,19 @@
 <script setup lang="ts">
+import { MailCheck } from '@lucide/vue'
+
 const { fetch: refreshSession, loggedIn } = useUserSession()
 const localePath = useLocalePath()
 const { t, locale } = useI18n()
+const { setting } = useSettings()
 
 const config = useRuntimeConfig()
 const captchaRequired = Boolean(config.public.turnstileSiteKey)
+
+const clubName = computed(() => setting('club.name', 'Toastily'))
+// The club's configured logo (the official Toastmasters logo), with a graceful
+// fallback to a club-initial monogram — mirrors AppHeader's branding.
+const logoUrl = computed(() => setting('branding.logo_url', ''))
+const logoFailed = ref(false)
 
 const name = ref('')
 const email = ref('')
@@ -53,24 +62,71 @@ useHead(() => ({ title: t('auth.register') }))
 
 <template>
   <div class="mx-auto flex max-w-md flex-col px-4 py-16">
-    <Card>
-      <CardHeader>
-        <CardTitle>{{ t('auth.register') }}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div
-          v-if="done === 'pending'"
-          class="space-y-2"
+    <!-- Post-registration: a branded confirmation, not a bare message (issue #53) -->
+    <Card
+      v-if="done === 'pending'"
+      class="overflow-hidden"
+    >
+      <div class="flex flex-col items-center gap-3 bg-primary px-6 py-8 text-center text-primary-foreground">
+        <img
+          v-if="logoUrl && !logoFailed"
+          :src="logoUrl"
+          :alt="clubName"
+          class="h-14 w-auto"
+          @error="logoFailed = true"
         >
-          <p class="text-sm">
+        <span
+          v-else
+          class="grid size-14 place-items-center rounded-md bg-primary-foreground/15 text-xl font-bold"
+        >
+          {{ clubName.charAt(0) }}
+        </span>
+        <span class="text-lg font-semibold tracking-tight">{{ clubName }}</span>
+      </div>
+      <CardContent class="space-y-5 px-6 py-8 text-center">
+        <div class="flex justify-center">
+          <span class="grid size-12 place-items-center rounded-full bg-accent/15 text-accent">
+            <MailCheck class="size-6" />
+          </span>
+        </div>
+        <div class="space-y-2">
+          <h2 class="text-xl font-bold tracking-tight text-foreground">
+            {{ t('auth.checkEmailTitle') }}
+          </h2>
+          <p class="text-sm text-muted-foreground">
+            {{ t('auth.checkEmailLead', { club: clubName }) }}
+          </p>
+          <p class="text-sm font-medium text-foreground">
             {{ t('auth.checkEmail') }}
           </p>
           <p class="text-xs text-muted-foreground">
             {{ t('auth.devEmailNote') }}
           </p>
         </div>
+        <div class="flex flex-col gap-2 pt-1 sm:flex-row">
+          <Button
+            as-child
+            class="w-full"
+          >
+            <NuxtLink :to="localePath('/login')">{{ t('auth.backToLogin') }}</NuxtLink>
+          </Button>
+          <Button
+            as-child
+            variant="outline"
+            class="w-full"
+          >
+            <NuxtLink :to="localePath('/')">{{ t('auth.backToHome') }}</NuxtLink>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card v-else>
+      <CardHeader>
+        <CardTitle>{{ t('auth.register') }}</CardTitle>
+      </CardHeader>
+      <CardContent>
         <form
-          v-else
           class="space-y-4"
           @submit.prevent="submit"
         >

@@ -24,6 +24,22 @@ test.describe('authentication', () => {
     await expect(page).toHaveURL(/\/login/)
   })
 
+  test('registering shows the branded confirmation with login + home links', async ({ page }) => {
+    await gotoReady(page, '/register')
+    await page.locator('#name').fill('Branded Newcomer')
+    // Unique email so the run is idempotent against a reused test DB.
+    await page.locator('#email').fill(`newcomer-${Date.now()}@toastily.test`)
+    await page.locator('#password').fill('supersecret123')
+    await page.locator('#consent').check()
+    await page.getByRole('button', { name: 'Create account' }).click()
+
+    // The bare message is replaced by a branded panel (issue #53).
+    await expect(page.getByText(/You're almost there/)).toBeVisible()
+    await expect(page.getByText(/Check your email/i)).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Go to login' })).toHaveAttribute('href', /\/login$/)
+    await expect(page.getByRole('link', { name: 'Back to home' })).toHaveAttribute('href', /\/$/)
+  })
+
   test('unauthenticated visit to a member page redirects to login', async ({ guestPage }) => {
     await guestPage.goto('/members')
     await expect(guestPage).toHaveURL(/\/login/)
