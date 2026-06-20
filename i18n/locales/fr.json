@@ -19,6 +19,7 @@
     "logout": "Déconnexion",
     "requests": "Demandes d'adhésion",
     "membersArea": "Membres",
+    "dashboard": "Mon tableau de bord",
     "executive": "Exécutif",
     "menu": "Menu"
   },
@@ -125,6 +126,21 @@
       "revoke": "Révoquer",
       "confirmRevoke": "Révoquer l'adhésion de {name}? Le compte redeviendra invité."
     }
+  },
+  "dashboard": {
+    "title": "Mon tableau de bord",
+    "greeting": "Bon retour, {name}",
+    "subtitle": "Vos engagements à venir et votre activité récente en un coup d'œil.",
+    "nextMeeting": "Prochaine réunion",
+    "viewAgenda": "Voir l'ordre du jour",
+    "upcomingCommitments": "Engagements à venir",
+    "noCommitments": "Vous n'avez encore aucun rôle ni discours inscrit. Inscrivez-vous à la prochaine réunion ci-dessus.",
+    "noUpcomingMeetings": "Aucune réunion à venir n'est encore planifiée.",
+    "myRoles": "Rôles",
+    "mySpeeches": "Discours",
+    "myEvaluations": "Évaluations",
+    "recentActivity": "Activité récente",
+    "viewFullHistory": "Voir tout mon historique"
   },
   "participation": {
     "title": "Participation",

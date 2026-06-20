@@ -19,6 +19,7 @@
     "logout": "Log out",
     "requests": "Membership requests",
     "membersArea": "Members",
+    "dashboard": "My dashboard",
     "executive": "Executive",
     "menu": "Menu"
   },
@@ -125,6 +126,21 @@
       "revoke": "Revoke",
       "confirmRevoke": "Revoke {name}'s membership? They will return to guest status."
     }
+  },
+  "dashboard": {
+    "title": "My dashboard",
+    "greeting": "Welcome back, {name}",
+    "subtitle": "Your upcoming commitments and recent activity at a glance.",
+    "nextMeeting": "Next meeting",
+    "viewAgenda": "View agenda",
+    "upcomingCommitments": "Upcoming commitments",
+    "noCommitments": "You have no roles or speeches signed up yet. Sign up for the next meeting above.",
+    "noUpcomingMeetings": "No upcoming meetings are scheduled yet.",
+    "myRoles": "Roles",
+    "mySpeeches": "Speaking",
+    "myEvaluations": "Evaluating",
+    "recentActivity": "Recent activity",
+    "viewFullHistory": "View my full history"
   },
   "participation": {
     "title": "Participation",
