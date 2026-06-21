@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/madar-user-prompt-submit.cjs"
+          }
+        ],
+        "name": "madar",
+        "source": "madar"
+      }
+    ],
+    "PreToolUse": []
+  }
+}
