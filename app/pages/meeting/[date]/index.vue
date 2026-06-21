@@ -175,10 +175,6 @@ function lineRole(l: AgendaLine) {
   if (l.kind === 'evaluation') return t('meetings.evaluator')
   return (locale.value === 'fr' ? l.roleFr : l.roleEn) || ''
 }
-// Speakers and evaluators are highlighted in the TI brand gray: speech lines,
-// evaluation lines, and items bound to a counts-as-evaluator role (Grammarian).
-// Placeholder lines carry no participant, so they stay unhighlighted.
-const highlighted = (l: AgendaLine) => !l.placeholder && (l.kind !== 'item' || !!l.isEvaluatorRole)
 
 function printPage() {
   window.print()
@@ -368,7 +364,6 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
               <tr
                 v-else
                 class="border-b border-border align-top"
-                :class="{ 'bg-tm-gray/30': highlighted(r.line) }"
               >
                 <td class="py-2 pr-2 tabular-nums text-muted-foreground">
                   {{ r.clock }}
