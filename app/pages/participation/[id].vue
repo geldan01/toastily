@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Award, Briefcase, History, MessageSquare, Mic, Star, UserCheck, Users } from '@lucide/vue'
+import { Award, Briefcase, GraduationCap, History, MessageSquare, Mic, Star, UserCheck, Users } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -28,6 +28,7 @@ type EvaluationReceived = {
 type AwardWin = { category: string, date: string, meetingNumber: number | null, votes: number }
 type PositionHeld = { positionNameEn: string, positionNameFr: string, startedAt: string, endedAt: string | null }
 type StatusChange = { fromStatus: string | null, toStatus: string, at: string }
+type MentorshipLink = { mentorshipId: string, userId: string, name: string }
 type Participation = {
   member: {
     id: string
@@ -47,13 +48,77 @@ type Participation = {
   awards: AwardWin[]
   positions: PositionHeld[]
   statusHistory: StatusChange[]
+  mentor: MentorshipLink | null
+  mentees: MentorshipLink[]
 }
 
-const { data, error } = await useFetch<Participation>(() => `/api/participation/${id.value}`, {
+const { data, error, refresh } = await useFetch<Participation>(() => `/api/participation/${id.value}`, {
   key: () => `participation-${id.value}`,
 })
 
 const member = computed(() => data.value?.member)
+
+// Mentorship management (issue #62) — only people-managers (admin or a
+// canAssignOfficers holder) may set/end pairings; the server enforces it too.
+const { data: caps } = useCapabilities()
+const canManageMentorship = computed(() => caps.value?.canAssignOfficers ?? false)
+
+const { data: rosterData } = await useFetch<{ members: { id: string, name: string }[] }>(
+  '/api/meetings/members',
+  { key: 'mentorship-member-picker', immediate: canManageMentorship.value, default: () => ({ members: [] }) },
+)
+// Members eligible to be paired with this member (exclude self).
+const pickableMembers = computed(() =>
+  (rosterData.value?.members ?? []).filter(m => m.id !== id.value),
+)
+
+const mentorPick = ref('')
+const menteePick = ref('')
+const busy = ref(false)
+
+async function setMentor() {
+  if (!mentorPick.value || busy.value) return
+  busy.value = true
+  try {
+    await $fetch('/api/mentorships', {
+      method: 'POST',
+      body: { mentorUserId: mentorPick.value, menteeUserId: id.value },
+    })
+    mentorPick.value = ''
+    await refresh()
+  }
+  finally {
+    busy.value = false
+  }
+}
+
+async function addMentee() {
+  if (!menteePick.value || busy.value) return
+  busy.value = true
+  try {
+    await $fetch('/api/mentorships', {
+      method: 'POST',
+      body: { mentorUserId: id.value, menteeUserId: menteePick.value },
+    })
+    menteePick.value = ''
+    await refresh()
+  }
+  finally {
+    busy.value = false
+  }
+}
+
+async function endPairing(mentorshipId: string) {
+  if (busy.value) return
+  busy.value = true
+  try {
+    await $fetch(`/api/mentorships/${mentorshipId}`, { method: 'DELETE' })
+    await refresh()
+  }
+  finally {
+    busy.value = false
+  }
+}
 const counts = computed(() => {
   const d = data.value
   return [
@@ -151,6 +216,134 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
               class="hover:underline"
             >{{ member.phone }}</a>
           </p>
+        </div>
+      </section>
+
+      <!-- Mentorship (issue #62): visible on both the mentee's and mentor's page -->
+      <section
+        v-if="data && (data.mentor || data.mentees.length || canManageMentorship)"
+        class="mb-8 space-y-4 rounded-lg border bg-muted/30 px-4 py-4"
+      >
+        <h2 class="flex items-center gap-2 text-sm font-semibold text-secondary">
+          <GraduationCap class="size-4" /> {{ t('mentorship.title') }}
+        </h2>
+
+        <!-- Mentored by -->
+        <div class="space-y-2">
+          <p class="text-sm">
+            <span class="text-muted-foreground">{{ t('mentorship.mentoredBy') }}:</span>
+            <NuxtLink
+              v-if="data.mentor"
+              :to="localePath(`/participation/${data.mentor.userId}`)"
+              class="ml-1 font-medium hover:underline"
+            >{{ data.mentor.name }}</NuxtLink>
+            <button
+              v-if="data.mentor && canManageMentorship"
+              type="button"
+              class="ml-2 text-xs text-destructive hover:underline disabled:opacity-50"
+              :disabled="busy"
+              @click="endPairing(data.mentor.mentorshipId)"
+            >
+              {{ t('mentorship.remove') }}
+            </button>
+            <span
+              v-if="!data.mentor"
+              class="ml-1 text-muted-foreground"
+            >{{ t('mentorship.none') }}</span>
+          </p>
+          <form
+            v-if="canManageMentorship"
+            class="flex flex-wrap items-center gap-2"
+            @submit.prevent="setMentor"
+          >
+            <select
+              v-model="mentorPick"
+              class="flex h-9 min-w-48 flex-1 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <option value="">
+                {{ data.mentor ? t('mentorship.changeMentor') : t('mentorship.setMentor') }}
+              </option>
+              <option
+                v-for="m in pickableMembers"
+                :key="m.id"
+                :value="m.id"
+              >
+                {{ m.name }}
+              </option>
+            </select>
+            <Button
+              type="submit"
+              size="sm"
+              :disabled="!mentorPick || busy"
+            >
+              {{ t('mentorship.save') }}
+            </Button>
+          </form>
+        </div>
+
+        <!-- Mentoring -->
+        <div class="space-y-2">
+          <p class="text-sm text-muted-foreground">
+            {{ t('mentorship.mentoring') }}:
+          </p>
+          <ul
+            v-if="data.mentees.length"
+            class="space-y-1.5"
+          >
+            <li
+              v-for="m in data.mentees"
+              :key="m.mentorshipId"
+              class="flex items-center justify-between gap-3 text-sm"
+            >
+              <NuxtLink
+                :to="localePath(`/participation/${m.userId}`)"
+                class="font-medium hover:underline"
+              >{{ m.name }}</NuxtLink>
+              <button
+                v-if="canManageMentorship"
+                type="button"
+                class="text-xs text-destructive hover:underline disabled:opacity-50"
+                :disabled="busy"
+                @click="endPairing(m.mentorshipId)"
+              >
+                {{ t('mentorship.remove') }}
+              </button>
+            </li>
+          </ul>
+          <p
+            v-else
+            class="text-sm text-muted-foreground"
+          >
+            {{ t('mentorship.noMentees') }}
+          </p>
+          <form
+            v-if="canManageMentorship"
+            class="flex flex-wrap items-center gap-2"
+            @submit.prevent="addMentee"
+          >
+            <select
+              v-model="menteePick"
+              class="flex h-9 min-w-48 flex-1 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <option value="">
+                {{ t('mentorship.addMentee') }}
+              </option>
+              <option
+                v-for="m in pickableMembers"
+                :key="m.id"
+                :value="m.id"
+              >
+                {{ m.name }}
+              </option>
+            </select>
+            <Button
+              type="submit"
+              size="sm"
+              :disabled="!menteePick || busy"
+            >
+              {{ t('mentorship.add') }}
+            </Button>
+          </form>
         </div>
       </section>
 
