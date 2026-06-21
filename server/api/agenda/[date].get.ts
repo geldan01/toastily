@@ -22,6 +22,9 @@ interface AgendaLine {
   // Speech extras.
   slot?: number
   title?: string | null
+  // A "nothing scheduled" stand-in so an otherwise-empty speeches/evaluations
+  // section still renders its heading; localized client-side.
+  placeholder?: boolean
 }
 
 /**
@@ -136,9 +139,18 @@ export default defineEventHandler(async (event) => {
   const slotCount = Math.max(speeches.length, Number.isFinite(maxSetting) && maxSetting > 0 ? maxSetting : 0)
   const timing = await speechTiming()
 
+  // A section keeps its heading as long as something lands in it. Item-type
+  // rows always emit a line (e.g. the Grammarian, an evaluator item, holds the
+  // Evaluations section open even with no speeches), so a speeches/evaluations
+  // block only needs a "nothing scheduled" placeholder when its section would
+  // otherwise be empty.
+  const sectionHasItem = (section: AgendaLine['section']) =>
+    items.some(i => i.itemType === 'item' && i.section === section)
+
   const lines: AgendaLine[] = []
   for (const it of items) {
     if (it.itemType === 'speeches' || it.itemType === 'evaluations') {
+      const before = lines.length
       for (let slot = 1; slot <= slotCount; slot++) {
         const s = speechBySlot.get(slot)
         // Only scheduled speeches appear on the agenda: a slot with no speaker
@@ -173,6 +185,21 @@ export default defineEventHandler(async (event) => {
             isGuest: !!s.evaluatorGuestName,
           })
         }
+      }
+      // No speech had a speaker → the block produced no lines. Emit a single
+      // placeholder (no participant, no time allotment) so the section heading
+      // survives — unless an item already keeps the section visible.
+      if (lines.length === before && !sectionHasItem(it.section)) {
+        lines.push({
+          kind: it.itemType === 'speeches' ? 'speech' : 'evaluation',
+          section: it.section,
+          labelEn: it.labelEn,
+          labelFr: it.labelFr,
+          durationMinutes: null,
+          who: null,
+          isGuest: false,
+          placeholder: true,
+        })
       }
     }
     else {

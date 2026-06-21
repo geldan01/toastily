@@ -15,6 +15,7 @@ interface AgendaLine {
   isGuest?: boolean
   slot?: number
   title?: string | null
+  placeholder?: boolean
 }
 interface Officer { nameEn: string, nameFr: string, who: string | null, isGuest: boolean }
 interface AgendaData {
@@ -163,18 +164,17 @@ const rows = computed<Row[]>(() => {
 })
 
 function lineLabel(l: AgendaLine) {
+  if (l.placeholder) return t(l.kind === 'evaluation' ? 'agenda.noEvaluations' : 'agenda.noSpeeches')
   const base = locale.value === 'fr' ? l.labelFr : l.labelEn
   if (l.kind === 'speech' || l.kind === 'evaluation') return `${base} ${l.slot}${l.title ? ` — ${l.title}` : ''}`
   return base
 }
 function lineRole(l: AgendaLine) {
+  if (l.placeholder) return ''
   if (l.kind === 'speech') return t('meetings.speaker')
   if (l.kind === 'evaluation') return t('meetings.evaluator')
   return (locale.value === 'fr' ? l.roleFr : l.roleEn) || ''
 }
-// Speakers and evaluators are highlighted in the TI brand gray: speech lines,
-// evaluation lines, and items bound to a counts-as-evaluator role (Grammarian).
-const highlighted = (l: AgendaLine) => l.kind !== 'item' || !!l.isEvaluatorRole
 
 function printPage() {
   window.print()
@@ -364,7 +364,6 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
               <tr
                 v-else
                 class="border-b border-border align-top"
-                :class="{ 'bg-tm-gray/30': highlighted(r.line) }"
               >
                 <td class="py-2 pr-2 tabular-nums text-muted-foreground">
                   {{ r.clock }}

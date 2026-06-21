@@ -795,7 +795,9 @@
     "sectionEducative": "Educative Session",
     "sectionSpeeches": "Prepared Speeches",
     "sectionTableTopics": "Table Topics",
-    "sectionEvaluations": "Evaluations"
+    "sectionEvaluations": "Evaluations",
+    "noSpeeches": "No prepared speeches scheduled",
+    "noEvaluations": "No evaluations scheduled"
   },
   "footer": {
     "whenWhere": "When & Where",

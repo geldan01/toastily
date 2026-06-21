@@ -795,7 +795,9 @@
     "sectionEducative": "Session éducative",
     "sectionSpeeches": "Discours préparés",
     "sectionTableTopics": "Sujets impromptus",
-    "sectionEvaluations": "Évaluations"
+    "sectionEvaluations": "Évaluations",
+    "noSpeeches": "Aucun discours préparé prévu",
+    "noEvaluations": "Aucune évaluation prévue"
   },
   "footer": {
     "whenWhere": "Quand et où",
