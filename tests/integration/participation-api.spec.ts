@@ -112,4 +112,26 @@ test.describe('participation API', () => {
     expect(row.speeches).toBeGreaterThanOrEqual(1)
     expect(row.evaluations).toBeGreaterThanOrEqual(1)
   })
+
+  test('a guest cannot read the badge catalog (401)', async ({ apiAs }) => {
+    const guest = await apiAs('guest')
+    expect((await guest.get('/api/participation/badges')).status()).toBe(401)
+  })
+
+  test('the badge catalog lists the member as a holder of the first-time badges', async ({ apiAs }) => {
+    const member = await apiAs('member')
+    const res = await member.get('/api/participation/badges')
+    expect(res.ok(), await res.text()).toBeTruthy()
+    const body = await res.json()
+
+    // The full catalog is always returned (badges with no holders included).
+    expect(Array.isArray(body.badges)).toBeTruthy()
+    expect(body.badges.length).toBeGreaterThanOrEqual(15)
+
+    const holders = (key: string) =>
+      (body.badges.find((b: { key: string }) => b.key === key)?.holders ?? []) as { id: string }[]
+    for (const key of ['first_role', 'first_speech', 'first_evaluation']) {
+      expect(holders(key).some(h => h.id === memberId), key).toBeTruthy()
+    }
+  })
 })

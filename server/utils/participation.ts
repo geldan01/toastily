@@ -1,9 +1,9 @@
-import { and, count, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
+import { and, count, countDistinct, desc, eq, inArray, isNotNull, isNull } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
 import type { useDrizzle } from '../db/client'
 import { schema } from '../db/client'
 import type { VoteCategory } from '../db/schema/voting'
-import { earnedMilestones, type EarnedMilestone } from './milestones'
+import { earnedMilestones, type EarnedMilestone, type MilestoneMetrics } from './milestones'
 import { mentorshipFor, type MentorshipLink } from './mentorship'
 
 /**
@@ -470,4 +470,92 @@ export async function participationSummary(
     evaluations: evalsByUser.get(m.id) ?? 0,
     awards: awardsByUser.get(m.id) ?? 0,
   }))
+}
+
+export interface MemberMilestones {
+  id: string
+  name: string
+  milestones: EarnedMilestone[]
+}
+
+/**
+ * Every *current* member with the achievement badges they've earned (issue #64).
+ * Like `participationSummary` it's roster-linked and filters to member/officer/
+ * admin — so a revoked membership (status downgraded to `guest`) drops out of
+ * every badge view automatically, with no badge rows to delete. Adds two metrics
+ * the summary doesn't need: distinct roles held and meetings chaired (a role
+ * flagged `grants_meeting_authority`), so the full catalog can be evaluated.
+ */
+export async function membersWithMilestones(
+  db: ReturnType<typeof useDrizzle>,
+): Promise<MemberMilestones[]> {
+  const members = await db.select({
+    id: schema.users.id,
+    name: schema.users.name,
+  })
+    .from(schema.users)
+    .where(inArray(schema.users.status, ['member', 'officer', 'admin']))
+    .orderBy(schema.users.name)
+
+  const attendedCounts = await db.select({ userId: schema.meetingAttendance.userId, n: count() })
+    .from(schema.meetingAttendance)
+    .groupBy(schema.meetingAttendance.userId)
+
+  const roleCounts = await db.select({ userId: schema.meetingRoleSignups.userId, n: count() })
+    .from(schema.meetingRoleSignups)
+    .where(isNotNull(schema.meetingRoleSignups.userId))
+    .groupBy(schema.meetingRoleSignups.userId)
+
+  const distinctRoleCounts = await db.select({
+    userId: schema.meetingRoleSignups.userId,
+    n: countDistinct(schema.meetingRoleSignups.roleId),
+  })
+    .from(schema.meetingRoleSignups)
+    .where(isNotNull(schema.meetingRoleSignups.userId))
+    .groupBy(schema.meetingRoleSignups.userId)
+
+  // Meetings chaired = role signups for a role that grants meeting authority,
+  // keyed off the flag (never a role name) per "roles are data".
+  const chairedCounts = await db.select({ userId: schema.meetingRoleSignups.userId, n: count() })
+    .from(schema.meetingRoleSignups)
+    .innerJoin(schema.meetingRoles, eq(schema.meetingRoles.id, schema.meetingRoleSignups.roleId))
+    .where(and(
+      isNotNull(schema.meetingRoleSignups.userId),
+      eq(schema.meetingRoles.grantsMeetingAuthority, true),
+    ))
+    .groupBy(schema.meetingRoleSignups.userId)
+
+  const speechCounts = await db.select({ userId: schema.speeches.presenterUserId, n: count() })
+    .from(schema.speeches)
+    .where(isNotNull(schema.speeches.presenterUserId))
+    .groupBy(schema.speeches.presenterUserId)
+
+  const evalCounts = await db.select({ userId: schema.speeches.evaluatorUserId, n: count() })
+    .from(schema.speeches)
+    .where(isNotNull(schema.speeches.evaluatorUserId))
+    .groupBy(schema.speeches.evaluatorUserId)
+
+  const wins = await memberAwardWins(db)
+
+  const attendedByUser = new Map(attendedCounts.map(r => [r.userId, Number(r.n)]))
+  const rolesByUser = new Map(roleCounts.map(r => [r.userId!, Number(r.n)]))
+  const distinctRolesByUser = new Map(distinctRoleCounts.map(r => [r.userId!, Number(r.n)]))
+  const chairedByUser = new Map(chairedCounts.map(r => [r.userId!, Number(r.n)]))
+  const speechesByUser = new Map(speechCounts.map(r => [r.userId!, Number(r.n)]))
+  const evalsByUser = new Map(evalCounts.map(r => [r.userId!, Number(r.n)]))
+  const awardsByUser = new Map<string, number>()
+  for (const w of wins) awardsByUser.set(w.userId, (awardsByUser.get(w.userId) ?? 0) + 1)
+
+  return members.map((m) => {
+    const metrics: MilestoneMetrics = {
+      attended: attendedByUser.get(m.id) ?? 0,
+      speeches: speechesByUser.get(m.id) ?? 0,
+      evaluations: evalsByUser.get(m.id) ?? 0,
+      roles: rolesByUser.get(m.id) ?? 0,
+      distinctRoles: distinctRolesByUser.get(m.id) ?? 0,
+      chaired: chairedByUser.get(m.id) ?? 0,
+      awards: awardsByUser.get(m.id) ?? 0,
+    }
+    return { id: m.id, name: m.name, milestones: earnedMilestones(metrics) }
+  })
 }

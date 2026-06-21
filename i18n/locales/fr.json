@@ -217,7 +217,20 @@
     "first_chair": { "name": "Aux commandes", "desc": "Vous avez animé votre première réunion" },
     "five_chairs": { "name": "Animateur de réunion", "desc": "Vous avez animé 5 réunions" },
     "first_award": { "name": "Lauréat", "desc": "Vous avez remporté votre premier prix" },
-    "five_awards": { "name": "Décoré", "desc": "Vous avez remporté 5 prix" }
+    "five_awards": { "name": "Décoré", "desc": "Vous avez remporté 5 prix" },
+    "categories": {
+      "attendance": "Présences",
+      "speaking": "Discours préparés",
+      "evaluation": "Évaluations",
+      "roles": "Rôles de réunion",
+      "leadership": "Leadership",
+      "awards": "Prix"
+    }
+  },
+  "achievements": {
+    "title": "Réalisations",
+    "subtitle": "Les jalons que les membres atteignent par leur participation. Sélectionnez un insigne pour voir qui l'a obtenu.",
+    "noOne": "Personne ne l'a encore obtenu."
   },
   "mentorship": {
     "title": "Mentorat",

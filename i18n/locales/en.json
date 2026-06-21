@@ -217,7 +217,20 @@
     "first_chair": { "name": "In the chair", "desc": "Led your first meeting" },
     "five_chairs": { "name": "Meeting leader", "desc": "Led 5 meetings" },
     "first_award": { "name": "Award winner", "desc": "Won your first award" },
-    "five_awards": { "name": "Decorated", "desc": "Won 5 awards" }
+    "five_awards": { "name": "Decorated", "desc": "Won 5 awards" },
+    "categories": {
+      "attendance": "Attendance",
+      "speaking": "Prepared speeches",
+      "evaluation": "Evaluations",
+      "roles": "Meeting roles",
+      "leadership": "Leadership",
+      "awards": "Awards"
+    }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "subtitle": "Milestones members earn through participation. Select a badge to see who has earned it.",
+    "noOne": "No one has earned this yet."
   },
   "mentorship": {
     "title": "Mentorship",
