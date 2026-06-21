@@ -87,6 +87,14 @@
       "save": "Save testimonial",
       "saved": "Saved",
       "featured": "Featured"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose which emails the club sends you.",
+      "roleReminders": "Meeting role reminders",
+      "roleRemindersHint": "Email me before a meeting where I have a role or speech.",
+      "signupReminders": "Signup reminders",
+      "signupRemindersHint": "Email me the open roles and speech slots for the next meeting so I can sign up."
     }
   },
   "requests": {
@@ -446,6 +454,10 @@
       "intro": "Send members the list of open meeting roles — now, or on a recurring schedule. Set the Resend key and sender address in Settings before sending for real.",
       "notConfigured": "No email provider is configured yet — sends will be logged to the server console as a preview. Add a Resend API key and sender address in Settings to deliver real email.",
       "configureLink": "Open Settings",
+      "signupReminder": "Signup reminder",
+      "signupReminderIntro": "Email all members the open roles and speech slots for the next meeting, with a link to sign up. Members can opt out in their account.",
+      "signupReminderDisabled": "The signup reminder is off — no email is scheduled.",
+      "enableSignupReminder": "Enable signup reminder",
       "templates": "Templates",
       "subjectEn": "Subject (EN)",
       "subjectFr": "Subject (FR)",
@@ -603,6 +615,8 @@
     "optionalEmail": "Email (optional)",
     "noUpcomingMeeting": "There's no upcoming meeting to check in to right now.",
     "viewMeeting": "View the meeting",
+    "addToCalendar": "Add to calendar",
+    "addMyMeetings": "Add my meetings to calendar",
     "guestName": "Guest name",
     "assign": "Assign",
     "cancelled": "Cancelled",

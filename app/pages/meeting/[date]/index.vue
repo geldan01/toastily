@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CheckCircle2, ClipboardList, LogIn, MessageSquarePlus, NotebookPen, Printer, UserCheck, Users, Vote } from '@lucide/vue'
+import { CalendarPlus, CheckCircle2, ClipboardList, LogIn, MessageSquarePlus, NotebookPen, Printer, UserCheck, Users, Vote } from '@lucide/vue'
 
 type AgendaSection = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
 interface AgendaLine {
@@ -522,6 +522,18 @@ useHead(() => ({ title: theme.value || `${t('agenda.title')} — ${prettyDate(da
             <NotebookPen class="size-4" />
             {{ t('meetings.secretaryTitle') }}
           </NuxtLink>
+        </Button>
+        <Button
+          as-child
+          variant="outline"
+        >
+          <a
+            :href="`/api/meetings/${date}/calendar?lang=${locale}`"
+            download
+          >
+            <CalendarPlus class="size-4" />
+            {{ t('meetings.addToCalendar') }}
+          </a>
         </Button>
         <Button
           variant="outline"

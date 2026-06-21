@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarDays, CalendarOff } from '@lucide/vue'
+import { CalendarDays, CalendarOff, CalendarPlus } from '@lucide/vue'
 
 interface MeetingRow { id: string, date: string, meetingNumber: number | null, status: 'scheduled' | 'cancelled', themeEn: string | null, themeFr: string | null, location: string | null }
 interface HolidayRow { id: string, date: string, labelEn: string, labelFr: string }
@@ -96,6 +96,20 @@ useHead(() => ({ title: t('meetings.title') }))
       <p class="mt-1 text-sm text-muted-foreground">
         {{ t('meetings.signupMatrixHint') }}
       </p>
+      <Button
+        as-child
+        variant="outline"
+        size="sm"
+        class="mt-3"
+      >
+        <a
+          :href="`/api/meetings/calendar?lang=${locale}`"
+          download
+        >
+          <CalendarPlus class="size-4" />
+          {{ t('meetings.addMyMeetings') }}
+        </a>
+      </Button>
       <MeetingSignupMatrix class="mt-3" />
     </section>
 

@@ -169,6 +169,20 @@
       "when": 1790000000004,
       "tag": "0023_serious_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790000000005,
+      "tag": "0024_left_rick_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790000000006,
+      "tag": "0025_sparkling_ben_urich",
+      "breakpoints": true
     }
   ]
 }

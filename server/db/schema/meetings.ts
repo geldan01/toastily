@@ -106,6 +106,10 @@ export const meetings = pgTable('meetings', {
   notesFr: text('notes_fr'),
   templateId: uuid('template_id').references(() => agendaTemplates.id, { onDelete: 'set null' }),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  // When the pre-meeting role-reminder emails were dispatched for this meeting
+  // (issue #59). Null ⇒ not yet sent; set once by the role-reminder task so a
+  // meeting is reminded only once even though the task polls repeatedly.
+  roleReminderSentAt: timestamp('role_reminder_sent_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

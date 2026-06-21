@@ -5,12 +5,21 @@ import { getSetting } from './settings'
 
 type Locale = 'en' | 'fr'
 
+/**
+ * The signup-reminder template: the weekly "open roles & speech slots — please
+ * sign up" email to all members for the next meeting. Special-cased so it honours
+ * the per-member opt-out and is configurable by agenda/calendar managers.
+ */
+export const SIGNUP_REMINDER_TEMPLATE_KEY = 'unfilled_roles'
+
 export interface UnfilledMeeting {
   date: string
   meetingNumber: number | null
   themeEn: string | null
   themeFr: string | null
   roles: { en: string, fr: string }[]
+  /** Prepared-speech slots with no speaker yet (signup opportunities). */
+  openSpeechSlots: number
 }
 
 function siteUrl(): string {
@@ -52,11 +61,14 @@ export async function getUpcomingUnfilled(limit = 2): Promise<UnfilledMeeting[]>
     .orderBy(desc(schema.agendaTemplates.isDefault), asc(schema.agendaTemplates.createdAt))
     .limit(1)
 
+  const maxPerMeeting = Number.parseInt((await getSetting('speeches.max_per_meeting')) ?? '', 10) || 3
+
   const result: UnfilledMeeting[] = []
   for (const m of meetings) {
+    const openSpeechSlots = await openSpeechSlotsFor(m.id, maxPerMeeting)
     const templateId = m.templateId ?? defaultTpl?.id ?? null
     if (!templateId) {
-      result.push({ date: m.date, meetingNumber: m.meetingNumber, themeEn: m.themeEn, themeFr: m.themeFr, roles: [] })
+      result.push({ date: m.date, meetingNumber: m.meetingNumber, themeEn: m.themeEn, themeFr: m.themeFr, roles: [], openSpeechSlots })
       continue
     }
 
@@ -103,10 +115,30 @@ export async function getUpcomingUnfilled(limit = 2): Promise<UnfilledMeeting[]>
       themeEn: m.themeEn,
       themeFr: m.themeFr,
       roles,
+      openSpeechSlots,
     })
   }
 
   return result
+}
+
+/**
+ * Count prepared-speech slots with no speaker yet for a meeting. Slots offered =
+ * max(`speeches.max_per_meeting`, existing speech rows); open = offered minus the
+ * speeches that already have a speaker (member or guest). Mirrors the signup
+ * page's slot count.
+ */
+async function openSpeechSlotsFor(meetingId: string, maxPerMeeting: number): Promise<number> {
+  const rows = await useDrizzle()
+    .select({
+      presenterUserId: schema.speeches.presenterUserId,
+      presenterGuestName: schema.speeches.presenterGuestName,
+    })
+    .from(schema.speeches)
+    .where(eq(schema.speeches.meetingId, meetingId))
+  const filled = rows.filter(r => r.presenterUserId || r.presenterGuestName).length
+  const offered = Math.max(maxPerMeeting, rows.length)
+  return Math.max(0, offered - filled)
 }
 
 /** Members/officers/admins with a deliverable email, plus their locale. */
@@ -115,6 +147,24 @@ export async function getMemberRecipients(): Promise<{ email: string, locale: Lo
     .select({ email: schema.users.email, locale: schema.users.locale })
     .from(schema.users)
     .where(inArray(schema.users.status, ['member', 'officer', 'admin']))
+  return rows
+    .filter(r => r.email?.includes('@'))
+    .map(r => ({ email: r.email, locale: r.locale === 'fr' ? 'fr' : 'en' }))
+}
+
+/**
+ * Members/officers/admins who haven't opted out of the signup reminder, with a
+ * deliverable email. Same as `getMemberRecipients` but filtered by the
+ * `notifySignupReminders` preference.
+ */
+export async function getSignupReminderRecipients(): Promise<{ email: string, locale: Locale }[]> {
+  const rows = await useDrizzle()
+    .select({ email: schema.users.email, locale: schema.users.locale })
+    .from(schema.users)
+    .where(and(
+      inArray(schema.users.status, ['member', 'officer', 'admin']),
+      eq(schema.users.notifySignupReminders, true),
+    ))
   return rows
     .filter(r => r.email?.includes('@'))
     .map(r => ({ email: r.email, locale: r.locale === 'fr' ? 'fr' : 'en' }))
@@ -243,24 +293,220 @@ export async function notifyMembershipRequest(input: NotifyMembershipRequestInpu
   return { status, recipientCount: sentCount, error: lastError }
 }
 
+interface ReminderParticipant {
+  name: string
+  email: string
+  locale: Locale
+  /** Localized assignment labels (role names, speech roles) for this member. */
+  labels: { en: string[], fr: string[] }
+}
+
+/**
+ * Members who hold a role or speech on a meeting and want the reminder
+ * (issue #59). Keyed by user id; each carries their localized assignment labels.
+ * Guests are excluded (no account / preference / reliable email here). Members
+ * who opted out (`notifyRoleReminders=false`) or have no deliverable email are
+ * skipped.
+ */
+async function getRoleReminderParticipants(meetingId: string): Promise<Map<string, ReminderParticipant>> {
+  const db = useDrizzle()
+  const out = new Map<string, ReminderParticipant>()
+
+  const add = (
+    user: { id: string, name: string, email: string, locale: string, notifyRoleReminders: boolean },
+    en: string,
+    fr: string,
+  ) => {
+    if (!user.notifyRoleReminders || !user.email?.includes('@')) return
+    let p = out.get(user.id)
+    if (!p) {
+      p = { name: user.name, email: user.email, locale: user.locale === 'fr' ? 'fr' : 'en', labels: { en: [], fr: [] } }
+      out.set(user.id, p)
+    }
+    p.labels.en.push(en)
+    p.labels.fr.push(fr)
+  }
+
+  const roleRows = await db.select({
+    id: schema.users.id,
+    name: schema.users.name,
+    email: schema.users.email,
+    locale: schema.users.locale,
+    notifyRoleReminders: schema.users.notifyRoleReminders,
+    roleEn: schema.meetingRoles.nameEn,
+    roleFr: schema.meetingRoles.nameFr,
+  })
+    .from(schema.meetingRoleSignups)
+    .innerJoin(schema.users, eq(schema.users.id, schema.meetingRoleSignups.userId))
+    .innerJoin(schema.meetingRoles, eq(schema.meetingRoles.id, schema.meetingRoleSignups.roleId))
+    .where(eq(schema.meetingRoleSignups.meetingId, meetingId))
+  for (const r of roleRows) add(r, r.roleEn, r.roleFr)
+
+  const speechRows = await db.select({
+    title: schema.speeches.title,
+    presenterUserId: schema.speeches.presenterUserId,
+    evaluatorUserId: schema.speeches.evaluatorUserId,
+  })
+    .from(schema.speeches)
+    .where(eq(schema.speeches.meetingId, meetingId))
+
+  // Resolve the speech participants in one pass.
+  const speechUserIds = new Set<string>()
+  for (const s of speechRows) {
+    if (s.presenterUserId) speechUserIds.add(s.presenterUserId)
+    if (s.evaluatorUserId) speechUserIds.add(s.evaluatorUserId)
+  }
+  if (speechUserIds.size) {
+    const users = await db.select({
+      id: schema.users.id,
+      name: schema.users.name,
+      email: schema.users.email,
+      locale: schema.users.locale,
+      notifyRoleReminders: schema.users.notifyRoleReminders,
+    })
+      .from(schema.users)
+      .where(inArray(schema.users.id, [...speechUserIds]))
+    const byId = new Map(users.map(u => [u.id, u]))
+    for (const s of speechRows) {
+      const title = s.title?.trim()
+      if (s.presenterUserId) {
+        const u = byId.get(s.presenterUserId)
+        if (u) add(u, `Speaker${title ? `: ${title}` : ''}`, `Orateur${title ? ` : ${title}` : ''}`)
+      }
+      if (s.evaluatorUserId) {
+        const u = byId.get(s.evaluatorUserId)
+        if (u) add(u, `Evaluator${title ? ` for "${title}"` : ''}`, `Évaluateur${title ? ` pour « ${title} »` : ''}`)
+      }
+    }
+  }
+
+  return out
+}
+
+export interface NotifyRoleRemindersResult extends SendNotificationResult {
+  /** Whether there was anyone to remind (drives the task's sent-flag bookkeeping). */
+  hadRecipients: boolean
+}
+
+/**
+ * Send the pre-meeting role reminder (issue #59) to every member holding a role
+ * or speech on the given meeting, each email personalised with their own
+ * assignments. Renders the `meeting_role_reminder` template per recipient locale,
+ * delivers via Resend (or the log stub), and records one row in `email_send_log`
+ * (trigger `scheduled`). Never throws — a delivery problem is captured in the log.
+ */
+export async function notifyRoleReminders(meetingId: string): Promise<NotifyRoleRemindersResult> {
+  const db = useDrizzle()
+  const templateKey = 'meeting_role_reminder'
+
+  const [template] = await db.select().from(schema.emailTemplates)
+    .where(eq(schema.emailTemplates.key, templateKey)).limit(1)
+  if (!template) {
+    return { status: 'failed', recipientCount: 0, error: `Unknown email template: ${templateKey}`, hadRecipients: false }
+  }
+
+  const [meeting] = await db.select({
+    date: schema.meetings.date,
+    location: schema.meetings.location,
+  })
+    .from(schema.meetings)
+    .where(eq(schema.meetings.id, meetingId))
+    .limit(1)
+  if (!meeting) {
+    return { status: 'failed', recipientCount: 0, error: `Unknown meeting: ${meetingId}`, hadRecipients: false }
+  }
+
+  const participants = [...(await getRoleReminderParticipants(meetingId)).values()]
+  if (participants.length === 0) {
+    return { status: 'sent', recipientCount: 0, hadRecipients: false }
+  }
+
+  const meetingTime = (await getSetting('meeting.time'))?.trim()
+    || (await getSetting('meeting.start_time'))?.trim() || ''
+  const location = meeting.location?.trim() || (await getSetting('meeting.address'))?.trim() || ''
+  const link = `${siteUrl()}/meeting/${meeting.date}`
+
+  const renderFor = (p: ReminderParticipant) => {
+    const subjectTemplate = p.locale === 'fr' ? template.subjectFr : template.subjectEn
+    const bodyTemplate = p.locale === 'fr' ? template.bodyFr : template.bodyEn
+    const dateStr = localizedDate(meeting.date, p.locale)
+    const labels = p.labels[p.locale]
+    const rolesHtml = `<ul>${labels.map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>`
+    const locationHtml = location ? `, ${escapeHtml(location)}` : ''
+    const subject = subjectTemplate.replaceAll('{{meeting_date}}', dateStr)
+    const html = bodyTemplate
+      .replaceAll('{{member_name}}', escapeHtml(p.name))
+      .replaceAll('{{meeting_date}}', dateStr)
+      .replaceAll('{{meeting_time}}', escapeHtml(meetingTime))
+      .replaceAll('{{location}}', locationHtml)
+      .replaceAll('{{roles}}', rolesHtml)
+      .replaceAll('{{meeting_link}}', link)
+    return { subject, html }
+  }
+
+  let anyFailed = false
+  let allStubbed = true
+  let lastError: string | undefined
+  let sentCount = 0
+
+  for (const p of participants) {
+    const { subject, html } = renderFor(p)
+    const res = await sendEmail({ to: p.email, subject, html })
+    if (!res.ok) {
+      anyFailed = true
+      lastError = res.error
+      continue
+    }
+    if (!res.stubbed) allStubbed = false
+    sentCount++
+  }
+
+  const status: SendNotificationResult['status']
+    = anyFailed ? 'failed' : (allStubbed ? 'stubbed' : 'sent')
+
+  await db.insert(schema.emailSendLog).values({
+    templateKey,
+    trigger: 'scheduled',
+    status,
+    recipientCount: sentCount,
+    triggeredBy: null,
+    error: lastError ?? null,
+  })
+
+  return { status, recipientCount: sentCount, error: lastError, hadRecipients: true }
+}
+
 function localizedDate(date: string, locale: Locale): string {
   return new Date(`${date}T00:00:00`).toLocaleDateString(locale === 'fr' ? 'fr-CA' : 'en-CA', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   })
 }
 
-/** Render the unfilled-roles list as an HTML fragment for the given locale. */
+/** Signup page for a meeting (members claim open roles / speech slots here). */
+function signupUrl(date: string): string {
+  return `${siteUrl()}/meeting/${date}/signup`
+}
+
+/**
+ * Render the open roles **and** open speech slots per meeting as an HTML fragment
+ * for the given locale. Each meeting heading links to its signup page; a meeting
+ * with nothing open shows an "all filled" note.
+ */
 function renderUnfilledHtml(meetings: UnfilledMeeting[], locale: Locale): string {
-  const noneOpen = locale === 'fr' ? 'Tous les rôles sont pourvus. Merci!' : 'All roles are filled. Thank you!'
+  const allFilled = locale === 'fr' ? 'Tout est pourvu. Merci!' : 'Everything is filled. Thank you!'
   const noMeeting = locale === 'fr' ? 'Aucune réunion à venir.' : 'No upcoming meetings.'
+  const speechLabel = (n: number) => locale === 'fr'
+    ? `${n} créneau${n > 1 ? 'x' : ''} d'orateur disponible${n > 1 ? 's' : ''} (discours préparés)`
+    : `${n} open speaking slot${n > 1 ? 's' : ''} (prepared speeches)`
   if (meetings.length === 0) return `<p>${noMeeting}</p>`
 
   const sections = meetings.map((m) => {
     const heading = `${localizedDate(m.date, locale)}${m.meetingNumber ? ` (#${m.meetingNumber})` : ''}`
-    const link = `${siteUrl()}/meeting/${m.date}`
-    if (m.roles.length === 0) return `<p><strong>${heading}</strong><br>${noneOpen}</p>`
-    const items = m.roles.map(r => `<li>${locale === 'fr' ? r.fr : r.en}</li>`).join('')
-    return `<p><strong><a href="${link}">${heading}</a></strong></p><ul>${items}</ul>`
+    const link = signupUrl(m.date)
+    const items = m.roles.map(r => `<li>${locale === 'fr' ? r.fr : r.en}</li>`)
+    if (m.openSpeechSlots > 0) items.push(`<li>${speechLabel(m.openSpeechSlots)}</li>`)
+    if (items.length === 0) return `<p><strong>${heading}</strong><br>${allFilled}</p>`
+    return `<p><strong><a href="${link}">${heading}</a></strong></p><ul>${items.join('')}</ul>`
   })
   return sections.join('\n')
 }
@@ -270,7 +516,7 @@ async function renderBody(body: string, locale: Locale, meetings: UnfilledMeetin
   const intro = (await getSetting(`notify.intro_${locale}`)) ?? ''
   const outro = (await getSetting(`notify.outro_${locale}`)) ?? ''
   const nearest = meetings[0]
-  const signupLink = nearest ? `${siteUrl()}/meeting/${nearest.date}` : `${siteUrl()}/meetings`
+  const signupLink = nearest ? signupUrl(nearest.date) : `${siteUrl()}/meetings`
   return body
     .replaceAll('{{intro}}', intro)
     .replaceAll('{{outro}}', outro)
@@ -305,7 +551,10 @@ export async function sendNotification(input: SendNotificationInput): Promise<Se
     throw createError({ statusCode: 404, statusMessage: `Unknown email template: ${input.templateKey}` })
   }
 
-  const recipients = await getMemberRecipients()
+  // The signup reminder honours the per-member opt-out; other templates go to all.
+  const recipients = input.templateKey === SIGNUP_REMINDER_TEMPLATE_KEY
+    ? await getSignupReminderRecipients()
+    : await getMemberRecipients()
   const meetings = await getUpcomingUnfilled()
 
   // Pre-render the subject + body once per locale.

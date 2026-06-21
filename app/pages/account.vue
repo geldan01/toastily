@@ -108,6 +108,25 @@ async function saveTestimonial() {
   }
 }
 
+// Notification preferences (issue #59): members can opt out of the pre-meeting
+// role reminder and the signup reminder emails. Persisted immediately on toggle.
+const { data: prefs, refresh: refreshPrefs } = await useFetch<{ notifyRoleReminders: boolean, notifySignupReminders: boolean }>(
+  '/api/me/preferences',
+  { key: 'me-preferences' },
+)
+const savingPrefs = ref(false)
+
+async function savePref(patch: { notifyRoleReminders?: boolean, notifySignupReminders?: boolean }) {
+  savingPrefs.value = true
+  try {
+    await $fetch('/api/me/preferences', { method: 'PUT', body: patch })
+    await refreshPrefs()
+  }
+  finally {
+    savingPrefs.value = false
+  }
+}
+
 const statusLabel = computed(() => {
   switch (me.value?.status) {
     case 'admin': return t('account.statusAdmin')
@@ -347,6 +366,47 @@ useHead(() => ({ title: t('account.title') }))
         >
           {{ savedTestimonial ? t('account.testimonial.saved') : t('account.testimonial.save') }}
         </Button>
+      </CardContent>
+    </Card>
+
+    <!-- Notification preferences (issue #59): members+ only -->
+    <Card
+      v-if="!isGuest"
+      class="mt-6"
+    >
+      <CardHeader>
+        <CardTitle class="text-lg">
+          {{ t('account.notifications.title') }}
+        </CardTitle>
+        <CardDescription>{{ t('account.notifications.description') }}</CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-3">
+        <label class="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            class="mt-0.5 size-4 shrink-0 rounded border-input"
+            :checked="prefs?.notifyRoleReminders ?? true"
+            :disabled="savingPrefs"
+            @change="savePref({ notifyRoleReminders: ($event.target as HTMLInputElement).checked })"
+          >
+          <span>
+            <span class="font-medium">{{ t('account.notifications.roleReminders') }}</span>
+            <span class="block text-muted-foreground">{{ t('account.notifications.roleRemindersHint') }}</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            class="mt-0.5 size-4 shrink-0 rounded border-input"
+            :checked="prefs?.notifySignupReminders ?? true"
+            :disabled="savingPrefs"
+            @change="savePref({ notifySignupReminders: ($event.target as HTMLInputElement).checked })"
+          >
+          <span>
+            <span class="font-medium">{{ t('account.notifications.signupReminders') }}</span>
+            <span class="block text-muted-foreground">{{ t('account.notifications.signupRemindersHint') }}</span>
+          </span>
+        </label>
       </CardContent>
     </Card>
   </div>
