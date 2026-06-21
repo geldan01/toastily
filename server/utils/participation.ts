@@ -3,6 +3,7 @@ import { alias } from 'drizzle-orm/pg-core'
 import type { useDrizzle } from '../db/client'
 import { schema } from '../db/client'
 import type { VoteCategory } from '../db/schema/voting'
+import { mentorshipFor, type MentorshipLink } from './mentorship'
 
 /**
  * Participation tracking & history (PRD §11). Read-side only — no new schema.
@@ -152,6 +153,10 @@ export interface MemberParticipation {
   awards: (AwardWin & { meetingNumber: number | null })[]
   positions: PositionHeld[]
   statusHistory: StatusChange[]
+  /** Current mentor (if any) and current mentees (issue #62). Shown on both
+   * members' pages — the pairing carries no privacy gate. */
+  mentor: MentorshipLink | null
+  mentees: MentorshipLink[]
 }
 
 /** Full participation timeline for one member, newest first within each
@@ -303,6 +308,9 @@ export async function memberParticipation(
     .map(w => ({ ...w, meetingNumber: numberById.get(w.meetingId) ?? null }))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
 
+  // Current mentor / mentees (issue #62) — shown on both members' pages.
+  const { mentor, mentees } = await mentorshipFor(db, userId)
+
   // Contact-visibility preference (issue #61): hide email/phone from other
   // members unless this member opted in (or the requester is the member/admin,
   // signalled by includeContact). bio/goals are directory content, always shown.
@@ -328,6 +336,8 @@ export async function memberParticipation(
       endedAt: p.endedAt as unknown as string | null,
     })),
     statusHistory: statusHistory.map(s => ({ ...s, at: s.at as unknown as string })),
+    mentor,
+    mentees,
   }
 }
 

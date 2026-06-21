@@ -197,6 +197,19 @@
     "goals": "Goals",
     "contact": "Contact"
   },
+  "mentorship": {
+    "title": "Mentorship",
+    "mentoredBy": "Mentored by",
+    "mentoring": "Mentoring",
+    "none": "No mentor assigned",
+    "noMentees": "Not mentoring anyone yet.",
+    "setMentor": "Set a mentor…",
+    "changeMentor": "Change mentor…",
+    "addMentee": "Add a mentee…",
+    "save": "Save",
+    "add": "Add",
+    "remove": "Remove"
+  },
   "pathways": {
     "title": "My Pathways",
     "subtitle": "Track the path you're on and the projects you've completed.",

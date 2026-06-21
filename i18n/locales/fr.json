@@ -197,6 +197,19 @@
     "goals": "Objectifs",
     "contact": "Coordonnées"
   },
+  "mentorship": {
+    "title": "Mentorat",
+    "mentoredBy": "Encadré par",
+    "mentoring": "Encadre",
+    "none": "Aucun mentor assigné",
+    "noMentees": "N'encadre personne pour l'instant.",
+    "setMentor": "Choisir un mentor…",
+    "changeMentor": "Changer de mentor…",
+    "addMentee": "Ajouter un mentoré…",
+    "save": "Enregistrer",
+    "add": "Ajouter",
+    "remove": "Retirer"
+  },
   "pathways": {
     "title": "Mes Pathways",
     "subtitle": "Suivez le parcours que vous suivez et les projets que vous avez terminés.",
