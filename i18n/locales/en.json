@@ -230,6 +230,7 @@
   "achievements": {
     "title": "Achievements",
     "subtitle": "Milestones members earn through participation. Select a badge to see who has earned it.",
+    "cardHint": "Browse milestone badges and see who's earned each one.",
     "noOne": "No one has earned this yet."
   },
   "mentorship": {
