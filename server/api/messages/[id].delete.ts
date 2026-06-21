@@ -2,11 +2,12 @@ import { eq } from 'drizzle-orm'
 import { schema, useDrizzle } from '../../db/client'
 
 /**
- * Remove an internal announcement (PRD §7.1, issue #17). Officer/admin only —
- * any officer may tidy up the announcement board, not just the original author.
+ * Remove an internal announcement (PRD §7.1, issues #17/#63). Gated to
+ * communication managers (`canManageCommunication`) — any of them may tidy up
+ * the announcement board, not just the original author.
  */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'officer')
+  await requireCommunicationManager(event)
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'A message id is required.' })
 

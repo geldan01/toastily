@@ -7,8 +7,6 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { user } = useUserSession()
 
-const isOfficer = computed(() => hasMinRole(user.value?.status, 'officer'))
-
 type Position = { nameEn: string, nameFr: string }
 type Member = {
   id: string
@@ -24,7 +22,10 @@ type Member = {
 }
 type Message = {
   id: string
-  body: string
+  titleEn: string
+  titleFr: string
+  bodyEn: string
+  bodyFr: string
   pinned: boolean
   expiresAt: string | null
   createdAt: string
@@ -42,6 +43,9 @@ const members = computed(() => data.value?.members ?? [])
 // `canAssignOfficers` (President) position. Authority is data, not a role name.
 const { data: caps } = useCapabilities()
 const canManagePeople = computed(() => caps.value?.canAssignOfficers ?? false)
+// Announcement authoring is gated on the communication capability (issue #63) —
+// admin or a `canManageCommunication` executive position, never a role name.
+const canManageMessages = computed(() => caps.value?.canManageCommunication ?? false)
 
 // A member/officer (not self, not an admin) may be revoked back to guest.
 function canRevoke(m: Member) {
@@ -110,15 +114,25 @@ const minutesStatusLabel = (s: MinutesApprovalStatus) => t(
 const minutesStatusVariant = (s: MinutesApprovalStatus) => (s === 'pending' ? 'outline' : 'secondary')
 const minutesStatusWord = (s: MinutesApprovalStatus) => t(s === 'amended' ? 'meetings.minutesStatusAmended' : 'meetings.minutesStatusRead')
 
-// Officer compose form (hidden behind a button until opened)
+// Compose form (hidden behind a button until opened). Announcements are
+// bilingual user-generated content — both EN/FR title + body are required.
 const composing = ref(false)
-const composeBody = ref('')
+const composeTitleEn = ref('')
+const composeTitleFr = ref('')
+const composeBodyEn = ref('')
+const composeBodyFr = ref('')
 const composePinned = ref(false)
 const composeExpiresAt = ref('')
+const composeSendEmail = ref(false)
 const posting = ref(false)
 const composeError = ref('')
 
-const canPost = computed(() => composeBody.value.trim().length > 0 && !posting.value)
+const canPost = computed(() =>
+  composeTitleEn.value.trim().length > 0
+  && composeTitleFr.value.trim().length > 0
+  && composeBodyEn.value.trim().length > 0
+  && composeBodyFr.value.trim().length > 0
+  && !posting.value)
 
 function openCompose() {
   composeError.value = ''
@@ -127,9 +141,13 @@ function openCompose() {
 
 function cancelCompose() {
   composing.value = false
-  composeBody.value = ''
+  composeTitleEn.value = ''
+  composeTitleFr.value = ''
+  composeBodyEn.value = ''
+  composeBodyFr.value = ''
   composePinned.value = false
   composeExpiresAt.value = ''
+  composeSendEmail.value = false
   composeError.value = ''
 }
 
@@ -141,9 +159,13 @@ async function postMessage() {
     await $fetch('/api/messages', {
       method: 'POST',
       body: {
-        body: composeBody.value.trim(),
+        titleEn: composeTitleEn.value.trim(),
+        titleFr: composeTitleFr.value.trim(),
+        bodyEn: composeBodyEn.value.trim(),
+        bodyFr: composeBodyFr.value.trim(),
         pinned: composePinned.value,
         expiresAt: composeExpiresAt.value || null,
+        sendEmail: composeSendEmail.value,
       },
     })
     await refreshMessages()
@@ -156,6 +178,10 @@ async function postMessage() {
     posting.value = false
   }
 }
+
+// Render the announcement in the viewer's locale.
+const msgTitle = (m: Message) => (locale.value === 'fr' ? m.titleFr : m.titleEn)
+const msgBody = (m: Message) => (locale.value === 'fr' ? m.bodyFr : m.bodyEn)
 
 async function deleteMessage(id: string) {
   if (!window.confirm(t('members.messages.confirmDelete'))) return
@@ -199,47 +225,15 @@ useHead(() => ({ title: t('members.title') }))
       </p>
     </header>
 
-    <!-- Member hub (PRD §7.1) -->
-    <div class="mb-10 grid gap-4 sm:grid-cols-2">
-      <NuxtLink :to="localePath('/participation')">
-        <Card class="h-full transition-colors hover:border-primary/50 hover:bg-muted/40">
-          <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-base">
-              <BarChart3 class="size-4" /> {{ t('participation.title') }}
-            </CardTitle>
-            <CardDescription>{{ t('participation.cardHint') }}</CardDescription>
-          </CardHeader>
-        </Card>
-      </NuxtLink>
-      <NuxtLink :to="localePath('/pathways')">
-        <Card class="h-full transition-colors hover:border-primary/50 hover:bg-muted/40">
-          <CardHeader>
-            <CardTitle class="flex items-center gap-2 text-base">
-              <Route class="size-4" /> {{ t('pathways.title') }}
-            </CardTitle>
-            <CardDescription>{{ t('pathways.cardHint') }}</CardDescription>
-          </CardHeader>
-        </Card>
-      </NuxtLink>
-      <Card class="opacity-70">
-        <CardHeader>
-          <CardTitle class="flex items-center gap-2 text-base">
-            <Wrench class="size-4" /> {{ t('members.tools.title') }}
-          </CardTitle>
-          <CardDescription>{{ t('members.tools.soon') }}</CardDescription>
-        </CardHeader>
-      </Card>
-    </div>
-
-    <!-- Announcements (PRD §7.1, issue #17) -->
-    <section class="mb-10">
-      <h2 class="mb-4 flex items-center gap-2 text-xl font-semibold tracking-tight">
+    <!-- Announcements (PRD §7.1, issues #17/#63) — always the top, highlighted block -->
+    <section class="mb-10 rounded-xl border-2 border-primary/40 bg-primary/5 p-5 shadow-sm sm:p-6">
+      <h2 class="mb-4 flex items-center gap-2 text-xl font-semibold tracking-tight text-primary">
         <Mail class="size-5" /> {{ t('members.messages.title') }}
       </h2>
 
-      <!-- Officer: button to reveal the compose form -->
+      <!-- Communication manager: button to reveal the compose form -->
       <div
-        v-if="isOfficer && !composing"
+        v-if="canManageMessages && !composing"
         class="mb-4"
       >
         <Button
@@ -250,9 +244,9 @@ useHead(() => ({ title: t('members.title') }))
         </Button>
       </div>
 
-      <!-- Officer compose form -->
+      <!-- Compose form (bilingual) -->
       <Card
-        v-if="isOfficer && composing"
+        v-if="canManageMessages && composing"
         class="mb-4"
       >
         <CardHeader>
@@ -260,13 +254,39 @@ useHead(() => ({ title: t('members.title') }))
             {{ t('members.messages.compose') }}
           </CardTitle>
         </CardHeader>
-        <CardContent class="space-y-3">
-          <textarea
-            v-model="composeBody"
-            :placeholder="t('members.messages.placeholder')"
-            rows="3"
-            class="placeholder:text-muted-foreground dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-          />
+        <CardContent class="space-y-4">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-3">
+              <p class="text-sm font-semibold text-muted-foreground">
+                {{ t('members.messages.langEn') }}
+              </p>
+              <Input
+                v-model="composeTitleEn"
+                :placeholder="t('members.messages.titlePlaceholder')"
+              />
+              <textarea
+                v-model="composeBodyEn"
+                :placeholder="t('members.messages.placeholder')"
+                rows="3"
+                class="placeholder:text-muted-foreground dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              />
+            </div>
+            <div class="space-y-3">
+              <p class="text-sm font-semibold text-muted-foreground">
+                {{ t('members.messages.langFr') }}
+              </p>
+              <Input
+                v-model="composeTitleFr"
+                :placeholder="t('members.messages.titlePlaceholder')"
+              />
+              <textarea
+                v-model="composeBodyFr"
+                :placeholder="t('members.messages.placeholder')"
+                rows="3"
+                class="placeholder:text-muted-foreground dark:bg-input/30 border-input min-h-20 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              />
+            </div>
+          </div>
           <div class="flex flex-wrap items-center gap-4">
             <label class="flex items-center gap-2 text-sm">
               <input
@@ -275,6 +295,14 @@ useHead(() => ({ title: t('members.title') }))
                 class="size-4 rounded border-input accent-primary"
               >
               {{ t('members.messages.pin') }}
+            </label>
+            <label class="flex items-center gap-2 text-sm">
+              <input
+                v-model="composeSendEmail"
+                type="checkbox"
+                class="size-4 rounded border-input accent-primary"
+              >
+              {{ t('members.messages.sendEmail') }}
             </label>
             <label class="flex items-center gap-2 text-sm">
               <span class="text-muted-foreground">{{ t('members.messages.expires') }}</span>
@@ -331,8 +359,11 @@ useHead(() => ({ title: t('members.title') }))
           <Card :class="msg.pinned ? 'border-primary/50' : ''">
             <CardHeader class="flex-row items-start justify-between gap-4 space-y-0">
               <div class="min-w-0">
-                <p class="whitespace-pre-wrap break-words text-sm">
-                  {{ msg.body }}
+                <CardTitle class="text-base">
+                  {{ msgTitle(msg) }}
+                </CardTitle>
+                <p class="mt-1 whitespace-pre-wrap break-words text-sm">
+                  {{ msgBody(msg) }}
                 </p>
                 <CardDescription class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
                   <Badge
@@ -348,7 +379,7 @@ useHead(() => ({ title: t('members.title') }))
                 </CardDescription>
               </div>
               <Button
-                v-if="isOfficer"
+                v-if="canManageMessages"
                 variant="ghost"
                 size="icon"
                 :aria-label="t('members.messages.delete')"
@@ -361,6 +392,38 @@ useHead(() => ({ title: t('members.title') }))
         </li>
       </ul>
     </section>
+
+    <!-- Member hub (PRD §7.1) -->
+    <div class="mb-10 grid gap-4 sm:grid-cols-2">
+      <NuxtLink :to="localePath('/participation')">
+        <Card class="h-full transition-colors hover:border-primary/50 hover:bg-muted/40">
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2 text-base">
+              <BarChart3 class="size-4" /> {{ t('participation.title') }}
+            </CardTitle>
+            <CardDescription>{{ t('participation.cardHint') }}</CardDescription>
+          </CardHeader>
+        </Card>
+      </NuxtLink>
+      <NuxtLink :to="localePath('/pathways')">
+        <Card class="h-full transition-colors hover:border-primary/50 hover:bg-muted/40">
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2 text-base">
+              <Route class="size-4" /> {{ t('pathways.title') }}
+            </CardTitle>
+            <CardDescription>{{ t('pathways.cardHint') }}</CardDescription>
+          </CardHeader>
+        </Card>
+      </NuxtLink>
+      <Card class="opacity-70">
+        <CardHeader>
+          <CardTitle class="flex items-center gap-2 text-base">
+            <Wrench class="size-4" /> {{ t('members.tools.title') }}
+          </CardTitle>
+          <CardDescription>{{ t('members.tools.soon') }}</CardDescription>
+        </CardHeader>
+      </Card>
+    </div>
 
     <!-- Meeting minutes (secretary feature, issue #14) -->
     <section class="mb-10">

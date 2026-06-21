@@ -2,10 +2,11 @@ import { desc, eq, gt, isNull, or } from 'drizzle-orm'
 import { schema, useDrizzle } from '../../db/client'
 
 /**
- * Internal announcements (PRD §7.1, issue #17) — visible to any logged-in
+ * Internal announcements (PRD §7.1, issues #17/#63) — visible to any logged-in
  * member. Returns the currently-active messages (no expiry, or not yet expired)
- * with pinned ones floated to the top, newest first. Officer authoring lives in
- * the sibling POST route; deletion in [id].delete.ts.
+ * with pinned ones floated to the top, newest first. Bodies are bilingual; the
+ * client renders the viewer's locale. Authoring lives in the sibling POST route;
+ * deletion in [id].delete.ts.
  */
 export default defineEventHandler(async (event) => {
   await requireMinRole(event, 'member')
@@ -14,7 +15,10 @@ export default defineEventHandler(async (event) => {
   const rows = await db
     .select({
       id: schema.messages.id,
-      body: schema.messages.body,
+      titleEn: schema.messages.titleEn,
+      titleFr: schema.messages.titleFr,
+      bodyEn: schema.messages.bodyEn,
+      bodyFr: schema.messages.bodyFr,
       pinned: schema.messages.pinned,
       expiresAt: schema.messages.expiresAt,
       createdAt: schema.messages.createdAt,
