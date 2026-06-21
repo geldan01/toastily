@@ -5,6 +5,12 @@
 .cache
 dist
 
+# Madar (local codebase knowledge graph for AI agents — generated artifacts &
+# local-only MCP wiring; regenerate with `madar generate .`). Kept out of this
+# public/shared repo deliberately — see setup notes.
+out/
+.mcp.json
+
 # Local TMPDIR for the dev server (vite-node IPC socket — see `dev` script)
 .tmp
 
