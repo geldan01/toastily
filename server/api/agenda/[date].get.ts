@@ -6,7 +6,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
 interface AgendaLine {
   kind: 'item' | 'speech' | 'evaluation'
-  section: 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
+  section: 'administrative' | 'speeches' | 'table_topics' | 'evaluations' | 'opening' | 'closing'
   labelEn: string
   labelFr: string
   durationMinutes: number | null

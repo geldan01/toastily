@@ -792,6 +792,8 @@
     "division": "Division {n}",
     "district": "District {n}",
     "sectionAdministrative": "Segment administratif",
+    "sectionOpening": "Ouverture de la réunion",
+    "sectionClosing": "Cérémonie de clôture",
     "sectionEducative": "Session éducative",
     "sectionSpeeches": "Discours préparés",
     "sectionTableTopics": "Sujets impromptus",
