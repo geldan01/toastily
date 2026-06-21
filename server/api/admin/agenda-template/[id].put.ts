@@ -3,8 +3,8 @@ import { schema, useDrizzle } from '../../../db/client'
 
 type ItemType = 'item' | 'speeches' | 'evaluations'
 const BLOCK_TYPES: ItemType[] = ['speeches', 'evaluations']
-type Section = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
-const SECTIONS: Section[] = ['administrative', 'speeches', 'table_topics', 'evaluations']
+type Section = 'administrative' | 'speeches' | 'table_topics' | 'evaluations' | 'opening' | 'closing'
+const SECTIONS: Section[] = ['administrative', 'speeches', 'table_topics', 'evaluations', 'opening', 'closing']
 
 interface ItemInput {
   itemType?: ItemType

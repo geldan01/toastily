@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CalendarPlus, CheckCircle2, ClipboardList, LogIn, MessageSquarePlus, NotebookPen, Printer, UserCheck, Users, Vote } from '@lucide/vue'
 
-type AgendaSection = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
+type AgendaSection = 'administrative' | 'speeches' | 'table_topics' | 'evaluations' | 'opening' | 'closing'
 interface AgendaLine {
   kind: 'item' | 'speech' | 'evaluation'
   section: AgendaSection
@@ -122,16 +122,22 @@ const totalMinutes = computed(() => lines.value.reduce((s, l) => s + (l.duration
 const officerRole = (o: Officer) => locale.value === 'fr' ? o.nameFr : o.nameEn
 
 // The agenda table interleaves section headings with timed lines: a level-2
-// heading on every section change (the administrative segment appears at both
-// ends of the meeting), plus a one-time level-1 "Educative Session" heading
-// before its first subsection. The clock runs continuously from the club's
+// heading on every section change (the opening and closing ceremonies bookend
+// the meeting), plus a one-time level-1 "Educative Session" heading before its
+// first subsection. The clock runs continuously from the club's
 // meeting.start_time setting; headings consume no time.
 const SECTION_KEY: Record<AgendaSection, string> = {
   administrative: 'agenda.sectionAdministrative',
+  opening: 'agenda.sectionOpening',
+  closing: 'agenda.sectionClosing',
   speeches: 'agenda.sectionSpeeches',
   table_topics: 'agenda.sectionTableTopics',
   evaluations: 'agenda.sectionEvaluations',
 }
+// The educative session groups prepared speeches, table topics and evaluations;
+// its parent heading appears once before the first of these. Opening/closing/
+// administrative sections are the meeting's bookends and stay outside it.
+const EDUCATIVE_SECTIONS: AgendaSection[] = ['speeches', 'table_topics', 'evaluations']
 type Row
   = | { type: 'header', level: 1 | 2, label: string }
     | { type: 'line', line: AgendaLine, clock: string }
@@ -150,7 +156,7 @@ const rows = computed<Row[]>(() => {
   let educativeHeaderDone = false
   for (const l of lines.value) {
     if (l.section !== prevSection) {
-      if (l.section !== 'administrative' && !educativeHeaderDone) {
+      if (EDUCATIVE_SECTIONS.includes(l.section) && !educativeHeaderDone) {
         out.push({ type: 'header', level: 1, label: t('agenda.sectionEducative') })
         educativeHeaderDone = true
       }

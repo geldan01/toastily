@@ -4,7 +4,7 @@ import { schema, testDb } from '../setup/test-db'
 
 interface AgendaLine {
   kind: 'item' | 'speech' | 'evaluation'
-  section: 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
+  section: 'administrative' | 'speeches' | 'table_topics' | 'evaluations' | 'opening' | 'closing'
   durationMinutes: number | null
   who?: string | null
   placeholder?: boolean

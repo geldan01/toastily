@@ -266,13 +266,13 @@ const agendaTemplateSeed = {
   nameEn: 'Standard Meeting',
   nameFr: 'Réunion standard',
   items: [
-    // Opening administrative segment.
-    { labelEn: 'Call to Order', labelFr: 'Ouverture de la séance', duration: 1, role: 'Sergeant-at-Arms', section: 'administrative' as const },
-    { labelEn: 'Chair\'s Welcome', labelFr: 'Mot de bienvenue du président', duration: 3, role: 'Chair', section: 'administrative' as const },
-    { labelEn: 'Toast', labelFr: 'Toast', duration: 2, role: 'Toast', section: 'administrative' as const },
-    { labelEn: 'Moment of Reflection', labelFr: 'Moment de réflexion', duration: 2, role: 'Moment of Reflection', section: 'administrative' as const },
-    { labelEn: 'Moment of Humour', labelFr: 'Moment d\'humour', duration: 3, role: 'Moment of Humour', section: 'administrative' as const },
-    { labelEn: 'Toastmaster Takes Over', labelFr: 'Prise en charge par l\'animateur', duration: 2, role: 'Toastmaster', section: 'administrative' as const },
+    // Opening ceremony — the meeting's opening administrative bookend.
+    { labelEn: 'Call to Order', labelFr: 'Ouverture de la séance', duration: 1, role: 'Sergeant-at-Arms', section: 'opening' as const },
+    { labelEn: 'Chair\'s Welcome', labelFr: 'Mot de bienvenue du président', duration: 3, role: 'Chair', section: 'opening' as const },
+    { labelEn: 'Toast', labelFr: 'Toast', duration: 2, role: 'Toast', section: 'opening' as const },
+    { labelEn: 'Moment of Reflection', labelFr: 'Moment de réflexion', duration: 2, role: 'Moment of Reflection', section: 'opening' as const },
+    { labelEn: 'Moment of Humour', labelFr: 'Moment d\'humour', duration: 3, role: 'Moment of Humour', section: 'opening' as const },
+    { labelEn: 'Toastmaster Takes Over', labelFr: 'Prise en charge par l\'animateur', duration: 2, role: 'Toastmaster', section: 'opening' as const },
     // Educative session: prepared speeches, table topics, evaluations.
     { labelEn: 'Prepared Speeches', labelFr: 'Discours préparés', type: 'speeches' as const, section: 'speeches' as const },
     { labelEn: 'Break', labelFr: 'Pause', duration: 10, section: 'table_topics' as const },
@@ -282,10 +282,10 @@ const agendaTemplateSeed = {
     { labelEn: 'Grammarian\'s Report', labelFr: 'Rapport du grammairien', duration: 3, role: 'Grammarian', section: 'evaluations' as const },
     { labelEn: 'General Evaluation', labelFr: 'Évaluation générale', duration: 5, role: 'General Evaluator', section: 'evaluations' as const },
     { labelEn: 'Awards Ceremony', labelFr: 'Remise des prix', duration: 2, role: 'Toastmaster', section: 'evaluations' as const },
-    // Closing administrative segment — the Chair's conclusion.
-    { labelEn: 'Guests Feedback', labelFr: 'Commentaires des invités', duration: 5, role: 'Chair', section: 'administrative' as const },
-    { labelEn: 'Last Minute Announcements', labelFr: 'Annonces de dernière minute', duration: 2, role: 'Chair', section: 'administrative' as const },
-    { labelEn: 'Closing Remarks & Adjournment', labelFr: 'Mot de la fin et clôture', duration: 2, role: 'Chair', section: 'administrative' as const },
+    // Closing ceremony — the Chair's conclusion, the meeting's closing bookend.
+    { labelEn: 'Guests Feedback', labelFr: 'Commentaires des invités', duration: 5, role: 'Chair', section: 'closing' as const },
+    { labelEn: 'Last Minute Announcements', labelFr: 'Annonces de dernière minute', duration: 2, role: 'Chair', section: 'closing' as const },
+    { labelEn: 'Closing Remarks & Adjournment', labelFr: 'Mot de la fin et clôture', duration: 2, role: 'Chair', section: 'closing' as const },
   ],
 }
 

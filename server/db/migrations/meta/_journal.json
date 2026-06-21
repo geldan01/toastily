@@ -204,6 +204,13 @@
       "when": 1790000000009,
       "tag": "0028_bilingual_messages",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1790000000010,
+      "tag": "0029_stormy_anthem",
+      "breakpoints": true
     }
   ]
 }

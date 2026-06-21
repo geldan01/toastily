@@ -6,9 +6,13 @@ definePageMeta({ middleware: 'admin' })
 const { t } = useI18n()
 
 type ItemType = 'item' | 'speeches' | 'evaluations'
-type Section = 'administrative' | 'speeches' | 'table_topics' | 'evaluations'
-const SECTIONS: Section[] = ['administrative', 'speeches', 'table_topics', 'evaluations']
+type Section = 'administrative' | 'speeches' | 'table_topics' | 'evaluations' | 'opening' | 'closing'
+// `administrative` stays last as a deprecated fallback for templates saved
+// before opening/closing existed (issue #74); new items default to `opening`.
+const SECTIONS: Section[] = ['opening', 'speeches', 'table_topics', 'evaluations', 'closing', 'administrative']
 const SECTION_KEY: Record<Section, string> = {
+  opening: 'agenda.sectionOpening',
+  closing: 'agenda.sectionClosing',
   administrative: 'agenda.sectionAdministrative',
   speeches: 'agenda.sectionSpeeches',
   table_topics: 'agenda.sectionTableTopics',
@@ -57,7 +61,7 @@ function move(index: number, dir: -1 | 1) {
 }
 
 function addItem() {
-  items.value.push({ itemType: 'item', section: 'administrative', labelEn: '', labelFr: '', durationMinutes: null, meetingRoleId: null })
+  items.value.push({ itemType: 'item', section: 'opening', labelEn: '', labelFr: '', durationMinutes: null, meetingRoleId: null })
 }
 function addSpeeches() {
   items.value.push({ itemType: 'speeches', section: 'speeches', labelEn: 'Prepared Speeches', labelFr: 'Discours préparés', durationMinutes: null, meetingRoleId: null })

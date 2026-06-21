@@ -792,6 +792,8 @@
     "division": "Division {n}",
     "district": "District {n}",
     "sectionAdministrative": "Administrative Segment",
+    "sectionOpening": "Opening Ceremony",
+    "sectionClosing": "Closing Ceremony",
     "sectionEducative": "Educative Session",
     "sectionSpeeches": "Prepared Speeches",
     "sectionTableTopics": "Table Topics",

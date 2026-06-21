@@ -60,13 +60,15 @@ export const agendaTemplates = pgTable('agenda_templates', {
 export const agendaItemType = pgEnum('agenda_item_type', ['item', 'speeches', 'evaluations'])
 
 /**
- * The agenda is rendered in four sections: an administrative segment (which may
- * appear both at the start and the end of the meeting) and the educative
- * session's three parts — prepared speeches, table topics, evaluations. Each
- * template item carries its section; the agenda view emits a heading whenever
- * the section changes between consecutive items.
+ * The agenda is rendered in sections: the meeting's `opening` and `closing`
+ * ceremonies (the administrative bookends) and the educative session's three
+ * parts — prepared speeches, table topics, evaluations. Each template item
+ * carries its section; the agenda view emits a heading whenever the section
+ * changes between consecutive items. `administrative` is retained as a
+ * deprecated fallback for templates saved before opening/closing existed (issue
+ * #74); new templates use `opening`/`closing` instead.
  */
-export const agendaSection = pgEnum('agenda_section', ['administrative', 'speeches', 'table_topics', 'evaluations'])
+export const agendaSection = pgEnum('agenda_section', ['administrative', 'speeches', 'table_topics', 'evaluations', 'opening', 'closing'])
 
 export const agendaTemplateItems = pgTable('agenda_template_items', {
   id: uuid('id').defaultRandom().primaryKey(),
