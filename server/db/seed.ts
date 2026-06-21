@@ -345,6 +345,18 @@ const emailTemplatesSeed = [
     bodyEn: '<p>Hi {{member_name}},</p>\n<p>This is a friendly reminder that you are taking part in our meeting on <strong>{{meeting_date}}</strong> at {{meeting_time}}{{location}}. You are signed up for:</p>\n{{roles}}\n<p><a href="{{meeting_link}}">View the meeting agenda</a></p>',
     bodyFr: '<p>Bonjour {{member_name}},</p>\n<p>Petit rappel : vous participez à notre réunion du <strong>{{meeting_date}}</strong> à {{meeting_time}}{{location}}. Vous êtes inscrit(e) pour :</p>\n{{roles}}\n<p><a href="{{meeting_link}}">Voir l\'ordre du jour</a></p>',
   },
+  {
+    // Optional fan-out when an officer posts an internal announcement (issue
+    // #63). Sent to all members. Placeholders substituted at send time:
+    // {{title}} {{body}} {{members_link}}.
+    key: 'announcement_posted',
+    descriptionEn: 'Optionally emails a newly-posted internal announcement to all members.',
+    descriptionFr: 'Envoie facultativement une nouvelle annonce interne par courriel à tous les membres.',
+    subjectEn: 'New announcement: {{title}}',
+    subjectFr: 'Nouvelle annonce : {{title}}',
+    bodyEn: '<h2>{{title}}</h2>\n<p>{{body}}</p>\n<p><a href="{{members_link}}">View all announcements</a></p>',
+    bodyFr: '<h2>{{title}}</h2>\n<p>{{body}}</p>\n<p><a href="{{members_link}}">Voir toutes les annonces</a></p>',
+  },
 ]
 
 async function seedEmailNotifications() {

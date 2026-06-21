@@ -293,6 +293,92 @@ export async function notifyMembershipRequest(input: NotifyMembershipRequestInpu
   return { status, recipientCount: sentCount, error: lastError }
 }
 
+/**
+ * The internal-announcement template (issue #63): an optional fan-out emailing a
+ * newly-posted Members-area announcement to all members.
+ */
+export const ANNOUNCEMENT_TEMPLATE_KEY = 'announcement_posted'
+
+export interface NotifyAnnouncementInput {
+  titleEn: string
+  titleFr: string
+  bodyEn: string
+  bodyFr: string
+  /** The author's id, recorded as `triggeredBy` on the send log. */
+  triggeredBy?: string | null
+}
+
+/** Escape + preserve line breaks for a user-authored body in an HTML email. */
+function bodyToHtml(value: string): string {
+  return escapeHtml(value).replaceAll('\n', '<br>')
+}
+
+/**
+ * Email a freshly-posted internal announcement to all members (issue #63,
+ * PRD §7.1/§10). Renders the `announcement_posted` template in each recipient's
+ * locale (so EN members get the English title/body, FR members the French),
+ * delivers via Resend (or the log stub), and records one row in `email_send_log`
+ * (trigger `triggered`). Never throws — a delivery problem must not fail the
+ * post; failures are captured in the log.
+ */
+export async function notifyAnnouncement(input: NotifyAnnouncementInput): Promise<SendNotificationResult> {
+  const db = useDrizzle()
+  const templateKey = ANNOUNCEMENT_TEMPLATE_KEY
+
+  const [template] = await db.select().from(schema.emailTemplates)
+    .where(eq(schema.emailTemplates.key, templateKey)).limit(1)
+  if (!template) {
+    return { status: 'failed', recipientCount: 0, error: `Unknown email template: ${templateKey}` }
+  }
+
+  const recipients = await getMemberRecipients()
+  const membersLink = `${siteUrl()}/members`
+
+  const renderForLocale = (subject: string, body: string, title: string, content: string) => ({
+    subject: subject.replaceAll('{{title}}', title),
+    html: body
+      .replaceAll('{{title}}', escapeHtml(title))
+      .replaceAll('{{body}}', bodyToHtml(content))
+      .replaceAll('{{members_link}}', membersLink),
+  })
+
+  const rendered: Record<Locale, { subject: string, html: string }> = {
+    en: renderForLocale(template.subjectEn, template.bodyEn, input.titleEn, input.bodyEn),
+    fr: renderForLocale(template.subjectFr, template.bodyFr, input.titleFr, input.bodyFr),
+  }
+
+  let anyFailed = false
+  let allStubbed = true
+  let lastError: string | undefined
+  let sentCount = 0
+
+  for (const r of recipients) {
+    const { subject, html } = rendered[r.locale]
+    const res = await sendEmail({ to: r.email, subject, html })
+    if (!res.ok) {
+      anyFailed = true
+      lastError = res.error
+      continue
+    }
+    if (!res.stubbed) allStubbed = false
+    sentCount++
+  }
+
+  const status: SendNotificationResult['status']
+    = anyFailed ? 'failed' : (recipients.length > 0 && allStubbed ? 'stubbed' : 'sent')
+
+  await db.insert(schema.emailSendLog).values({
+    templateKey,
+    trigger: 'triggered',
+    status,
+    recipientCount: sentCount,
+    triggeredBy: input.triggeredBy ?? null,
+    error: lastError ?? null,
+  })
+
+  return { status, recipientCount: sentCount, error: lastError }
+}
+
 interface ReminderParticipant {
   name: string
   email: string

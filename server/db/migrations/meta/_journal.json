@@ -197,6 +197,13 @@
       "when": 1790000000008,
       "tag": "0027_smooth_master_mold",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1790000000009,
+      "tag": "0028_bilingual_messages",
+      "breakpoints": true
     }
   ]
 }
