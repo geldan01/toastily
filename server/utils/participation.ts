@@ -3,6 +3,7 @@ import { alias } from 'drizzle-orm/pg-core'
 import type { useDrizzle } from '../db/client'
 import { schema } from '../db/client'
 import type { VoteCategory } from '../db/schema/voting'
+import { earnedMilestones, type EarnedMilestone } from './milestones'
 import { mentorshipFor, type MentorshipLink } from './mentorship'
 
 /**
@@ -157,6 +158,9 @@ export interface MemberParticipation {
    * members' pages — the pairing carries no privacy gate. */
   mentor: MentorshipLink | null
   mentees: MentorshipLink[]
+  /** Achievement badges earned from this member's participation (issue #64).
+   * Computed on the fly from the counts above; public (no privacy gate). */
+  milestones: EarnedMilestone[]
 }
 
 /** Full participation timeline for one member, newest first within each
@@ -203,9 +207,14 @@ export async function memberParticipation(
     .where(eq(schema.meetingAttendance.userId, userId))
     .orderBy(desc(schema.meetings.date))
 
-  const roles = await db.select({
+  // Role signups carry the role id + authority flag too, used only to derive
+  // role-variety / "chaired a meeting" milestones (issue #64); the client-facing
+  // `roles` array keeps just the four display fields.
+  const roleRows = await db.select({
     meetingId: schema.meetingRoleSignups.meetingId,
     date: schema.meetings.date,
+    roleId: schema.meetingRoles.id,
+    grantsMeetingAuthority: schema.meetingRoles.grantsMeetingAuthority,
     roleNameEn: schema.meetingRoles.nameEn,
     roleNameFr: schema.meetingRoles.nameFr,
   })
@@ -214,6 +223,12 @@ export async function memberParticipation(
     .innerJoin(schema.meetingRoles, eq(schema.meetingRoles.id, schema.meetingRoleSignups.roleId))
     .where(eq(schema.meetingRoleSignups.userId, userId))
     .orderBy(desc(schema.meetings.date))
+  const roles: RoleTaken[] = roleRows.map(r => ({
+    meetingId: r.meetingId,
+    date: r.date,
+    roleNameEn: r.roleNameEn,
+    roleNameFr: r.roleNameFr,
+  }))
 
   const speeches = await db.select({
     meetingId: schema.speeches.meetingId,
@@ -311,6 +326,18 @@ export async function memberParticipation(
   // Current mentor / mentees (issue #62) — shown on both members' pages.
   const { mentor, mentees } = await mentorshipFor(db, userId)
 
+  // Achievement badges (issue #64) — reduce the timeline to counts and run the
+  // data-driven catalog. distinctRoles / chaired come from the role flags.
+  const milestones = earnedMilestones({
+    attended: attendance.length,
+    speeches: speeches.length,
+    evaluations: evaluations.length,
+    roles: roleRows.length,
+    distinctRoles: new Set(roleRows.map(r => r.roleId)).size,
+    chaired: roleRows.filter(r => r.grantsMeetingAuthority).length,
+    awards: awards.length,
+  })
+
   // Contact-visibility preference (issue #61): hide email/phone from other
   // members unless this member opted in (or the requester is the member/admin,
   // signalled by includeContact). bio/goals are directory content, always shown.
@@ -338,6 +365,7 @@ export async function memberParticipation(
     statusHistory: statusHistory.map(s => ({ ...s, at: s.at as unknown as string })),
     mentor,
     mentees,
+    milestones,
   }
 }
 

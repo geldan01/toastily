@@ -199,7 +199,25 @@
     "evaluationBy": "by {name}",
     "about": "About",
     "goals": "Goals",
-    "contact": "Contact"
+    "contact": "Contact",
+    "achievements": "Achievements"
+  },
+  "milestones": {
+    "first_meeting": { "name": "First meeting", "desc": "Attended your first meeting" },
+    "ten_meetings": { "name": "Regular", "desc": "Attended 10 meetings" },
+    "twenty_five_meetings": { "name": "Dedicated", "desc": "Attended 25 meetings" },
+    "first_speech": { "name": "Icebreaker", "desc": "Delivered your first speech" },
+    "five_speeches": { "name": "Rising speaker", "desc": "Delivered 5 speeches" },
+    "ten_speeches": { "name": "Seasoned speaker", "desc": "Delivered 10 speeches" },
+    "first_evaluation": { "name": "First evaluation", "desc": "Gave your first evaluation" },
+    "ten_evaluations": { "name": "Trusted evaluator", "desc": "Gave 10 evaluations" },
+    "first_role": { "name": "Stepped up", "desc": "Took your first meeting role" },
+    "role_variety": { "name": "Versatile", "desc": "Held 3 different meeting roles" },
+    "role_explorer": { "name": "All-rounder", "desc": "Held 5 different meeting roles" },
+    "first_chair": { "name": "In the chair", "desc": "Led your first meeting" },
+    "five_chairs": { "name": "Meeting leader", "desc": "Led 5 meetings" },
+    "first_award": { "name": "Award winner", "desc": "Won your first award" },
+    "five_awards": { "name": "Decorated", "desc": "Won 5 awards" }
   },
   "mentorship": {
     "title": "Mentorship",

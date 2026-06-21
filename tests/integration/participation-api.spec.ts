@@ -94,6 +94,13 @@ test.describe('participation API', () => {
     expect(body.roles.some((r: { date: string }) => r.date === meetingDate)).toBeTruthy()
     expect(body.speeches.some((s: { title: string }) => s.title === 'My Icebreaker')).toBeTruthy()
     expect(body.evaluations.some((e: { date: string }) => e.date === meetingDate)).toBeTruthy()
+
+    // Achievements (issue #64) — the recorded role/speech/evaluation earn the
+    // matching first-time badges, derived purely from the counts above.
+    const milestoneKeys = body.milestones.map((m: { key: string }) => m.key)
+    expect(milestoneKeys).toContain('first_role')
+    expect(milestoneKeys).toContain('first_speech')
+    expect(milestoneKeys).toContain('first_evaluation')
   })
 
   test('the aggregate summary counts the recorded participation', async ({ apiAs }) => {
