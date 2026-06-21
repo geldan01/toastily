@@ -199,7 +199,39 @@
     "evaluationBy": "par {name}",
     "about": "À propos",
     "goals": "Objectifs",
-    "contact": "Coordonnées"
+    "contact": "Coordonnées",
+    "achievements": "Réalisations"
+  },
+  "milestones": {
+    "first_meeting": { "name": "Première réunion", "desc": "Vous avez assisté à votre première réunion" },
+    "ten_meetings": { "name": "Habitué", "desc": "Vous avez assisté à 10 réunions" },
+    "twenty_five_meetings": { "name": "Assidu", "desc": "Vous avez assisté à 25 réunions" },
+    "first_speech": { "name": "Discours d'initiation", "desc": "Vous avez prononcé votre premier discours" },
+    "five_speeches": { "name": "Orateur en progression", "desc": "Vous avez prononcé 5 discours" },
+    "ten_speeches": { "name": "Orateur chevronné", "desc": "Vous avez prononcé 10 discours" },
+    "first_evaluation": { "name": "Première évaluation", "desc": "Vous avez donné votre première évaluation" },
+    "ten_evaluations": { "name": "Évaluateur de confiance", "desc": "Vous avez donné 10 évaluations" },
+    "first_role": { "name": "Engagé", "desc": "Vous avez assumé votre premier rôle" },
+    "role_variety": { "name": "Polyvalent", "desc": "Vous avez assumé 3 rôles différents" },
+    "role_explorer": { "name": "Touche-à-tout", "desc": "Vous avez assumé 5 rôles différents" },
+    "first_chair": { "name": "Aux commandes", "desc": "Vous avez animé votre première réunion" },
+    "five_chairs": { "name": "Animateur de réunion", "desc": "Vous avez animé 5 réunions" },
+    "first_award": { "name": "Lauréat", "desc": "Vous avez remporté votre premier prix" },
+    "five_awards": { "name": "Décoré", "desc": "Vous avez remporté 5 prix" },
+    "categories": {
+      "attendance": "Présences",
+      "speaking": "Discours préparés",
+      "evaluation": "Évaluations",
+      "roles": "Rôles de réunion",
+      "leadership": "Leadership",
+      "awards": "Prix"
+    }
+  },
+  "achievements": {
+    "title": "Réalisations",
+    "subtitle": "Les jalons que les membres atteignent par leur participation. Sélectionnez un insigne pour voir qui l'a obtenu.",
+    "cardHint": "Parcourez les insignes de jalons et voyez qui a obtenu chacun.",
+    "noOne": "Personne ne l'a encore obtenu."
   },
   "mentorship": {
     "title": "Mentorat",

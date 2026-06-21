@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Award, MessageSquare, Mic, UserCheck, Users } from '@lucide/vue'
+import { Award, MessageSquare, Mic, Trophy, UserCheck, Users } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -38,13 +38,21 @@ useHead(() => ({ title: t('participation.title') }))
 
 <template>
   <div class="mx-auto max-w-5xl px-4 py-12">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold tracking-tight">
-        {{ t('participation.title') }}
-      </h1>
-      <p class="mt-2 text-muted-foreground">
-        {{ t('participation.subtitle') }}
-      </p>
+    <header class="mb-8 flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">
+          {{ t('participation.title') }}
+        </h1>
+        <p class="mt-2 text-muted-foreground">
+          {{ t('participation.subtitle') }}
+        </p>
+      </div>
+      <NuxtLink
+        :to="localePath('/achievements')"
+        class="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+      >
+        <Trophy class="size-4" /> {{ t('achievements.title') }}
+      </NuxtLink>
     </header>
 
     <div class="mb-4 max-w-xs">

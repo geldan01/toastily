@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Award, Briefcase, GraduationCap, History, MessageSquare, Mic, Star, UserCheck, Users } from '@lucide/vue'
+import type { Component } from 'vue'
+import { Award, Briefcase, GraduationCap, History, MessageSquare, Mic, Star, Trophy, UserCheck, Users } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -29,6 +30,8 @@ type AwardWin = { category: string, date: string, meetingNumber: number | null, 
 type PositionHeld = { positionNameEn: string, positionNameFr: string, startedAt: string, endedAt: string | null }
 type StatusChange = { fromStatus: string | null, toStatus: string, at: string }
 type MentorshipLink = { mentorshipId: string, userId: string, name: string }
+type MilestoneCategory = 'attendance' | 'speaking' | 'evaluation' | 'roles' | 'leadership' | 'awards'
+type EarnedMilestone = { key: string, category: MilestoneCategory, threshold: number }
 type Participation = {
   member: {
     id: string
@@ -50,6 +53,17 @@ type Participation = {
   statusHistory: StatusChange[]
   mentor: MentorshipLink | null
   mentees: MentorshipLink[]
+  milestones: EarnedMilestone[]
+}
+
+// Per-category badge icon — keeps the achievements grid visually grouped.
+const milestoneIcon: Record<MilestoneCategory, Component> = {
+  attendance: UserCheck,
+  speaking: Mic,
+  evaluation: MessageSquare,
+  roles: Users,
+  leadership: Star,
+  awards: Award,
 }
 
 const { data, error, refresh } = await useFetch<Participation>(() => `/api/participation/${id.value}`, {
@@ -365,6 +379,32 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
           </CardHeader>
         </Card>
       </div>
+
+      <!-- Achievements / milestones (issue #64) -->
+      <section
+        v-if="data?.milestones.length"
+        class="mb-10"
+      >
+        <h2 class="mb-3 flex items-center gap-2 text-lg font-semibold">
+          <Trophy class="size-5" /> {{ t('participation.achievements') }}
+        </h2>
+        <ul class="flex flex-wrap gap-2">
+          <li
+            v-for="m in data.milestones"
+            :key="m.key"
+            class="flex items-center gap-2 rounded-full border bg-muted/40 py-1.5 pr-3 pl-2"
+            :title="t(`milestones.${m.key}.desc`)"
+          >
+            <span class="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <component
+                :is="milestoneIcon[m.category]"
+                class="size-3.5"
+              />
+            </span>
+            <span class="text-sm font-medium">{{ t(`milestones.${m.key}.name`) }}</span>
+          </li>
+        </ul>
+      </section>
 
       <!-- Meetings attended -->
       <section

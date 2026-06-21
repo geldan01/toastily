@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BarChart3, FileText, Mail, Pin, Plus, Route, Trash2, UserMinus, Wrench } from '@lucide/vue'
+import { BarChart3, FileText, Mail, Pin, Plus, Route, Trash2, Trophy, UserMinus, Wrench } from '@lucide/vue'
 
 definePageMeta({ middleware: 'member' })
 
@@ -412,6 +412,16 @@ useHead(() => ({ title: t('members.title') }))
               <Route class="size-4" /> {{ t('pathways.title') }}
             </CardTitle>
             <CardDescription>{{ t('pathways.cardHint') }}</CardDescription>
+          </CardHeader>
+        </Card>
+      </NuxtLink>
+      <NuxtLink :to="localePath('/achievements')">
+        <Card class="h-full transition-colors hover:border-primary/50 hover:bg-muted/40">
+          <CardHeader>
+            <CardTitle class="flex items-center gap-2 text-base">
+              <Trophy class="size-4" /> {{ t('achievements.title') }}
+            </CardTitle>
+            <CardDescription>{{ t('achievements.cardHint') }}</CardDescription>
           </CardHeader>
         </Card>
       </NuxtLink>
