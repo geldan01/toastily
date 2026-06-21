@@ -108,6 +108,54 @@ async function saveTestimonial() {
   }
 }
 
+// Member profile (issue #61): self-authored bio, goals, phone and the
+// contact-visibility preference. Members+ only.
+interface Profile {
+  bio: string | null
+  goals: string | null
+  phone: string | null
+  showContactInfo: boolean
+}
+
+const { data: profile, refresh: refreshProfile } = await useFetch<Profile>('/api/me/profile', {
+  key: 'me-profile',
+})
+const profileForm = reactive({
+  bio: profile.value?.bio ?? '',
+  goals: profile.value?.goals ?? '',
+  phone: profile.value?.phone ?? '',
+  showContactInfo: profile.value?.showContactInfo ?? true,
+})
+const savingProfile = ref(false)
+const savedProfile = ref(false)
+const profileError = ref('')
+
+async function saveProfile() {
+  savingProfile.value = true
+  savedProfile.value = false
+  profileError.value = ''
+  try {
+    await $fetch('/api/me/profile', {
+      method: 'PUT',
+      body: {
+        bio: profileForm.bio,
+        goals: profileForm.goals,
+        phone: profileForm.phone,
+        showContactInfo: profileForm.showContactInfo,
+      },
+    })
+    savedProfile.value = true
+    setTimeout(() => (savedProfile.value = false), 1500)
+    await refreshProfile()
+  }
+  catch (e) {
+    profileError.value = errorMessage(e, t('auth.genericError'))
+  }
+  finally {
+    savingProfile.value = false
+  }
+}
+
 // Notification preferences (issue #59): members can opt out of the pre-meeting
 // role reminder and the signup reminder emails. Persisted immediately on toggle.
 const { data: prefs, refresh: refreshPrefs } = await useFetch<{ notifyRoleReminders: boolean, notifySignupReminders: boolean }>(
@@ -365,6 +413,75 @@ useHead(() => ({ title: t('account.title') }))
           @click="saveTestimonial"
         >
           {{ savedTestimonial ? t('account.testimonial.saved') : t('account.testimonial.save') }}
+        </Button>
+      </CardContent>
+    </Card>
+
+    <!-- Member profile (issue #61): members+ only -->
+    <Card
+      v-if="!isGuest"
+      class="mt-6"
+    >
+      <CardHeader>
+        <CardTitle class="text-lg">
+          {{ t('account.profile.title') }}
+        </CardTitle>
+        <CardDescription>{{ t('account.profile.description') }}</CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <div class="space-y-2">
+          <Label for="profileBio">{{ t('account.profile.bio') }}</Label>
+          <textarea
+            id="profileBio"
+            v-model="profileForm.bio"
+            rows="3"
+            :placeholder="t('account.profile.bioPlaceholder')"
+            class="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </div>
+        <div class="space-y-2">
+          <Label for="profileGoals">{{ t('account.profile.goals') }}</Label>
+          <textarea
+            id="profileGoals"
+            v-model="profileForm.goals"
+            rows="2"
+            :placeholder="t('account.profile.goalsPlaceholder')"
+            class="w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
+        </div>
+        <div class="space-y-2">
+          <Label for="profilePhone">{{ t('account.profile.phone') }}</Label>
+          <Input
+            id="profilePhone"
+            v-model="profileForm.phone"
+            type="tel"
+            :placeholder="t('account.profile.phonePlaceholder')"
+          />
+        </div>
+        <label class="flex items-start gap-3 text-sm">
+          <input
+            v-model="profileForm.showContactInfo"
+            type="checkbox"
+            class="mt-0.5 size-4 shrink-0 rounded border-input"
+          >
+          <span>
+            <span class="font-medium">{{ t('account.profile.showContactInfo') }}</span>
+            <span class="block text-muted-foreground">{{ t('account.profile.showContactInfoHint') }}</span>
+          </span>
+        </label>
+
+        <p
+          v-if="profileError"
+          class="text-sm text-destructive"
+        >
+          {{ profileError }}
+        </p>
+
+        <Button
+          :disabled="savingProfile"
+          @click="saveProfile"
+        >
+          {{ savedProfile ? t('account.profile.saved') : t('account.profile.save') }}
         </Button>
       </CardContent>
     </Card>
