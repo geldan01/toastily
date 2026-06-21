@@ -13,11 +13,14 @@ type Position = { nameEn: string, nameFr: string }
 type Member = {
   id: string
   name: string
-  email: string
+  email: string | null
   status: 'member' | 'officer' | 'admin'
   since: string
   avatarUrl: string | null
   positions: Position[]
+  bio: string | null
+  goals: string | null
+  phone: string | null
 }
 type Message = {
   id: string
@@ -473,11 +476,37 @@ useHead(() => ({ title: t('members.title') }))
                   </CardTitle>
                   <CardDescription class="truncate">
                     <a
+                      v-if="m.email"
                       :href="`mailto:${m.email}`"
                       class="hover:underline"
                     >{{ m.email }}</a>
+                    <span
+                      v-else
+                      class="italic"
+                    >{{ t('members.roster.contactHidden') }}</span>
                     · {{ t('members.roster.since', { date: fmt(m.since) }) }}
                   </CardDescription>
+                  <p
+                    v-if="m.phone"
+                    class="text-sm text-muted-foreground"
+                  >
+                    <a
+                      :href="`tel:${m.phone}`"
+                      class="hover:underline"
+                    >{{ m.phone }}</a>
+                  </p>
+                  <p
+                    v-if="m.bio"
+                    class="mt-2 text-sm"
+                  >
+                    {{ m.bio }}
+                  </p>
+                  <p
+                    v-if="m.goals"
+                    class="mt-1 text-sm text-muted-foreground"
+                  >
+                    <span class="font-medium">{{ t('members.roster.goals') }}:</span> {{ m.goals }}
+                  </p>
                   <div
                     v-if="m.positions.length"
                     class="mt-2 flex flex-wrap gap-1.5"

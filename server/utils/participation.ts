@@ -134,7 +134,16 @@ export interface PositionHeld { positionNameEn: string, positionNameFr: string, 
 export interface StatusChange { fromStatus: string | null, toStatus: string, at: string }
 
 export interface MemberParticipation {
-  member: { id: string, name: string, email: string, status: string, since: string }
+  member: {
+    id: string
+    name: string
+    email: string | null
+    status: string
+    since: string
+    bio: string | null
+    goals: string | null
+    phone: string | null
+  }
   attendance: MeetingAttended[]
   roles: RoleTaken[]
   speeches: SpeechGiven[]
@@ -155,7 +164,7 @@ export interface MemberParticipation {
 export async function memberParticipation(
   db: ReturnType<typeof useDrizzle>,
   userId: string,
-  opts: { includeReceivedEvaluations?: boolean } = {},
+  opts: { includeReceivedEvaluations?: boolean, includeContact?: boolean } = {},
 ): Promise<MemberParticipation | null> {
   const [member] = await db.select({
     id: schema.users.id,
@@ -163,6 +172,10 @@ export async function memberParticipation(
     email: schema.users.email,
     status: schema.users.status,
     since: schema.users.createdAt,
+    bio: schema.users.bio,
+    goals: schema.users.goals,
+    phone: schema.users.phone,
+    showContactInfo: schema.users.showContactInfo,
   })
     .from(schema.users)
     .where(and(
@@ -290,8 +303,19 @@ export async function memberParticipation(
     .map(w => ({ ...w, meetingNumber: numberById.get(w.meetingId) ?? null }))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
 
+  // Contact-visibility preference (issue #61): hide email/phone from other
+  // members unless this member opted in (or the requester is the member/admin,
+  // signalled by includeContact). bio/goals are directory content, always shown.
+  const { showContactInfo, ...memberFields } = member
+  const canSeeContact = showContactInfo || opts.includeContact === true
+
   return {
-    member: { ...member, since: member.since as unknown as string },
+    member: {
+      ...memberFields,
+      since: member.since as unknown as string,
+      email: canSeeContact ? member.email : null,
+      phone: canSeeContact ? (member.phone ?? null) : null,
+    },
     attendance,
     roles,
     speeches,

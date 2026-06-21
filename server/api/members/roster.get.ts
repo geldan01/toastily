@@ -8,7 +8,7 @@ import { schema, useDrizzle } from '../../db/client'
  * guests never see this (member-gated).
  */
 export default defineEventHandler(async (event) => {
-  await requireMinRole(event, 'member')
+  const viewer = await requireMinRole(event, 'member')
   const db = useDrizzle()
 
   const people = await db
@@ -19,6 +19,10 @@ export default defineEventHandler(async (event) => {
       status: schema.users.status,
       since: schema.users.createdAt,
       avatarKey: schema.users.avatarKey,
+      bio: schema.users.bio,
+      goals: schema.users.goals,
+      phone: schema.users.phone,
+      showContactInfo: schema.users.showContactInfo,
     })
     .from(schema.users)
     .where(inArray(schema.users.status, ['member', 'officer', 'admin']))
@@ -51,10 +55,18 @@ export default defineEventHandler(async (event) => {
   }
 
   return {
-    members: people.map(({ avatarKey, ...p }) => ({
-      ...p,
-      avatarUrl: avatarKey ? publicUrlForKey(avatarKey) : null,
-      positions: positionsByUser.get(p.id) ?? [],
-    })),
+    members: people.map(({ avatarKey, showContactInfo, email, phone, ...p }) => {
+      // Contact-visibility preference (issue #61): a member who opted out hides
+      // their email/phone from other members; they themselves and admins still
+      // see it. The roster is already member-gated regardless.
+      const canSeeContact = showContactInfo || viewer.id === p.id || viewer.status === 'admin'
+      return {
+        ...p,
+        email: canSeeContact ? email : null,
+        phone: canSeeContact ? (phone ?? null) : null,
+        avatarUrl: avatarKey ? publicUrlForKey(avatarKey) : null,
+        positions: positionsByUser.get(p.id) ?? [],
+      }
+    }),
   }
 })

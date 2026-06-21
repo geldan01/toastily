@@ -95,6 +95,20 @@
       "roleRemindersHint": "M'envoyer un courriel avant une réunion où j'ai un rôle ou un discours.",
       "signupReminders": "Rappels d'inscription",
       "signupRemindersHint": "M'envoyer les rôles vacants et les créneaux d'orateur de la prochaine réunion pour que je puisse m'inscrire."
+    },
+    "profile": {
+      "title": "Mon profil",
+      "description": "Parlez un peu de vous aux autres membres. Ces informations apparaissent dans le répertoire du club et sur votre page de participation. Écrivez dans la langue de votre choix.",
+      "bio": "À propos de moi",
+      "bioPlaceholder": "Une courte présentation…",
+      "goals": "Mes objectifs",
+      "goalsPlaceholder": "Ce sur quoi vous travaillez, p. ex. la variété vocale…",
+      "phone": "Téléphone (facultatif)",
+      "phonePlaceholder": "p. ex. (555) 123-4567",
+      "showContactInfo": "Montrer mon courriel et mon téléphone aux autres membres",
+      "showContactInfoHint": "Désactivé, seuls vous et les administrateurs voient vos coordonnées dans le répertoire.",
+      "save": "Enregistrer le profil",
+      "saved": "Enregistré"
     }
   },
   "requests": {
@@ -132,7 +146,9 @@
       "title": "Répertoire",
       "since": "Membre depuis {date}",
       "revoke": "Révoquer",
-      "confirmRevoke": "Révoquer l'adhésion de {name}? Le compte redeviendra invité."
+      "confirmRevoke": "Révoquer l'adhésion de {name}? Le compte redeviendra invité.",
+      "goals": "Travaille sur",
+      "contactHidden": "Coordonnées masquées"
     }
   },
   "dashboard": {
@@ -176,7 +192,10 @@
     "attended": "Présences",
     "meetingsAttended": "Réunions fréquentées",
     "evaluationsReceived": "Évaluations reçues",
-    "evaluationBy": "par {name}"
+    "evaluationBy": "par {name}",
+    "about": "À propos",
+    "goals": "Objectifs",
+    "contact": "Coordonnées"
   },
   "pathways": {
     "title": "Mes Pathways",

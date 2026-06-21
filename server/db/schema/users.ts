@@ -28,6 +28,19 @@ export const users = pgTable('users', {
   // Self-service profile picture (issue #43): the S3 object key for the member's
   // avatar (see server/utils/s3.ts). Null ⇒ render a default initials avatar.
   avatarKey: text('avatar_key'),
+  // Member profile (issue #61): self-authored free text turning the roster into
+  // a real directory. Single language (the member's choice) — these are personal
+  // free text, not DB-managed bilingual labels. `bio` = a short introduction,
+  // `goals` = what they're working on (e.g. "vocal variety"), `phone` = an
+  // optional contact number. All nullable; blank ⇒ null.
+  bio: text('bio'),
+  goals: text('goals'),
+  phone: text('phone'),
+  // Contact preference (issue #61): whether other members may see this member's
+  // email (and phone) on the roster/profile. Opt-out (default visible); the
+  // member themselves and admins always see it. The roster is already
+  // member-gated, so this controls member-to-member visibility only.
+  showContactInfo: boolean('show_contact_info').notNull().default(true),
   // Privacy consent (issue #25): recorded when the user agreed to the privacy
   // terms at registration, with the policy version in force at the time so a
   // future policy revision can require re-consent. Null ⇒ never consented

@@ -95,6 +95,20 @@
       "roleRemindersHint": "Email me before a meeting where I have a role or speech.",
       "signupReminders": "Signup reminders",
       "signupRemindersHint": "Email me the open roles and speech slots for the next meeting so I can sign up."
+    },
+    "profile": {
+      "title": "My profile",
+      "description": "Tell other members a bit about yourself. This appears on the club roster and your participation page. Write in whichever language you prefer.",
+      "bio": "About me",
+      "bioPlaceholder": "A short introduction…",
+      "goals": "My goals",
+      "goalsPlaceholder": "What you're working on, e.g. vocal variety…",
+      "phone": "Phone (optional)",
+      "phonePlaceholder": "e.g. (555) 123-4567",
+      "showContactInfo": "Show my email and phone to other members",
+      "showContactInfoHint": "When off, only you and admins can see your contact details on the roster.",
+      "save": "Save profile",
+      "saved": "Saved"
     }
   },
   "requests": {
@@ -132,7 +146,9 @@
       "title": "Roster",
       "since": "Member since {date}",
       "revoke": "Revoke",
-      "confirmRevoke": "Revoke {name}'s membership? They will return to guest status."
+      "confirmRevoke": "Revoke {name}'s membership? They will return to guest status.",
+      "goals": "Working on",
+      "contactHidden": "Contact details hidden"
     }
   },
   "dashboard": {
@@ -176,7 +192,10 @@
     "attended": "Attended",
     "meetingsAttended": "Meetings attended",
     "evaluationsReceived": "Evaluations received",
-    "evaluationBy": "by {name}"
+    "evaluationBy": "by {name}",
+    "about": "About",
+    "goals": "Goals",
+    "contact": "Contact"
   },
   "pathways": {
     "title": "My Pathways",

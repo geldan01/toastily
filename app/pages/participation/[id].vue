@@ -29,7 +29,16 @@ type AwardWin = { category: string, date: string, meetingNumber: number | null, 
 type PositionHeld = { positionNameEn: string, positionNameFr: string, startedAt: string, endedAt: string | null }
 type StatusChange = { fromStatus: string | null, toStatus: string, at: string }
 type Participation = {
-  member: { id: string, name: string, email: string, status: 'member' | 'officer' | 'admin', since: string }
+  member: {
+    id: string
+    name: string
+    email: string | null
+    status: 'member' | 'officer' | 'admin'
+    since: string
+    bio: string | null
+    goals: string | null
+    phone: string | null
+  }
   attendance: MeetingAttended[]
   roles: RoleTaken[]
   speeches: SpeechGiven[]
@@ -104,6 +113,46 @@ useHead(() => ({ title: member.value ? `${member.value.name} — ${t('participat
           {{ statusLabel(member.status) }}
         </Badge>
       </header>
+
+      <!-- Profile (issue #61): bio, goals, contact -->
+      <section
+        v-if="member.bio || member.goals || member.email || member.phone"
+        class="mb-8 space-y-3 rounded-lg border bg-muted/30 px-4 py-4"
+      >
+        <div v-if="member.bio">
+          <h2 class="text-sm font-semibold text-secondary">
+            {{ t('participation.about') }}
+          </h2>
+          <p class="mt-0.5 whitespace-pre-line text-sm">
+            {{ member.bio }}
+          </p>
+        </div>
+        <div v-if="member.goals">
+          <h2 class="text-sm font-semibold text-secondary">
+            {{ t('participation.goals') }}
+          </h2>
+          <p class="mt-0.5 whitespace-pre-line text-sm">
+            {{ member.goals }}
+          </p>
+        </div>
+        <div v-if="member.email || member.phone">
+          <h2 class="text-sm font-semibold text-secondary">
+            {{ t('participation.contact') }}
+          </h2>
+          <p class="mt-0.5 flex flex-wrap gap-x-4 text-sm">
+            <a
+              v-if="member.email"
+              :href="`mailto:${member.email}`"
+              class="hover:underline"
+            >{{ member.email }}</a>
+            <a
+              v-if="member.phone"
+              :href="`tel:${member.phone}`"
+              class="hover:underline"
+            >{{ member.phone }}</a>
+          </p>
+        </div>
+      </section>
 
       <!-- Summary counts -->
       <div class="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
