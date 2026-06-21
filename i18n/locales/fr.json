@@ -528,8 +528,9 @@
       "statusFailed": "Échec"
     },
     "uploads": {
-      "title": "Téléversement d’images",
-      "intro": "Téléversez une image vers le stockage objet et obtenez une URL permanente. Utilisé par les actualités et les blocs de contenu.",
+      "title": "Images téléversées",
+      "intro": "Toutes les images stockées dans le stockage d'objets, leur emplacement d'utilisation, et un outil pour en téléverser de nouvelles. Utilisées par les actualités, les pages et les blocs de contenu.",
+      "uploadHeading": "Téléverser une nouvelle image",
       "choose": "Choisir une image",
       "upload": "Téléverser",
       "uploading": "Téléversement…",
@@ -537,7 +538,25 @@
       "copy": "Copier",
       "copied": "Copié",
       "error": "Échec du téléversement.",
-      "notConfigured": "Le stockage d’images n’est pas configuré sur ce déploiement (définissez les variables d’environnement S3_*)."
+      "notConfigured": "Le stockage d'images n'est pas configuré sur ce déploiement (définissez les variables d'environnement S3_*).",
+      "libraryHeading": "Médiathèque",
+      "refresh": "Actualiser",
+      "loading": "Chargement des images…",
+      "loadError": "Impossible de charger la médiathèque.",
+      "deleteError": "Impossible de supprimer cette image.",
+      "empty": "Aucune image n'a encore été téléversée.",
+      "summary": "{count} image(s) · {orphans} inutilisée(s) · {size} au total",
+      "unused": "Inutilisée",
+      "delete": "Supprimer",
+      "confirmDelete": "Supprimer cette image ? Cette action est irréversible.",
+      "confirmDeleteInUse": "Cette image est encore utilisée dans du contenu. La supprimer laissera une image brisée. Supprimer quand même ?",
+      "truncated": "Seules les images les plus récentes sont affichées ; certains téléversements plus anciens ne sont pas listés.",
+      "kind": {
+        "avatar": "Avatar",
+        "news": "Actualité",
+        "page": "Page",
+        "contentBlock": "Bloc"
+      }
     }
   },
   "common": {

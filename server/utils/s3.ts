@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { createError, readMultipartFormData } from 'h3'
 
 /**
@@ -138,6 +138,58 @@ export async function storeImageUpload(event: H3Event): Promise<{ key: string, u
   }
 
   return { key, url: publicUrlForKey(key, cfg) }
+}
+
+/** A stored object as surfaced to the admin media library (issue #78). */
+export interface StoredObject {
+  key: string
+  size: number
+  lastModified: string | null
+  url: string
+}
+
+/**
+ * List every object under the `uploads/` prefix (issue #78). Pages through
+ * ListObjectsV2 (1000 keys/page) up to `max` keys so the bucket can't blow up
+ * the response; sets `truncated` when more objects exist than were returned.
+ * Newest-first by last-modified. Caller is responsible for authorization.
+ */
+export async function listStoredObjects(
+  max = 2000,
+  cfg: S3Config = s3Config(),
+): Promise<{ objects: StoredObject[], truncated: boolean }> {
+  if (!isStorageConfigured(cfg)) {
+    throw createError({ statusCode: 503, statusMessage: 'Image storage is not configured on this deployment' })
+  }
+
+  const objects: StoredObject[] = []
+  let token: string | undefined
+  let truncated = false
+
+  do {
+    const page = await useS3Client(cfg).send(new ListObjectsV2Command({
+      Bucket: cfg.bucket,
+      Prefix: 'uploads/',
+      ContinuationToken: token,
+    }))
+    for (const o of page.Contents ?? []) {
+      if (!o.Key) continue
+      objects.push({
+        key: o.Key,
+        size: o.Size ?? 0,
+        lastModified: o.LastModified ? o.LastModified.toISOString() : null,
+        url: publicUrlForKey(o.Key, cfg),
+      })
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined
+    if (objects.length >= max && token) {
+      truncated = true
+      break
+    }
+  } while (token)
+
+  objects.sort((a, b) => (b.lastModified ?? '').localeCompare(a.lastModified ?? ''))
+  return { objects: objects.slice(0, max), truncated }
 }
 
 /**
