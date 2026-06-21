@@ -529,7 +529,8 @@
     },
     "uploads": {
       "title": "Image uploads",
-      "intro": "Upload an image to object storage and get a persistent URL. Used by News and content blocks.",
+      "intro": "All images stored in object storage, where each one is used, and a tool to upload new ones. Used by News, pages and content blocks.",
+      "uploadHeading": "Upload a new image",
       "choose": "Choose an image",
       "upload": "Upload",
       "uploading": "Uploading…",
@@ -537,7 +538,25 @@
       "copy": "Copy",
       "copied": "Copied",
       "error": "Upload failed.",
-      "notConfigured": "Image storage isn't configured on this deployment (set the S3_* environment variables)."
+      "notConfigured": "Image storage isn't configured on this deployment (set the S3_* environment variables).",
+      "libraryHeading": "Media library",
+      "refresh": "Refresh",
+      "loading": "Loading images…",
+      "loadError": "Couldn't load the media library.",
+      "deleteError": "Couldn't delete that image.",
+      "empty": "No images have been uploaded yet.",
+      "summary": "{count} image(s) · {orphans} unused · {size} total",
+      "unused": "Unused",
+      "delete": "Delete",
+      "confirmDelete": "Delete this image? This can't be undone.",
+      "confirmDeleteInUse": "This image is still used in content. Deleting it will leave a broken image. Delete anyway?",
+      "truncated": "Showing the most recent images only; some older uploads aren't listed.",
+      "kind": {
+        "avatar": "Avatar",
+        "news": "News",
+        "page": "Page",
+        "contentBlock": "Block"
+      }
     }
   },
   "common": {

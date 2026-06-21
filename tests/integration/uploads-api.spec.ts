@@ -45,3 +45,42 @@ test.describe('uploads API', () => {
     expect(res.status()).toBe(503)
   })
 })
+
+/**
+ * Media library listing + delete (issue #78). Both are admin-only management
+ * surfaces. Storage is forced unconfigured in the test env, so an authorised
+ * admin deterministically hits 503 rather than a real bucket — enough to pin
+ * the auth boundary and graceful degradation; the usage-scan logic is unit
+ * tested separately (tests/unit/upload-usage.test.ts).
+ */
+test.describe('media library API', () => {
+  test('listing rejects anonymous callers with 401', async ({ apiAs }) => {
+    const res = await (await apiAs('guest')).get('/api/uploads')
+    expect(res.status()).toBe(401)
+  })
+
+  test('listing rejects a plain member with 403', async ({ apiAs }) => {
+    const res = await (await apiAs('member')).get('/api/uploads')
+    expect(res.status()).toBe(403)
+  })
+
+  test('listing rejects a plain officer with 403', async ({ apiAs }) => {
+    const res = await (await apiAs('officer')).get('/api/uploads')
+    expect(res.status()).toBe(403)
+  })
+
+  test('listing lets an admin past the gate (503 when storage is unconfigured)', async ({ apiAs }) => {
+    const res = await (await apiAs('admin')).get('/api/uploads')
+    expect(res.status()).toBe(503)
+  })
+
+  test('delete rejects a plain member with 403', async ({ apiAs }) => {
+    const res = await (await apiAs('member')).delete('/api/uploads?key=uploads/2026/03/abc.png')
+    expect(res.status()).toBe(403)
+  })
+
+  test('delete lets an admin past the gate (503 when storage is unconfigured)', async ({ apiAs }) => {
+    const res = await (await apiAs('admin')).delete('/api/uploads?key=uploads/2026/03/abc.png')
+    expect(res.status()).toBe(503)
+  })
+})
