@@ -29,6 +29,11 @@ const settingsSeed: { key: string, value: string, isAdminOnly?: boolean }[] = [
   { key: 'meeting.time', value: '18:00 – 20:00' },
   // Machine-readable start time (HH:MM) used to compute agenda line clock times.
   { key: 'meeting.start_time', value: '18:00' },
+  // Meeting length in minutes (issue #59): the VEVENT duration in calendar (ICS)
+  // exports, paired with meeting.start_time.
+  { key: 'meeting.duration_minutes', value: '120' },
+  // How many days before a meeting the role-reminder email goes out (issue #59).
+  { key: 'meeting.reminder_days_before', value: '1' },
   { key: 'meeting.address', value: '123 Example Street, Suite 100, Your City' },
   { key: 'meeting.location_note_en', value: 'A short walk from the downtown transit station.' },
   { key: 'meeting.location_note_fr', value: 'À quelques pas de la station de transport au centre-ville.' },
@@ -62,8 +67,8 @@ const settingsSeed: { key: string, value: string, isAdminOnly?: boolean }[] = [
   // place it at this URL or point this setting elsewhere.
   { key: 'branding.logo_url', value: '/images/toastmasters-logo.png' },
   // Configurable intro/outro copy for notification emails (PRD §10).
-  { key: 'notify.intro_en', value: 'Here are the roles still open for our upcoming meeting. Please consider signing up!' },
-  { key: 'notify.intro_fr', value: 'Voici les rôles encore vacants pour notre prochaine réunion. Pensez à vous inscrire!' },
+  { key: 'notify.intro_en', value: 'Here are the open roles and speech slots for our upcoming meeting. Please consider signing up!' },
+  { key: 'notify.intro_fr', value: 'Voici les rôles vacants et les créneaux d\'orateur pour notre prochaine réunion. Pensez à vous inscrire!' },
   { key: 'notify.outro_en', value: 'Thank you for helping make our meetings a success.' },
   { key: 'notify.outro_fr', value: 'Merci de contribuer au succès de nos réunions.' },
   // Admin-only (never exposed to the public settings endpoint). Empty placeholders.
@@ -308,10 +313,10 @@ const executivePositionsSeed = [
 const emailTemplatesSeed = [
   {
     key: 'unfilled_roles',
-    descriptionEn: 'Weekly reminder listing open roles for upcoming meeting(s) with a link to sign up.',
-    descriptionFr: 'Rappel hebdomadaire listant les rôles vacants pour les prochaines réunions avec un lien pour s\'inscrire.',
-    subjectEn: 'Roles still open for our next meeting',
-    subjectFr: 'Rôles encore vacants pour notre prochaine réunion',
+    descriptionEn: 'Signup reminder listing open roles and speech slots for upcoming meeting(s) with a link to sign up. Sent to members who haven\'t opted out; configurable by agenda/calendar managers.',
+    descriptionFr: 'Rappel d\'inscription listant les rôles vacants et les créneaux d\'orateur pour les prochaines réunions avec un lien pour s\'inscrire. Envoyé aux membres non désabonnés; configurable par les responsables de l\'ordre du jour.',
+    subjectEn: 'Open roles & speech slots for our next meeting',
+    subjectFr: 'Rôles et créneaux d\'orateur vacants pour notre prochaine réunion',
     bodyEn: '<p>{{intro}}</p>\n{{unfilled_roles}}\n<p><a href="{{signup_link}}">Sign up here</a></p>\n<p>{{outro}}</p>',
     bodyFr: '<p>{{intro}}</p>\n{{unfilled_roles}}\n<p><a href="{{signup_link}}">Inscrivez-vous ici</a></p>\n<p>{{outro}}</p>',
   },
@@ -326,6 +331,19 @@ const emailTemplatesSeed = [
     subjectFr: 'Nouvelle demande d\'adhésion',
     bodyEn: '<p><strong>{{requester_name}}</strong> has requested to become a member.</p>\n{{message}}\n<p><a href="{{requests_link}}">Review membership requests</a></p>',
     bodyFr: '<p><strong>{{requester_name}}</strong> a demandé à devenir membre.</p>\n{{message}}\n<p><a href="{{requests_link}}">Examiner les demandes d\'adhésion</a></p>',
+  },
+  {
+    // Scheduled reminder before a meeting, sent individually to each member who
+    // holds a role or speech on it (issue #59). Personalised per recipient:
+    // placeholders {{member_name}} {{meeting_date}} {{meeting_time}} {{location}}
+    // {{roles}} {{meeting_link}} are substituted at send time.
+    key: 'meeting_role_reminder',
+    descriptionEn: 'Reminds a member before a meeting where they hold a role or speech, listing their assignment(s).',
+    descriptionFr: 'Rappelle à un membre avant une réunion où il occupe un rôle ou présente un discours, en listant ses tâches.',
+    subjectEn: 'Reminder: your role at our meeting on {{meeting_date}}',
+    subjectFr: 'Rappel : votre rôle à notre réunion du {{meeting_date}}',
+    bodyEn: '<p>Hi {{member_name}},</p>\n<p>This is a friendly reminder that you are taking part in our meeting on <strong>{{meeting_date}}</strong> at {{meeting_time}}{{location}}. You are signed up for:</p>\n{{roles}}\n<p><a href="{{meeting_link}}">View the meeting agenda</a></p>',
+    bodyFr: '<p>Bonjour {{member_name}},</p>\n<p>Petit rappel : vous participez à notre réunion du <strong>{{meeting_date}}</strong> à {{meeting_time}}{{location}}. Vous êtes inscrit(e) pour :</p>\n{{roles}}\n<p><a href="{{meeting_link}}">Voir l\'ordre du jour</a></p>',
   },
 ]
 

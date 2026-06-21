@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { Check, Plus, Send, Trash2, TriangleAlert } from '@lucide/vue'
 
-definePageMeta({ middleware: 'communication' })
+definePageMeta({ middleware: 'notifications' })
 
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
+
+// The signup-reminder template — the "open roles & speech slots, please sign up"
+// email. Calendar (agenda) managers may configure only this schedule (issue #59).
+const SIGNUP_REMINDER_TEMPLATE_KEY = 'unfilled_roles'
+
+const { data: caps } = await useCapabilities()
+const canComms = computed(() => !!caps.value?.canManageCommunication)
+// A calendar manager who is NOT a communication manager: signup-reminder only.
+const signupOnly = computed(() => !canComms.value && !!caps.value?.canManageCalendar)
 
 interface Template {
   id: string
@@ -34,14 +43,15 @@ interface LogRow {
   triggeredByName: string | null
 }
 
+// Templates + log are communication-only data; calendar-only managers skip them.
 const { data: tplData } = await useFetch<{ templates: Template[], configured: boolean }>(
-  '/api/admin/email-templates', { key: 'admin-email-templates' },
+  '/api/admin/email-templates', { key: 'admin-email-templates', immediate: canComms.value },
 )
 const { data: schedData, refresh: refreshSchedules } = await useFetch<{ schedules: Schedule[] }>(
   '/api/admin/email-schedules', { key: 'admin-email-schedules' },
 )
 const { data: logData, refresh: refreshLog } = await useFetch<{ log: LogRow[] }>(
-  '/api/admin/email-log', { key: 'admin-email-log' },
+  '/api/admin/email-log', { key: 'admin-email-log', immediate: canComms.value },
 )
 
 const templates = ref<Template[]>([])
@@ -51,6 +61,9 @@ watchEffect(() => {
 const configured = computed(() => tplData.value?.configured ?? false)
 const schedules = computed(() => schedData.value?.schedules ?? [])
 const log = computed(() => logData.value?.log ?? [])
+
+// The single signup-reminder schedule (if configured), for the calendar-only view.
+const signupSchedule = computed(() => schedules.value.find(s => s.templateKey === SIGNUP_REMINDER_TEMPLATE_KEY) ?? null)
 
 const saved = ref(false)
 const error = ref('')
@@ -64,6 +77,18 @@ function flash() {
 function fail(e: unknown) {
   error.value = errorMessage(e, t('auth.genericError'))
   saved.value = false
+}
+
+async function enableSignupReminder() {
+  error.value = ''
+  try {
+    await $fetch('/api/admin/email-schedules', {
+      method: 'POST',
+      body: { templateKey: SIGNUP_REMINDER_TEMPLATE_KEY, dayOfWeek: 0, timeOfDay: '09:00', active: true },
+    })
+    await refreshSchedules()
+  }
+  catch (e) { fail(e) }
 }
 
 // Localized weekday names, 0 = Sunday (2024-01-07 is a Sunday).
@@ -163,9 +188,9 @@ useHead(() => ({ title: t('admin.notifications.title') }))
       {{ t('admin.notifications.intro') }}
     </p>
 
-    <!-- Not-configured warning -->
+    <!-- Not-configured warning (communication managers: they own email config) -->
     <div
-      v-if="!configured"
+      v-if="canComms && !configured"
       class="mt-6 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
     >
       <TriangleAlert class="mt-0.5 size-4 shrink-0" />
@@ -198,8 +223,11 @@ useHead(() => ({ title: t('admin.notifications.title') }))
       {{ error }}
     </div>
 
-    <!-- Templates -->
-    <section class="mt-8">
+    <!-- Templates (communication managers only) -->
+    <section
+      v-if="canComms"
+      class="mt-8"
+    >
       <h2 class="text-xl font-semibold">
         {{ t('admin.notifications.templates') }}
       </h2>
@@ -274,8 +302,11 @@ useHead(() => ({ title: t('admin.notifications.title') }))
       </div>
     </section>
 
-    <!-- Schedules -->
-    <section class="mt-10">
+    <!-- Schedules (communication managers: full control over every template) -->
+    <section
+      v-if="canComms"
+      class="mt-10"
+    >
       <h2 class="text-xl font-semibold">
         {{ t('admin.notifications.schedules') }}
       </h2>
@@ -426,8 +457,11 @@ useHead(() => ({ title: t('admin.notifications.title') }))
       </Card>
     </section>
 
-    <!-- Send log -->
-    <section class="mt-10">
+    <!-- Send log (communication managers only) -->
+    <section
+      v-if="canComms"
+      class="mt-10"
+    >
       <h2 class="text-xl font-semibold">
         {{ t('admin.notifications.log') }}
       </h2>
@@ -492,6 +526,85 @@ useHead(() => ({ title: t('admin.notifications.title') }))
           {{ t('admin.notifications.noLog') }}
         </p>
       </div>
+    </section>
+
+    <!-- Calendar (agenda) managers without communication rights: configure only
+         the signup-reminder schedule (issue #59). -->
+    <section
+      v-if="signupOnly"
+      class="mt-8"
+    >
+      <h2 class="text-xl font-semibold">
+        {{ t('admin.notifications.signupReminder') }}
+      </h2>
+      <p class="mt-1 text-sm text-muted-foreground">
+        {{ t('admin.notifications.signupReminderIntro') }}
+      </p>
+
+      <Card
+        v-if="signupSchedule"
+        class="mt-4"
+        :class="signupSchedule.active ? '' : 'opacity-60'"
+      >
+        <CardContent class="flex flex-wrap items-end gap-3 py-4">
+          <div class="space-y-1.5">
+            <Label>{{ t('admin.notifications.day') }}</Label>
+            <select
+              :value="signupSchedule.dayOfWeek"
+              :class="inputClass"
+              @change="patchSchedule(signupSchedule!, { dayOfWeek: Number(($event.target as HTMLSelectElement).value) })"
+            >
+              <option
+                v-for="(name, i) in dayNames"
+                :key="i"
+                :value="i"
+              >
+                {{ name }}
+              </option>
+            </select>
+          </div>
+          <div class="space-y-1.5">
+            <Label>{{ t('admin.notifications.time') }}</Label>
+            <input
+              type="time"
+              :value="signupSchedule.timeOfDay"
+              :class="inputClass"
+              @change="patchSchedule(signupSchedule!, { timeOfDay: ($event.target as HTMLInputElement).value })"
+            >
+          </div>
+          <div class="flex items-center gap-2 pb-2">
+            <input
+              id="signup-active"
+              type="checkbox"
+              class="size-4 rounded border-input accent-primary"
+              :checked="signupSchedule.active"
+              @change="patchSchedule(signupSchedule!, { active: ($event.target as HTMLInputElement).checked })"
+            >
+            <Label
+              for="signup-active"
+              class="font-normal"
+            >{{ t('admin.notifications.active') }}</Label>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card
+        v-else
+        class="mt-4 border-dashed"
+      >
+        <CardContent class="flex flex-wrap items-center justify-between gap-3 py-4">
+          <p class="text-sm text-muted-foreground">
+            {{ t('admin.notifications.signupReminderDisabled') }}
+          </p>
+          <Button
+            variant="secondary"
+            @click="enableSignupReminder"
+          >
+            <Plus class="size-4" />
+            {{ t('admin.notifications.enableSignupReminder') }}
+          </Button>
+        </CardContent>
+      </Card>
     </section>
   </div>
 </template>

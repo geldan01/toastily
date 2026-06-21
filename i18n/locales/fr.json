@@ -87,6 +87,14 @@
       "save": "Enregistrer le témoignage",
       "saved": "Enregistré",
       "featured": "En vedette"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choisissez les courriels que le club vous envoie.",
+      "roleReminders": "Rappels de rôle de réunion",
+      "roleRemindersHint": "M'envoyer un courriel avant une réunion où j'ai un rôle ou un discours.",
+      "signupReminders": "Rappels d'inscription",
+      "signupRemindersHint": "M'envoyer les rôles vacants et les créneaux d'orateur de la prochaine réunion pour que je puisse m'inscrire."
     }
   },
   "requests": {
@@ -446,6 +454,10 @@
       "intro": "Envoyez aux membres la liste des rôles vacants — maintenant ou selon un horaire récurrent. Configurez la clé Resend et l'adresse d'expéditeur dans les Paramètres avant un envoi réel.",
       "notConfigured": "Aucun fournisseur de courriel n'est configuré — les envois seront affichés dans la console du serveur en aperçu. Ajoutez une clé d'API Resend et une adresse d'expéditeur dans les Paramètres pour livrer de vrais courriels.",
       "configureLink": "Ouvrir les Paramètres",
+      "signupReminder": "Rappel d'inscription",
+      "signupReminderIntro": "Envoyer à tous les membres les rôles vacants et les créneaux d'orateur de la prochaine réunion, avec un lien pour s'inscrire. Les membres peuvent se désabonner dans leur compte.",
+      "signupReminderDisabled": "Le rappel d'inscription est désactivé — aucun courriel n'est planifié.",
+      "enableSignupReminder": "Activer le rappel d'inscription",
       "templates": "Modèles",
       "subjectEn": "Objet (EN)",
       "subjectFr": "Objet (FR)",
@@ -603,6 +615,8 @@
     "optionalEmail": "Courriel (facultatif)",
     "noUpcomingMeeting": "Aucune réunion à venir pour l'inscription en ce moment.",
     "viewMeeting": "Voir la réunion",
+    "addToCalendar": "Ajouter au calendrier",
+    "addMyMeetings": "Ajouter mes réunions au calendrier",
     "guestName": "Nom de l'invité",
     "assign": "Assigner",
     "cancelled": "Annulée",

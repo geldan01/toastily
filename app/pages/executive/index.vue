@@ -114,7 +114,9 @@ const tools = computed(() => [
     to: localePath('/admin/notifications'),
     title: t('admin.notifications.title'),
     desc: t('executive.tools.notifications'),
-    show: isAdmin.value || (caps.value?.canManageCommunication ?? false),
+    // Communication managers get the full page; calendar (agenda) managers reach
+    // it to configure the signup reminder (issue #59).
+    show: isAdmin.value || (caps.value?.canManageCommunication ?? false) || (caps.value?.canManageCalendar ?? false),
   },
   {
     key: 'settings',

@@ -3,9 +3,9 @@ import { schema, useDrizzle } from '../../../db/client'
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
 
-/** Create an email schedule (officer/admin). PRD §10. */
+/** Create an email schedule. Signup-reminder schedule: communication OR calendar
+ * managers; any other template: communication only. PRD §10 / issue #59. */
 export default defineEventHandler(async (event) => {
-  await requireCommunicationManager(event)
   const body = await readBody(event)
 
   const templateKey = String(body?.templateKey ?? '').trim()
@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
   const active = body?.active !== false
 
   if (!templateKey) throw createError({ statusCode: 400, statusMessage: 'A template is required.' })
+  await requireScheduleManager(event, templateKey)
   if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) {
     throw createError({ statusCode: 400, statusMessage: 'Day of week must be 0 (Sunday) through 6.' })
   }

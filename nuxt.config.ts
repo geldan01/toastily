@@ -73,13 +73,16 @@ export default defineNuxtConfig({
 
   // Scheduled email notifications (PRD §10). The dispatcher runs every 15 min
   // and fires any DB-defined schedule that's due (server/tasks/notifications/
-  // dispatch.ts). Experimental tasks must be enabled for scheduledTasks.
+  // dispatch.ts); the role-reminder task runs once a day and emails members
+  // before a meeting where they hold a role (issue #59, role-reminders.ts).
+  // Experimental tasks must be enabled for scheduledTasks.
   nitro: {
     experimental: {
       tasks: true,
     },
     scheduledTasks: {
       '*/15 * * * *': ['notifications:dispatch'],
+      '0 9 * * *': ['notifications:role-reminders'],
     },
   },
 

@@ -34,6 +34,15 @@ export const users = pgTable('users', {
   // (pre-#25 accounts; no destructive backfill).
   privacyConsentAt: timestamp('privacy_consent_at', { withTimezone: true }),
   privacyConsentVersion: text('privacy_consent_version'),
+  // Notification preference (issue #59): whether the member wants the reminder
+  // email before a meeting where they hold a role or speech. Opt-out (default on);
+  // respected by the role-reminder task. A future profiles issue may add more
+  // granular preferences alongside this one.
+  notifyRoleReminders: boolean('notify_role_reminders').notNull().default(true),
+  // Notification preference: whether the member wants the "open roles & speech
+  // slots — please sign up" reminder for the next meeting. Opt-out (default on);
+  // respected when the signup-reminder template is sent to all members.
+  notifySignupReminders: boolean('notify_signup_reminders').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
